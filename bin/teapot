@@ -1,0 +1,111 @@
+#!/usr/bin/env ruby
+
+# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+require 'teapot/config'
+
+require 'uri'
+require 'rake'
+require 'rainbow'
+
+$app = Rake.application = Rake::Application.new
+$app.init('teapot')
+
+task :fetch do
+	config = Teapot::Config.load
+	context = Teapot::Context.new(config)
+	
+	base_uri = URI(config.options[:source].to_s + '/')
+	
+	config.records.each do |record|
+		destination_path = record.destination_path
+		
+		$stderr.puts "Fetching #{record}...".color(:blue)
+		
+		unless File.exist? destination_path
+			$stderr.puts "Cloning package at path #{destination_path} ...".color(:green)
+			
+			source_uri = URI(record.uri)
+		
+			unless source_uri.absolute?
+				source_uri = base_uri + source_uri
+			end
+		
+			if source_uri.scheme == "file"
+				source_uri = source_uri.path
+			end
+		
+			sh("git", "clone", source_uri.to_s, destination_path.to_s)
+		else
+			$stderr.puts "Updating package at path #{destination_path} ...".color(:green)
+			
+			Dir.chdir(destination_path) do
+				sh("git", "pull")
+			end
+		end
+	end
+end
+
+task :install => :fetch do
+	config = Teapot::Config.load
+	context = Teapot::Context.new(config)
+	
+	config.records.each do |record|
+		$stderr.puts "Installing #{record.name}...".color(:blue)
+		
+		record.load(context).each do |bundle|
+			if bundle.respond_to? :fetch_location
+				location = bundle.fetch_location
+				
+				if !location
+					puts "Could not determine fetch location for #{name}!".color(:red)
+				elsif File.exist? bundle.source_path
+					puts "Source path #{bundle.source_path} already exists!".color(:red)
+				else
+					url = location[:url]
+					local_path = bundle.path + (location[:filename] || File.basename(url))
+			
+					puts "Local path: #{local_path}"
+			
+					unless bundle.source_path.exist?
+						unless local_path.exist?
+							puts "Downloading #{bundle.name} to #{local_path}..."
+							sh("curl", "-L", url, "-o", local_path.to_s)
+						end
+			
+						puts "Extracting #{bundle.name}..."
+						sh("mkdir", bundle.source_path.to_s)
+						sh("tar", "-C", bundle.source_path.to_s, "--strip-components", "1", "-xvf", local_path.to_s)
+					end
+				end
+			end
+		end
+	end
+end
+
+task :help do
+	$stderr.puts "To create a new teapot, use the setup task:"
+	$stderr.puts "$ #{File.basename($0)} setup project-path"
+end
+
+task :default => :help
+
+$app.top_level
