@@ -41,6 +41,7 @@ module Teapot
 		attr :platforms
 
 		def load(record)
+			@record = record
 			@defined = []
 			
 			path = (record.destination_path + record.loader_path).to_s
@@ -50,7 +51,7 @@ module Teapot
 		end
 
 		def define_package(name, &block)
-			package = Package.new(self, name)
+			package = Package.new(self, name, @record.destination_path)
 
 			yield(package)
 

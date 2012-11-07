@@ -29,6 +29,24 @@ require 'rainbow'
 $app = Rake.application = Rake::Application.new
 $app.init('teapot')
 
+VARIANT = ENV['VARIANT'] || 'debug'
+
+case VARIANT
+when 'debug'
+	GLOBAL_CFLAGS = "-O0 -g -Wall -Wmissing-prototypes -pipe"
+	GLOBAL_CXXFLAGS = "-std=c++11"
+	GLOBAL_LDFLAGS = "-g"
+when 'release'
+	GLOBAL_CFLAGS = "-O2 -Wall -ffast-math -fno-strict-aliasing -pipe"
+	GLOBAL_CXXFLAGS = "-std=c++11"
+	GLOBAL_LDFLAGS = ""
+end
+
+def run(*args)
+	$stderr.puts args.join(' ')
+	system(*args.collect{|arg| arg.to_s})
+end
+
 task :fetch do
 	config = Teapot::Config.load
 	context = Teapot::Context.new(config)
@@ -53,51 +71,113 @@ task :fetch do
 				source_uri = source_uri.path
 			end
 		
-			sh("git", "clone", source_uri.to_s, destination_path.to_s)
+			sh("git", "clone", "--recursive", source_uri.to_s, destination_path.to_s)
 		else
 			$stderr.puts "Updating package at path #{destination_path} ...".color(:green)
 			
 			Dir.chdir(destination_path) do
 				sh("git", "pull")
+				sh("git", "submodule", "update", "--init")
 			end
 		end
 	end
 end
 
-task :install => :fetch do
+task :build do
 	config = Teapot::Config.load
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|
-		$stderr.puts "Installing #{record.name}...".color(:blue)
+		destination_path = record.destination_path
 		
-		record.load(context).each do |bundle|
-			if bundle.respond_to? :fetch_location
-				location = bundle.fetch_location
-				
-				if !location
-					puts "Could not determine fetch location for #{name}!".color(:red)
-				elsif File.exist? bundle.source_path
-					puts "Source path #{bundle.source_path} already exists!".color(:red)
-				else
-					url = location[:url]
-					local_path = bundle.path + (location[:filename] || File.basename(url))
+		bundles = record.load(context)
+		
+		bundles.each do |bundle|
 			
-					puts "Local path: #{local_path}"
-			
-					unless bundle.source_path.exist?
-						unless local_path.exist?
-							puts "Downloading #{bundle.name} to #{local_path}..."
-							sh("curl", "-L", url, "-o", local_path.to_s)
-						end
-			
-						puts "Extracting #{bundle.name}..."
-						sh("mkdir", bundle.source_path.to_s)
-						sh("tar", "-C", bundle.source_path.to_s, "--strip-components", "1", "-xvf", local_path.to_s)
-					end
-				end
-			end
 		end
+	end
+end
+
+task :build do |task, arguments|
+	config = Teapot::Config.load
+	context = Teapot::Context.new(config)
+	
+	config.records.each do |record|
+		destination_path = record.destination_path
+		
+		record.load(context)
+	end
+
+	build_package = ENV['PACKAGE']
+	build_platform = ENV['PLATFORM']
+	
+	if build_package
+		package = context.packages[build_package]
+		
+		unless package
+			puts "Could not find package #{build_package}"
+			
+			next
+		end
+		
+		packages = [package]
+	else
+		packages = context.packages.values
+	end
+	
+	if build_platform
+		platform = context.platforms[build_platform.to_sym]
+		
+		unless platform
+			puts "Could not find platform #{build_platform}"
+			
+			next
+		end
+		
+		platforms = [platform]
+	end
+	
+	unless ENV['ONLY']
+		ordered = Teapot::Package.build_order(context.packages, packages)
+	else
+		ordered = packages
+	end
+	
+	puts "Building: #{ordered.join(', ')} for variant #{VARIANT}"
+	
+	context.platforms.each do |name, platform|
+		next unless platform.available?
+		
+		platform.prepare!
+		
+		ordered.each do |package|
+			package.build!(platform, :variant => VARIANT)
+		end
+	end
+end
+
+task :list do
+	config = Teapot::Config.load
+	context = Teapot::Context.new(config)
+	
+	config.records.each do |record|
+		destination_path = record.destination_path
+		
+		record.load(context)
+	end
+	
+	ordered = Teapot::Package::build_order(context.packages, context.packages.values)
+	
+	ordered.each do |package|
+		puts "Package: #{package.name}"
+		
+		if package.depends.size > 0
+			puts "	(depends on #{package.depends.join(', ')})"
+		end
+	end
+	
+	context.platforms.each do |platform|
+		puts "Platform: #{platform.name}"
 	end
 end
 

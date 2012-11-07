@@ -1,5 +1,6 @@
 
 require 'fileutils'
+require 'rexec/environment'
 
 module Teapot
 	class Platform
