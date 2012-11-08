@@ -19,60 +19,51 @@
 # THE SOFTWARE.
 
 require 'pathname'
-require 'rainbow'
+require 'test/unit'
+require 'stringio'
 
-require 'teapot/package'
-require 'teapot/platform'
+require 'teapot/environment'
 
-module Teapot
-	class Context
-		def initialize(config)
-			@config = config
-
-			@packages = {}
-			@platforms = {}
-
-			@defined = []
-		end
-
-		attr :config
-		attr :packages
-		attr :platforms
-
-		def load(record)
-			@record = record
-			@defined = []
-			
-			path = (record.destination_path + record.loader_path).to_s
-			self.instance_eval(File.read(path), path)
-			
-			@defined
-		end
-
-		def define_package(*args, &block)
-			package = Package.new(self, @record, *args)
-
-			yield(package)
-
-			@packages[package.name] = package
-
-			@defined << package
+class TestEnvironment < Test::Unit::TestCase
+	def test_environment_chaining
+		a = Teapot::Environment.new
+		a[:cflags] = ["-std=c++11"]
+		
+		b = Teapot::Environment.new(a)
+		b[:cflags] = ["-stdlib=libc++"]
+		
+		expected = {:cflags => ["-std=c++11", "-stdlib=libc++"]}
+		
+		assert_equal expected, b.flatten.to_hash
+	end
+	
+	def test_environment_lambda
+		a = Teapot::Environment.new do
+			sdk "bob-2.6"
+			cflags {"-sdk=#{sdk}"}
 		end
 		
-		def define_platform(*args, &block)
-			platform = Platform.new(self, @record, *args)
-
-			yield(platform)
-
-			if platform.available?
-				@platforms[platform.name] = platform
-			end
-
-			@defined << platform
+		b = Teapot::Environment.new(a) do
+			sdk "bob-2.8"
 		end
+
+		expected = {'SDK' => "bob-2.8", 'CFLAGS' => "-sdk=bob-2.8"}
 		
-		def global name
-			@config.environment[name]
-		end
+		assert_equal [:cflags, :sdk], b.flatten.to_hash.keys.sort
+		assert_equal expected, b.flatten.to_string_hash
+	end
+	
+	def test_combine
+		a = Teapot::Environment.new(nil, {:name => 'a'})
+		b = Teapot::Environment.new(a, {:name => 'b'})
+		c = Teapot::Environment.new(nil, {:name => 'c'})
+		d = Teapot::Environment.new(c, {:name => 'd'})
+
+		top = Teapot::Environment.combine(b, d)
+		
+		assert_equal d.values, top.values
+		assert_equal c.values, top.parent.values
+		assert_equal b.values, top.parent.parent.values
+		assert_equal a.values, top.parent.parent.parent.values
 	end
 end

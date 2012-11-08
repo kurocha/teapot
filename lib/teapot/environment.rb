@@ -180,11 +180,11 @@ module Teapot
 		protected
 		
 		def flatten_to_array(array)
-			array << self
-			
 			if @parent
 				@parent.flatten_to_array(array)
 			end
+			
+			array << self
 		end
 		
 		def flatten_to_hash(hash)
