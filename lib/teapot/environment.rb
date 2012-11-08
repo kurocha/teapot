@@ -26,6 +26,7 @@ require 'yaml'
 
 require 'teapot/package'
 require 'teapot/platform'
+require 'teapot/commands'
 
 module Teapot
 	class Environment
@@ -152,13 +153,15 @@ module Teapot
 			Hash[@values.map{|key, value| [key.to_s.upcase, string_value(value)]}]
 		end
 		
-		def use(&block)
+		def use(options = {}, &block)
 			system_environment = flatten.to_string_hash
 			
 			puts YAML::dump(system_environment).color(:magenta)
 			
-			RExec.env(system_environment) do
-				@evaluator.instance_eval(&block)
+			Dir.chdir(options[:in] || ".") do
+				RExec.env(system_environment) do
+					@evaluator.instance_eval(&block)
+				end
 			end
 		end
 		

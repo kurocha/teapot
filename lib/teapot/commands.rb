@@ -18,66 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
 require 'rainbow'
 
-require 'teapot/package'
-require 'teapot/platform'
-
 module Teapot
-	class Context
-		def initialize(config)
-			@config = config
-
-			@packages = {}
-			@platforms = {}
-
-			@defined = []
-		end
-
-		attr :config
-		attr :packages
-		attr :platforms
-
-		def load(record)
-			@record = record
-			@defined = []
+	module Commands
+		def self.run(*args)
+			args.collect!(&:to_s)
 			
-			path = (record.destination_path + record.loader_path).to_s
-			self.instance_eval(File.read(path), path)
-			
-			@defined
-		end
-
-		def define_package(*args, &block)
-			package = Package.new(self, @record, *args)
-
-			yield(package)
-
-			@packages[package.name] = package
-
-			@defined << package
-		end
-		
-		def define_platform(*args, &block)
-			platform = Platform.new(self, @record, *args)
-
-			yield(platform)
-
-			if platform.available?
-				@platforms[platform.name] = platform
-			end
-
-			@defined << platform
-		end
-		
-		def run(*args)
 			puts args.join(' ').color(:blue)
 			system(*args)
-		end
-		
-		def global name
-			@config.environment[name]
 		end
 	end
 end

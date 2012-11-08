@@ -22,6 +22,7 @@ require 'pathname'
 
 require 'teapot/context'
 require 'teapot/environment'
+require 'teapot/commands'
 
 module Teapot
 	class Config

@@ -38,10 +38,10 @@ task :fetch do
 	config.records.each do |record|
 		destination_path = record.destination_path
 		
-		$stderr.puts "Fetching #{record}...".color(:blue)
+		puts "Fetching #{record}...".color(:blue)
 		
 		unless File.exist? destination_path
-			$stderr.puts "Cloning package at path #{destination_path} ...".color(:green)
+			puts "Cloning package at path #{destination_path} ...".color(:green)
 			
 			source_uri = URI(record.uri)
 		
@@ -53,13 +53,13 @@ task :fetch do
 				source_uri = source_uri.path
 			end
 		
-			sh("git", "clone", "--recursive", source_uri.to_s, destination_path.to_s)
+			Teapot::Commands.run("git", "clone", "--recursive", source_uri.to_s, destination_path.to_s)
 		else
-			$stderr.puts "Updating package at path #{destination_path} ...".color(:green)
+			puts "Updating package at path #{destination_path} ...".color(:green)
 			
 			Dir.chdir(destination_path) do
-				sh("git", "pull")
-				sh("git", "submodule", "update", "--init")
+				Teapot::Commands.run("git", "pull")
+				Teapot::Commands.run("git", "submodule", "update", "--init")
 			end
 		end
 	end
@@ -168,8 +168,8 @@ task :list do
 end
 
 task :help do
-	$stderr.puts "To create a new teapot, use the setup task:"
-	$stderr.puts "$ #{File.basename($0)} setup project-path"
+	puts "To create a new teapot, use the setup task:"
+	puts "$ #{File.basename($0)} setup project-path"
 end
 
 task :install => [:fetch, :build]
