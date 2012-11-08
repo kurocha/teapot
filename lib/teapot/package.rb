@@ -74,9 +74,11 @@ module Teapot
 			task = @build[platform.name]
 			
 			if task
-				environment = Environment.new(platform.environment)
-				environment.merge!(@record.options[:environment])
-				environment.merge!(config)
+				environment = Environment.combine(
+					@record.options[:environment],
+					platform.environment,
+					config,
+				)
 				
 				Dir.chdir(@path) do
 					task.call(platform, environment)

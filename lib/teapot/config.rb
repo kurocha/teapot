@@ -88,7 +88,7 @@ module Teapot
 			@packages = []
 			@platforms = []
 			
-			@environment = {}
+			@environment = Environment.new
 		end
 
 		def packages_path
@@ -145,7 +145,7 @@ module Teapot
 		end
 
 		def platform(name, options = {})
-			options = {:config => @global}.merge(options)
+			options = {:environment => @environment}.merge(options)
 			@platforms << Record.new(self, Platform, name, options)
 		end
 
@@ -163,7 +163,6 @@ module Teapot
 		
 		def self.load_default(root = Dir.getwd, options = {})
 			options.merge!(:variant => ENV['TEAPOT_VARIANT'])
-			
 			
 			load(root, options)
 		end

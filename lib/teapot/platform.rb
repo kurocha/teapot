@@ -22,6 +22,9 @@ require 'fileutils'
 require 'rexec/environment'
 
 module Teapot
+	class UnavailableError < StandardError
+	end
+	
 	class Platform
 		def initialize(context, record, name)
 			@context = context
@@ -48,14 +51,13 @@ module Teapot
 		end
 		
 		def environment
-			if available?
-				environment = Environment.new
-			
-				@configure.call(environment)
-			
-				return environment
+			if @available
+				return Environment.combine(
+					@record.options[:environment],
+					Environment.new(&@configure),
+				)
 			else
-				return nil
+				raise UnavailableError.new("Platform is not available for configuration!")
 			end
 		end
 		
@@ -68,7 +70,7 @@ module Teapot
 		end
 		
 		def to_s
-			"<Platform #{@name}: #{@availble ? 'available' : 'inactive'}>"
+			"<Platform #{@name}: #{@available ? 'available' : 'inactive'}>"
 		end
 		
 		def prepare!

@@ -130,7 +130,7 @@ task :build do |task, arguments|
 	context.platforms.each do |name, platform|
 		next unless platform.available?
 		
-		puts "Building #{name} on #{platform}...".color(:blue)
+		puts "Building for #{platform}...".color(:blue)
 		
 		platform.prepare!
 		
