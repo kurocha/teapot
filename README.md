@@ -24,11 +24,11 @@ Create a Teapot file in the root directory of your project:
 
 	source "https://github.com/infusions"
 
-	if RUBY_PLATFORM =~ /linux/
+	host /linux/ do
 		platform "linux"
 	end
-	#
-	if RUBY_PLATFORM =~ /darwin/
+	
+	host /darwin/ do
 		platform "darwin-osx"
 	end
 
