@@ -186,6 +186,8 @@ task :help do
 	$stderr.puts "$ #{File.basename($0)} setup project-path"
 end
 
+task :install => [:fetch, :build]
+
 task :default => :help
 
 $app.top_level

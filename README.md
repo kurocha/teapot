@@ -20,7 +20,50 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Create a Teapot file in the root directory of your project:
+
+	source "https://github.com/infusions"
+
+	if RUBY_PLATFORM =~ /linux/
+		platform "linux"
+	end
+	#
+	if RUBY_PLATFORM =~ /darwin/
+		platform "darwin-osx"
+	end
+
+	package "png"
+	package "freetype"
+	package "vorbis"
+	package "ogg"
+	package "jpeg"
+
+Then run
+
+	$ teapot install
+
+This will download and compile all the selected packages into the `build` directory.
+
+### CMake ###
+
+To use these packages in a CMake project, update your `CMakeLists.txt`:
+
+	list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/build/${TEAPOT_PLATFORM}/")
+
+Then configure like so:
+
+	cmake path/to/src -DTEAPOT_PLATFORM=linux
+
+### Xcode ###
+
+To use these packages in an Xcode project, creating a custom `teapot.xcconfig` is recommended:
+
+	TEAPOT_PLATFORM=darwin-osx
+	TEAPOT_PREFIX_PATH=$(SRCROOT)/build/$(TEAPOT_PLATFORM)
+	
+	// Search paths:
+	HEADER_SEARCH_PATHS=$(inherited) "$(TEAPOT_PREFIX_PATH)/include"
+	LIBRARY_SEARCH_PATHS=$(inherited) "$(TEAPOT_PREFIX_PATH)/lib"
 
 ## Contributing
 
