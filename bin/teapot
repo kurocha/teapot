@@ -29,26 +29,8 @@ require 'rainbow'
 $app = Rake.application = Rake::Application.new
 $app.init('teapot')
 
-VARIANT = ENV['VARIANT'] || 'debug'
-
-case VARIANT
-when 'debug'
-	GLOBAL_CFLAGS = "-O0 -g -Wall -Wmissing-prototypes -pipe"
-	GLOBAL_CXXFLAGS = "-std=c++11"
-	GLOBAL_LDFLAGS = "-g"
-when 'release'
-	GLOBAL_CFLAGS = "-O2 -Wall -ffast-math -fno-strict-aliasing -pipe"
-	GLOBAL_CXXFLAGS = "-std=c++11"
-	GLOBAL_LDFLAGS = ""
-end
-
-def run(*args)
-	$stderr.puts args.join(' ')
-	system(*args.collect{|arg| arg.to_s})
-end
-
 task :fetch do
-	config = Teapot::Config.load
+	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
 	
 	base_uri = URI(config.options[:source].to_s + '/')
@@ -84,7 +66,7 @@ task :fetch do
 end
 
 task :build do
-	config = Teapot::Config.load
+	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|
@@ -99,7 +81,7 @@ task :build do
 end
 
 task :build do |task, arguments|
-	config = Teapot::Config.load
+	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|
@@ -115,7 +97,7 @@ task :build do |task, arguments|
 		package = context.packages[build_package]
 		
 		unless package
-			puts "Could not find package #{build_package}"
+			puts "Could not find package #{build_package}".color(:red)
 			
 			next
 		end
@@ -129,7 +111,7 @@ task :build do |task, arguments|
 		platform = context.platforms[build_platform.to_sym]
 		
 		unless platform
-			puts "Could not find platform #{build_platform}"
+			puts "Could not find platform #{build_platform}".color(:red)
 			
 			next
 		end
@@ -143,21 +125,25 @@ task :build do |task, arguments|
 		ordered = packages
 	end
 	
-	puts "Building: #{ordered.join(', ')} for variant #{VARIANT}"
+	puts "Building #{ordered.join(', ')} for variant #{config.variant}".color(:blue)
 	
 	context.platforms.each do |name, platform|
 		next unless platform.available?
 		
+		puts "Building #{name} on #{platform}...".color(:blue)
+		
 		platform.prepare!
 		
 		ordered.each do |package|
-			package.build!(platform, :variant => VARIANT)
+			package.build!(platform, :variant => config.variant)
 		end
 	end
+	
+	puts "Completed build successfully.".color(:green)
 end
 
 task :list do
-	config = Teapot::Config.load
+	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|

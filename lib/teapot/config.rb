@@ -21,6 +21,7 @@
 require 'pathname'
 
 require 'teapot/context'
+require 'teapot/environment'
 
 module Teapot
 	class Config
@@ -42,12 +43,14 @@ module Teapot
 				end
 				
 				@options = options
+				@global = Environment.new
 			end
 			
 			attr :klass
 			attr :name
 			attr :uri
 			attr :options
+			attr :global
 			
 			def load(context)
 				context.load(self)
@@ -84,6 +87,8 @@ module Teapot
 		
 			@packages = []
 			@platforms = []
+			
+			@environment = {}
 		end
 
 		def packages_path
@@ -98,9 +103,34 @@ module Teapot
 			@root + (@options[:build_path] || "build")
 		end
 		
+		def variant(*args, &block)
+			name = @options[:variant] || 'debug'
+			
+			if block_given?
+				if args.find{|arg| arg === name}
+					yield
+				end
+			else
+				name
+			end
+		end
+		
+		def host(*args, &block)
+			name = @options[:host_platform] || RUBY_PLATFORM
+			
+			if block_given?
+				if args.find{|arg| arg === name}
+					yield
+				end
+			else
+				name
+			end
+		end
+		
 		attr :options
 		attr :packages
 		attr :platforms
+		attr :environment
 
 		def source(path)
 			@options[:source] = path
@@ -115,10 +145,11 @@ module Teapot
 		end
 
 		def platform(name, options = {})
+			options = {:config => @global}.merge(options)
 			@platforms << Record.new(self, Platform, name, options)
 		end
 
-		def self.load(root = Dir.getwd, options = {})
+		def self.load(root, options = {})
 			config = new(root, options)
 			
 			teapot_path = File.join(root, "Teapot")
@@ -128,6 +159,13 @@ module Teapot
 			end
 			
 			return config
+		end
+		
+		def self.load_default(root = Dir.getwd, options = {})
+			options.merge!(:variant => ENV['TEAPOT_VARIANT'])
+			
+			
+			load(root, options)
 		end
 	end
 end

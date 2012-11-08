@@ -21,63 +21,70 @@
 require 'pathname'
 require 'rainbow'
 
+require 'rexec'
+
 require 'teapot/package'
 require 'teapot/platform'
 
 module Teapot
-	class Context
-		def initialize(config)
-			@config = config
-
-			@packages = {}
-			@platforms = {}
-
-			@defined = []
-		end
-
-		attr :config
-		attr :packages
-		attr :platforms
-
-		def load(record)
-			@record = record
-			@defined = []
-			
-			path = (record.destination_path + record.loader_path).to_s
-			self.instance_eval(File.read(path), path)
-			
-			@defined
-		end
-
-		def define_package(*args, &block)
-			package = Package.new(self, @record, *args)
-
-			yield(package)
-
-			@packages[package.name] = package
-
-			@defined << package
+	class Environment
+		def initialize(values = {})
+			@values = values
 		end
 		
-		def define_platform(*args, &block)
-			platform = Platform.new(self, @record, *args)
-
-			yield(platform)
-
-			if platform.available?
-				@platforms[platform.name] = platform
+		attr :values
+		
+		def method_missing(name, *args)
+			if name.to_s.match(/^(.*?)(\=)?$/)
+				if $2
+					return @values[$1.to_sym] = args[0]
+				else
+					return @values[$1.to_sym]
+				end
+			else
+				super(name, *args)
 			end
-
-			@defined << platform
 		end
 		
-		def sh(*args)
-			puts args.join(' ').color(:blue)
-			system(*args)
+		def [] (key)
+			@values[key]
 		end
 		
-		def global name
-			@config.environment[name]
+		def []= (key, value)
+			@values[key] = value
+		end
+		
+		def to_hash
+			@values
+		end
+		
+		def merge(config)
+			environment = Environment.new(values)
+			environment.merge!(config)
+		end
+		
+		def merge!(config)
+			if config
+				@values.merge!(config.to_hash) do |key, old_value, new_value|
+					if Array === old_value || Array === new_value
+						Array(old_value) + Array(new_value)
+					else
+						new_value
+					end
+				end
+			end
+			
+			@values.merge!(config.to_hash) if config
+			
+			return self
+		end
+		
+		def environment_variables
+			Hash[@values.map{|key, value| [key.to_s.upcase, Array(value).join(' ')]}]
+		end
+		
+		def use(&block)
+			RExec.env(environment_variables, &block)
 		end
 	end
 end

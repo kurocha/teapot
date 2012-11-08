@@ -21,22 +21,73 @@
 require 'pathname'
 
 module Teapot
+	class BuildError < StandardError
+	end
+	
+	class Task
+		def initialize
+			@callbacks = {}
+		end
+			
+		def define(name, &callback)
+			@callbacks[name] = callback
+		end
+			
+		def [](name)
+			@callbacks[name] || @callbacks[:all]
+		end
+	end
+	
 	class Package
-		class BuildError < StandardError
+		def initialize(context, record, name)
+			@context = context
+			@record = record
+
+			parts = name.split('-')
+			@name = parts[0..-2].join('-')
+			@version = parts[-1]
+
+			@build = Task.new
+
+			@depends = []
+
+			@path = @record.destination_path
+			@source_path = @path + name
 		end
 
-		class Task
-			def initialize
-				@callbacks = {}
-			end
+		attr :context
+		attr :record
+		
+		attr :name
+		attr :version
+		
+		attr :path
+
+		attr :depends, true
+		attr :source_path, true
+
+		def build(platform, &block)
+			@build.define(platform, &block)
+		end
+
+		def build!(platform = :all, config = {})
+			task = @build[platform.name]
 			
-			def define(name, &callback)
-				@callbacks[name] = callback
+			if task
+				environment = Environment.new(platform.environment)
+				environment.merge!(@record.options[:environment])
+				environment.merge!(config)
+				
+				Dir.chdir(@path) do
+					task.call(platform, environment)
+				end
+			else
+				raise BuildError.new("Could not find build task for #{platform.name}!")
 			end
-			
-			def [](name)
-				@callbacks[name] || @callbacks[:all]
-			end
+		end
+
+		def to_s
+			"<Package: #{@name}>"
 		end
 
 		def self.build_order(available, packages)
@@ -63,54 +114,6 @@ module Teapot
 			end
 
 			return ordered
-		end
-
-		def initialize(context, name, path)
-			@context = context
-			
-			parts = name.split('-')
-			@name = parts[0..-2].join('-')
-			@version = parts[-1]
-
-			@path = path
-
-			@build = Task.new
-
-			@depends = []
-
-			@source_path = @path + name
-			@fetch_location = nil
-		end
-
-		attr :name
-		attr :version
-		attr :path
-		attr :variants
-		attr :fetch_location
-
-		attr :depends, true
-		attr :source_path, true
-
-		def build(platform, &block)
-			@build.define(platform, &block)
-		end
-
-		def build!(platform = :all, config = {})
-			task = @build[platform.name]
-			
-			puts "Building #{@name} for #{platform.name}"
-			if task
-				Dir.chdir(@path) do
-					puts "Entering #{@path}..."
-					task.call(platform, platform.config.merge(config))
-				end
-			else
-				raise BuildError.new("Could not find task #{task_name} for #{platform.name}!")
-			end
-		end
-
-		def to_s
-			"<Package: #{@name}>"
 		end
 	end
 end
