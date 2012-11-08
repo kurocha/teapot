@@ -4,6 +4,8 @@ Teapot is a tool for managing complex cross-platform builds. It provides
 advanced dependency management via the Teapot file and is supported by
 the infusions ecosystem of packages and platform tooling.
 
+[![Build Status](https://secure.travis-ci.org/ioquatix/teapot.png)](http://travis-ci.org/ioquatix/teapot)
+
 ## Installation
 
 Add this line to your application's Gemfile:
