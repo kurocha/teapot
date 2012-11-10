@@ -29,7 +29,7 @@ class TestEnvironment < Test::Unit::TestCase
 		a = Teapot::Environment.new
 		a[:cflags] = ["-std=c++11"]
 		
-		b = Teapot::Environment.new(a)
+		b = Teapot::Environment.new(a, {})
 		b[:cflags] = ["-stdlib=libc++"]
 		
 		expected = {:cflags => ["-std=c++11", "-stdlib=libc++"]}
