@@ -70,7 +70,7 @@ module Teapot
 		end
 		
 		def to_s
-			"<Platform #{@name}: #{@available ? 'available' : 'inactive'}>"
+			"<Platform: #{@name} (#{@available ? 'available' : 'inactive'})>"
 		end
 		
 		def prepare!

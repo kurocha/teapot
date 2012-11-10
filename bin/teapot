@@ -33,51 +33,59 @@ task :fetch do
 	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
 	
-	base_uri = URI(config.options[:source].to_s + '/')
+	base_uri = URI(config.options[:source].to_s)
+	
+	if base_uri.scheme == nil || base_uri.scheme == 'file'
+		base_uri = URI "file://" + File.expand_path(base_uri.path, config.root) + "/"
+	end
+	
+	puts "Base URI: #{base_uri}".color(:cyan)
 	
 	config.records.each do |record|
+		next if record.transient?
+		
 		destination_path = record.destination_path
 		
-		puts "Fetching #{record}...".color(:blue)
+		puts "Fetching #{record}...".color(:cyan)
 		
 		unless File.exist? destination_path
-			puts "Cloning package at path #{destination_path} ...".color(:green)
+			puts "Cloning package at path #{destination_path} ...".color(:cyan)
+			FileUtils.mkdir_p(destination_path.to_s)
 			
-			source_uri = URI(record.uri)
+			source_uri = URI record.uri
 		
 			unless source_uri.absolute?
 				source_uri = base_uri + source_uri
 			end
 		
+			# Git can't handle the default formatting that Ruby uses for file URIs.
 			if source_uri.scheme == "file"
-				source_uri = source_uri.path
+				source_uri = "file://" + source_uri.path
 			end
 		
-			Teapot::Commands.run("git", "clone", "--recursive", source_uri.to_s, destination_path.to_s)
+			clone_arguments = [
+				"--recursive",
+				source_uri, destination_path,
+				"--depth", 1,
+			]
+			
+			if record.options[:version]
+				clone_arguments << "--branch"
+				clone_arguments << record.options[:version]
+			end
+			
+			Teapot::Commands.run("git", "clone", *clone_arguments)
 		else
-			puts "Updating package at path #{destination_path} ...".color(:green)
+			puts "Updating package at path #{destination_path} ...".color(:cyan)
 			
 			Dir.chdir(destination_path) do
-				Teapot::Commands.run("git", "pull")
+				Teapot::Commands.run("git", "pull", "--depth", 1)
 				Teapot::Commands.run("git", "submodule", "update", "--init")
 			end
 		end
 	end
-end
-
-task :build do
-	config = Teapot::Config.load_default
-	context = Teapot::Context.new(config)
 	
-	config.records.each do |record|
-		destination_path = record.destination_path
-		
-		bundles = record.load(context)
-		
-		bundles.each do |bundle|
-			
-		end
-	end
+	puts "Completed fetch successfully.".color(:green)
 end
 
 task :build do |task, arguments|
@@ -85,8 +93,6 @@ task :build do |task, arguments|
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|
-		destination_path = record.destination_path
-		
 		record.load(context)
 	end
 
@@ -108,7 +114,7 @@ task :build do |task, arguments|
 	end
 	
 	if build_platform
-		platform = context.platforms[build_platform.to_sym]
+		platform = context.platforms[build_platform]
 		
 		unless platform
 			puts "Could not find platform #{build_platform}".color(:red)
@@ -117,24 +123,41 @@ task :build do |task, arguments|
 		end
 		
 		platforms = [platform]
+	else
+		platforms = context.platforms.values
 	end
 	
 	unless ENV['ONLY']
-		ordered = Teapot::Package.build_order(context.packages, packages)
+		build_order = Teapot::Package.build_order(context.packages, packages)
 	else
-		ordered = packages
+		build_order = {:ordered => packages, :unresolved => []}
 	end
 	
-	puts "Building #{ordered.join(', ')} for variant #{config.variant}".color(:blue)
+	if build_order[:unresolved].size > 0
+		puts "Unresolved packages:"
+		build_order[:unresolved].each do |(name, from)|
+			puts "\tPackage: #{name} (from #{from})".color(:red)
+		end
+		
+		fail "Cannot continue build due to unresolved dependencies!".color(:red)
+	else
+		ordered = build_order[:ordered]
+	end
 	
-	context.platforms.each do |name, platform|
+	puts "Building #{ordered.join(', ')} for variant #{config.variant}".color(:cyan)
+	
+	platforms.each do |platform|
 		next unless platform.available?
 		
-		puts "Building for #{platform}...".color(:blue)
+		puts "Building for #{platform}...".color(:cyan)
 		
 		platform.prepare!
 		
 		ordered.each do |package|
+			next if package.record.transient?
+			
+			puts "Building #{package}...".color(:cyan)
+			
 			package.build!(platform, :variant => config.variant)
 		end
 	end
@@ -147,33 +170,35 @@ task :list do
 	context = Teapot::Context.new(config)
 	
 	config.records.each do |record|
-		destination_path = record.destination_path
-		
 		record.load(context)
 	end
 	
-	ordered = Teapot::Package::build_order(context.packages, context.packages.values)
+	build_order = Teapot::Package.build_order(context.packages, context.packages.values)
 	
-	ordered.each do |package|
-		puts "Package: #{package.name}"
-		
-		if package.depends.size > 0
-			puts "	(depends on #{package.depends.join(', ')})"
+	if build_order[:unresolved].size > 0
+		puts "Unresolved packages:"
+		build_order[:unresolved].each do |(name, from)|
+			puts "\tPackage: #{name} (from #{from})".color(:red)
 		end
 	end
 	
-	context.platforms.each do |platform|
-		puts "Platform: #{platform.name}"
+	puts "Ordered packages:"
+	build_order[:ordered].each do |package|
+		puts "\t#{package.class}: #{package.name}".color(:green)
+		
+		if package.depends.size > 0
+			puts "\t\t(depends on #{package.depends.join(', ')})".color(:green)
+		end
+	end
+	
+	puts "Platforms:"
+	context.platforms.each do |name, platform|
+		puts "\t#{platform.class}: #{platform.name}".color(:green)
 	end
 end
 
-task :help do
-	puts "To create a new teapot, use the setup task:"
-	puts "$ #{File.basename($0)} setup project-path"
-end
+task :install => [:fetch, :build, :list]
 
-task :install => [:fetch, :build]
-
-task :default => :help
+task :default => :install
 
 $app.top_level

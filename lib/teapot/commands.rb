@@ -22,11 +22,19 @@ require 'rainbow'
 
 module Teapot
 	module Commands
+		class CommandError < StandardError
+		end
+		
 		def self.run(*args)
 			args.collect!(&:to_s)
 			
 			puts args.join(' ').color(:blue)
-			system(*args)
+			
+			if system(*args)
+				true
+			else
+				raise CommandError.new("Non-zero exit status")
+			end
 		end
 	end
 end

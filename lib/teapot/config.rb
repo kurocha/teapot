@@ -53,16 +53,20 @@ module Teapot
 			attr :options
 			attr :global
 			
+			def transient?
+				@klass == FakePackage
+			end
+			
 			def load(context)
-				context.load(self)
+				if @klass == FakePackage
+					context.packages[@name] = @klass.new(@context, self, @name)
+				else
+					context.load(self)
+				end
 			end
 			
 			def loader_path
-				if @klass == Package
-					"package.rb"
-				elsif @klass == Platform
-					"platform.rb"
-				end
+				"infusion.rb"
 			end
 			
 			def destination_path
@@ -91,6 +95,8 @@ module Teapot
 			
 			@environment = Environment.new
 		end
+
+		attr :root
 
 		def packages_path
 			@root + (@options[:packages_path] || "packages")
@@ -148,6 +154,10 @@ module Teapot
 		def platform(name, options = {})
 			options = {:environment => @environment}.merge(options)
 			@platforms << Record.new(self, Platform, name, options)
+		end
+
+		def provides(name, options = {})
+			@packages << Record.new(self, FakePackage, name, options)
 		end
 
 		def self.load(root, options = {})

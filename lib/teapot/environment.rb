@@ -105,7 +105,10 @@ module Teapot
 			return top
 		end
 		
-		def initialize(parent = nil, values = nil, &block)
+		def initialize(*args, &block)
+			parent = args.shift if args.size == 2
+			values = args.shift
+			
 			@values = (values || {}).to_hash
 			@parent = parent
 			
@@ -160,7 +163,7 @@ module Teapot
 			
 			Dir.chdir(options[:in] || ".") do
 				RExec.env(system_environment) do
-					@evaluator.instance_eval(&block)
+					block.call(@evaluator)
 				end
 			end
 		end

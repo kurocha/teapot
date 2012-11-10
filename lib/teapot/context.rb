@@ -25,14 +25,65 @@ require 'teapot/package'
 require 'teapot/platform'
 
 module Teapot
+	INFUSION_VERSION = "0.1"
+	
+	class IncompatibleInfusion < StandardError
+	end
+	
+	class Infusion
+		def initialize(context, record)
+			@context = context
+			@record = record
+			
+			@defined = []
+			@version = nil
+		end
+		
+		attr :record
+		attr :defined
+		attr :version
+		
+		def required_version(version)
+			if version <= INFUSION_VERSION
+				@version = version
+			else
+				raise IncompatibleInfusion.new("Version #{version} more recent than #{INFUSION_VERSION}!")
+			end
+		end
+
+		def define_package(*args, &block)
+			package = Package.new(@context, @record, *args)
+
+			yield(package)
+
+			@context.packages[package.name] = package
+
+			@defined << package
+		end
+		
+		def define_platform(*args, &block)
+			platform = Platform.new(@context, @record, *args)
+
+			yield(platform)
+
+			if platform.available?
+				@context.platforms[platform.name] = platform
+			end
+
+			@defined << platform
+		end
+		
+		def load(path)
+			self.instance_eval(File.read(path), path)
+		end
+	end
+	
 	class Context
 		def initialize(config)
 			@config = config
 
 			@packages = {}
 			@platforms = {}
-
-			@defined = []
 		end
 
 		attr :config
@@ -40,39 +91,16 @@ module Teapot
 		attr :platforms
 
 		def load(record)
-			@record = record
-			@defined = []
+			infusion = Infusion.new(self, record)
 			
 			path = (record.destination_path + record.loader_path).to_s
-			self.instance_eval(File.read(path), path)
+			infusion.load(path)
 			
-			@defined
-		end
-
-		def define_package(*args, &block)
-			package = Package.new(self, @record, *args)
-
-			yield(package)
-
-			@packages[package.name] = package
-
-			@defined << package
-		end
-		
-		def define_platform(*args, &block)
-			platform = Platform.new(self, @record, *args)
-
-			yield(platform)
-
-			if platform.available?
-				@platforms[platform.name] = platform
+			if infusion.version == nil
+				raise IncompatibleInfusion.new("No version specified in #{path}!")
 			end
-
-			@defined << platform
-		end
-		
-		def global name
-			@config.environment[name]
+			
+			infusion.defined
 		end
 	end
 end

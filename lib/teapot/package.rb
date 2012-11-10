@@ -38,6 +38,35 @@ module Teapot
 		end
 	end
 	
+	class FakePackage
+		def initialize(context, record, name)
+			@context = context
+			@record = record
+			@name = name
+			@version = nil
+			@path = nil
+		end
+		
+		attr :context
+		attr :record
+		
+		attr :name
+		attr :version
+		
+		attr :path
+
+		def depends
+			@record.options.fetch(:depends, [])
+		end
+		
+		def build!(platform = :all, config = {})
+		end
+		
+		def to_s
+			"<FakePackage: #{@name}>"
+		end
+	end
+	
 	class Package
 		def initialize(context, record, name)
 			@context = context
@@ -94,15 +123,16 @@ module Teapot
 
 		def self.build_order(available, packages)
 			ordered = []
+			unresolved = []
 
-			expand = lambda do |name|
+			expand = lambda do |name, parent|
 				package = available[name]
 
 				unless package
-					puts "Couldn't resolve #{name}"
+					unresolved << [name, parent]
 				else
 					package.depends.each do |dependency|
-						expand.call(dependency)
+						expand.call(dependency, package)
 					end
 
 					unless ordered.include? package
@@ -112,10 +142,10 @@ module Teapot
 			end
 
 			packages.each do |package|
-				expand.call(package.name)
+				expand.call(package.name, nil)
 			end
 
-			return ordered
+			return {:ordered => ordered, :unresolved => unresolved}
 		end
 	end
 end
