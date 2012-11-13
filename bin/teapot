@@ -48,6 +48,8 @@ task :fetch do
 		
 		puts "Fetching #{record}...".color(:cyan)
 		
+		branch = record.options.fetch(:version, 'master')
+		
 		unless File.exist? destination_path
 			puts "Cloning package at path #{destination_path} ...".color(:cyan)
 			FileUtils.mkdir_p(destination_path.to_s)
@@ -62,25 +64,21 @@ task :fetch do
 			if source_uri.scheme == "file"
 				source_uri = "file://" + source_uri.path
 			end
-		
-			clone_arguments = [
-				"--recursive",
-				source_uri, destination_path,
-				"--depth", 1,
-			]
 			
-			if record.options[:version]
-				clone_arguments << "--branch"
-				clone_arguments << record.options[:version]
+			Teapot::Commands.run("git", "clone", source_uri, destination_path, "--branch", branch)
+			
+			Dir.chdir(destination_path) do
+				Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
 			end
-			
-			Teapot::Commands.run("git", "clone", *clone_arguments)
 		else
 			puts "Updating package at path #{destination_path} ...".color(:cyan)
 			
 			Dir.chdir(destination_path) do
-				Teapot::Commands.run("git", "pull", "--depth", 1)
-				Teapot::Commands.run("git", "submodule", "update", "--init")
+				Teapot::Commands.run("git", "fetch", "origin")
+				
+				Teapot::Commands.run("git", "checkout", branch)
+				
+				Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
 			end
 		end
 	end
