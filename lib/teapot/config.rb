@@ -57,6 +57,10 @@ module Teapot
 				@klass == FakePackage
 			end
 			
+			def local?
+				@options.key? :local
+			end
+			
 			def load(context)
 				if @klass == FakePackage
 					context.packages[@name] = @klass.new(@context, self, @name)

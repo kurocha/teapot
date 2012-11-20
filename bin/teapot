@@ -46,43 +46,53 @@ task :fetch do
 		
 		destination_path = record.destination_path
 		
-		puts "Fetching #{record}...".color(:cyan)
-		
-		branch = record.options.fetch(:version, 'master')
-		
-		unless File.exist? destination_path
-			puts "Cloning package at path #{destination_path} ...".color(:cyan)
-			FileUtils.mkdir_p(destination_path.to_s)
+		if record.local?
+			puts "Linking local #{record}...".color(:cyan)
 			
-			source_uri = URI record.uri
-		
-			unless source_uri.absolute?
-				source_uri = base_uri + source_uri
-			end
-		
-			# Git can't handle the default formatting that Ruby uses for file URIs.
-			if source_uri.scheme == "file"
-				source_uri = "file://" + source_uri.path
-			end
+			local_path = config.root + record.options[:local]
 			
-			Teapot::Commands.run("git", "clone", source_uri, destination_path, "--branch", branch)
-			
-			Dir.chdir(destination_path) do
-				Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+			unless File.exist? destination_path
+				FileUtils.ln_s local_path, destination_path
 			end
 		else
-			puts "Updating package at path #{destination_path} ...".color(:cyan)
+			puts "Fetching #{record}...".color(:cyan)
+		
+			branch = record.options.fetch(:version, 'master')
+		
+			unless File.exist? destination_path
+				puts "Cloning package at path #{destination_path} ...".color(:cyan)
+				FileUtils.mkdir_p(destination_path.to_s)
 			
-			Dir.chdir(destination_path) do
-				Teapot::Commands.run("git", "fetch", "origin")
+				source_uri = URI record.uri
+		
+				unless source_uri.absolute?
+					source_uri = base_uri + source_uri
+				end
+		
+				# Git can't handle the default formatting that Ruby uses for file URIs.
+				if source_uri.scheme == "file"
+					source_uri = "file://" + source_uri.path
+				end
+			
+				Teapot::Commands.run("git", "clone", source_uri, destination_path, "--branch", branch)
+			
+				Dir.chdir(destination_path) do
+					Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+				end
+			else
+				puts "Updating package at path #{destination_path} ...".color(:cyan)
+			
+				Dir.chdir(destination_path) do
+					Teapot::Commands.run("git", "fetch", "origin")
 				
-				Teapot::Commands.run("git", "checkout", branch)
+					Teapot::Commands.run("git", "checkout", branch)
 				
-				# Pull any changes, if you might get the error from above:
-				# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
-				Teapot::Commands.run("git", "pull")
+					# Pull any changes, if you might get the error from above:
+					# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
+					Teapot::Commands.run("git", "pull")
 				
-				Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+					Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+				end
 			end
 		end
 	end
