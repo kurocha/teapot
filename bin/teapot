@@ -78,6 +78,10 @@ task :fetch do
 				
 				Teapot::Commands.run("git", "checkout", branch)
 				
+				# Pull any changes, if you might get the error from above:
+				# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
+				Teapot::Commands.run("git", "pull")
+				
 				Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
 			end
 		end
