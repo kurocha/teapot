@@ -66,4 +66,21 @@ class TestEnvironment < Test::Unit::TestCase
 		assert_equal b.values, top.parent.parent.values
 		assert_equal a.values, top.parent.parent.parent.values
 	end
+	
+	def test_combine_defaults
+		local = Teapot::Environment.new do
+			architectures ["-m64"]
+		end
+		
+		platform = Teapot::Environment.new do
+			default architectures ["-arch", "i386"]
+		end
+		
+		combined = Teapot::Environment.combine(
+			platform,
+			local
+		)
+		
+		assert_equal ["-m64"], combined[:architectures]
+	end
 end

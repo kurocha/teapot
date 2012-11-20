@@ -53,8 +53,8 @@ module Teapot
 		def environment
 			if @available
 				return Environment.combine(
-					@record.options[:environment],
 					Environment.new(&@configure),
+					@record.options[:environment],
 				)
 			else
 				raise UnavailableError.new("Platform is not available for configuration!")
