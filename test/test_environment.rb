@@ -40,17 +40,34 @@ class TestEnvironment < Test::Unit::TestCase
 	def test_environment_lambda
 		a = Teapot::Environment.new do
 			sdk "bob-2.6"
-			cflags {"-sdk=#{sdk}"}
+			ccflags [->{"-sdk=#{sdk}"}]
 		end
 		
 		b = Teapot::Environment.new(a) do
 			sdk "bob-2.8"
 		end
-
-		expected = {'SDK' => "bob-2.8", 'CFLAGS' => "-sdk=bob-2.8"}
 		
-		assert_equal [:cflags, :sdk], b.flatten.to_hash.keys.sort
-		assert_equal expected, b.flatten.to_env_hash
+		c = Teapot::Environment.new(b) do
+			ccflags ["-pipe"]
+		end
+		
+		expected = {'SDK' => "bob-2.8", 'CCFLAGS' => "-sdk=bob-2.8"}
+		
+		assert_equal [:ccflags, :sdk], b.flatten.to_hash.keys.sort
+		assert_equal expected, b.flatten.to_system_environment_hash
+		
+		assert_equal "-sdk=bob-2.8 -pipe", c.flatten.to_string_hash[:ccflags]
+	end
+	
+	def test_environment_nested_lambda
+		a = Teapot::Environment.new do
+			sdk "bob-2.6"
+			ccflags [->{"-sdk=#{sdk}"}]
+		end
+		
+		b = Teapot::Environment.new(a) do
+			sdk "bob-2.8"
+		end
 	end
 	
 	def test_combine

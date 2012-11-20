@@ -42,6 +42,7 @@ module Teapot
 		end
 		
 		Default = Struct.new(:value)
+		Replace = Struct.new(:value)
 		
 		class Constructor
 			def initialize(environment)
@@ -65,6 +66,10 @@ module Teapot
 			def default(name)
 				@environment[name] = Default.new(@environment[name])
 			end
+			
+			def replace(name)
+				@environment[name] = Replace.new(@environment[name])
+			end
 		end
 		
 		class Evaluator
@@ -86,8 +91,10 @@ module Teapot
 				when Symbol
 					object_value(@values[value])
 				when Proc
-					object_value(instance_eval(&value))
+					object_value(instance_exec(&value))
 				when Default
+					object_value(value.value)
+				when Replace
 					object_value(value.value)
 				else
 					value
@@ -116,10 +123,7 @@ module Teapot
 			return top
 		end
 		
-		def initialize(*args, &block)
-			parent = args.shift if args.size == 2
-			values = args.shift
-			
+		def initialize(parent = nil, values = {}, &block)
 			@values = (values || {}).to_hash
 			@parent = parent
 			
@@ -131,7 +135,7 @@ module Teapot
 		end
 		
 		def construct(&block)
-			Constructor.new(self).instance_eval(&block)
+			Constructor.new(self).instance_exec(&block)
 		end
 		
 		def dup
@@ -140,6 +144,14 @@ module Teapot
 		
 		attr :values
 		attr :parent
+		
+		def lookup(name)
+			if @values.include? name
+				self
+			elsif @parent
+				@parent.lookup(name)
+			end
+		end
 		
 		def [] (key)
 			environment = lookup(key)
@@ -167,12 +179,12 @@ module Teapot
 			Hash[@values.map{|key, value| [key, string_value(value)]}]
 		end
 		
-		def to_env_hash
+		def to_system_environment_hash
 			Hash[@values.map{|key, value| [key.to_s.upcase, string_value(value)]}]
 		end
 		
 		def use(options = {}, &block)
-			system_environment = flatten.to_env_hash
+			system_environment = flatten.to_system_environment_hash
 			
 			puts YAML::dump(system_environment).color(:magenta)
 			
@@ -213,10 +225,15 @@ module Teapot
 			@values.each do |key, value|
 				previous = hash[key]
 
-				if Array === previous
+				if Replace === value
+					# Replace the parent value
+					hash[key] = value
+				elsif Array === previous
+					# Merge with the parent value
 					hash[key] = previous + Array(value)
-				elsif Default == previous
-					hash[key] ||= previous
+				elsif Default === value
+					# Update the parent value if not defined.
+					hash[key] = previous || value
 				else
 					hash[key] = value
 				end
@@ -231,19 +248,11 @@ module Teapot
 			when Symbol
 				string_value(@values[value])
 			when Proc
-				string_value(@evaluator.instance_eval(&value))
+				string_value(@evaluator.instance_exec(&value))
 			when Default
 				string_value(value.value)
 			else
 				value.to_s
-			end
-		end
-		
-		def lookup(name)
-			if @values.include? name
-				self
-			elsif @parent
-				@parent.lookup(name)
 			end
 		end
 	end
