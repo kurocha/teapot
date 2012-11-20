@@ -164,14 +164,17 @@ module Teapot
 			@packages << Record.new(self, FakePackage, name, options)
 		end
 
+		def load(teapot_path)
+			instance_eval File.read(teapot_path), teapot_path
+		end
+
 		def self.load(root, options = {})
 			config = new(root, options)
 			
-			teapot_path = File.join(root, "Teapot")
+			yield config if block_given?
 			
-			if File.exist? teapot_path
-				config.instance_eval(File.read(teapot_path), teapot_path)
-			end
+			teapot_path = File.join(root, "Teapot")
+			config.load(teapot_path) if File.exist? teapot_path
 			
 			return config
 		end
@@ -179,7 +182,14 @@ module Teapot
 		def self.load_default(root = Dir.getwd, options = {})
 			options.merge!(:variant => ENV['TEAPOT_VARIANT'])
 			
-			load(root, options)
+			# Load project specific Teapot file
+			load(root, options) do |config|
+				user_path = File.expand_path("~/.Teapot")
+				
+				if File.exist? user_path
+					config.load(user_path)
+				end
+			end
 		end
 	end
 end
