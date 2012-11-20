@@ -34,6 +34,13 @@ module Teapot
 			self.new(Hash[env.to_hash.collect{|key, value| [key.downcase.to_sym, value]}])
 		end
 		
+		def merge(&block)
+			self.class.combine(
+				self,
+				self.class.new(&block)
+			)
+		end
+		
 		Default = Struct.new(:value)
 		
 		class Constructor
