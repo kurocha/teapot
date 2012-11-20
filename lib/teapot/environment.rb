@@ -30,6 +30,10 @@ require 'teapot/commands'
 
 module Teapot
 	class Environment
+		def self.system_environment(env = ENV)
+			self.new(Hash[env.to_hash.collect{|key, value| [key.downcase.to_sym, value]}])
+		end
+		
 		Default = Struct.new(:value)
 		
 		class Constructor
@@ -153,11 +157,15 @@ module Teapot
 		end
 		
 		def to_string_hash
+			Hash[@values.map{|key, value| [key, string_value(value)]}]
+		end
+		
+		def to_env_hash
 			Hash[@values.map{|key, value| [key.to_s.upcase, string_value(value)]}]
 		end
 		
 		def use(options = {}, &block)
-			system_environment = flatten.to_string_hash
+			system_environment = flatten.to_env_hash
 			
 			puts YAML::dump(system_environment).color(:magenta)
 			

@@ -25,7 +25,7 @@ require 'teapot/package'
 require 'teapot/platform'
 
 module Teapot
-	INFUSION_VERSION = "0.1"
+	INFUSION_VERSION = "0.2"
 	
 	class IncompatibleInfusion < StandardError
 	end

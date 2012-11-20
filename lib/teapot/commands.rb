@@ -19,14 +19,19 @@
 # THE SOFTWARE.
 
 require 'rainbow'
+require 'shellwords'
 
 module Teapot
 	module Commands
 		class CommandError < StandardError
 		end
 		
+		def self.split(arg)
+			Shellwords.split(arg || "")
+		end
+		
 		def self.run(*args)
-			args.collect!(&:to_s)
+			args = args.flatten.collect &:to_s
 			
 			puts args.join(' ').color(:blue)
 			
