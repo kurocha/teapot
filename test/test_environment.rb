@@ -50,7 +50,7 @@ class TestEnvironment < Test::Unit::TestCase
 		expected = {'SDK' => "bob-2.8", 'CFLAGS' => "-sdk=bob-2.8"}
 		
 		assert_equal [:cflags, :sdk], b.flatten.to_hash.keys.sort
-		assert_equal expected, b.flatten.to_string_hash
+		assert_equal expected, b.flatten.to_env_hash
 	end
 	
 	def test_combine
