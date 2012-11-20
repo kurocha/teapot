@@ -109,8 +109,21 @@ module Teapot
 					config,
 				)
 				
+				local_build = environment.merge do
+					default build_prefix "build-#{platform.name}-#{variant}"
+					default install_prefix platform.prefix
+			
+					buildflags [
+						"-I", ->{platform.prefix + "include"},
+					]
+					
+					linkflags [
+						"-L", ->{platform.prefix + "lib"},
+					]
+				end
+				
 				Dir.chdir(@path) do
-					task.call(platform, environment)
+					task.call(platform, local_build)
 				end
 			else
 				raise BuildError.new("Could not find build task for #{platform.name}!")
