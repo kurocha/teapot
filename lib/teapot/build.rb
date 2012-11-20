@@ -25,8 +25,13 @@ require 'pathname'
 require 'rainbow'
 require 'shellwords'
 
+require 'teapot/build/linker'
+
 module Teapot
 	module Build
+		class UnsupportedPlatform < StandardError
+		end
+		
 		class Task
 			def initialize(inputs, outputs)
 				@inputs = inputs
@@ -129,13 +134,9 @@ module Teapot
 			
 			def link(environment, objects)
 				library_file = build_prefix!(environment) + "lib#{@name}.a"
-			
-				Commands.run(
-					Commands.split(environment[:libtool] || "libtool"),
-					"-static", "-o", library_file, objects,
-					Commands.split(environment[:ldflags])
-				)
-			
+				
+				Linker.link_static(environment, library_file, objects)
+				
 				return library_file
 			end
 			
