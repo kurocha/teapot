@@ -114,11 +114,11 @@ module Teapot
 					default install_prefix platform.prefix
 			
 					buildflags [
-						"-I", ->{platform.prefix + "include"},
+						->{"-I" + (platform.prefix + "include").to_s},
 					]
 					
 					linkflags [
-						"-L", ->{platform.prefix + "lib"},
+						->{"-L" + (platform.prefix + "lib").to_s},
 					]
 				end
 				
