@@ -119,7 +119,7 @@ module Teapot
 				when ".c"
 					Commands.run(
 						environment[:cc],
-						environment[:ccflags],
+						environment[:cflags],
 						"-c", source_file, "-o", object_file
 					)
 				end
