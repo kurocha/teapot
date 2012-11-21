@@ -110,7 +110,7 @@ module Teapot
 				)
 				
 				local_build = environment.merge do
-					default build_prefix ".build-#{platform.name}-#{variant}"
+					default build_prefix "build/cache/#{platform.name}-#{config[:variant]}"
 					default install_prefix platform.prefix
 			
 					buildflags [
