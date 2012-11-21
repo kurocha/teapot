@@ -67,17 +67,18 @@ module Teapot
 		
 			def execute(command, environment, *arguments)
 				if @configure
-					environment = Environment.combine(
-						environment,
-						Environment.new(&@configure),
-					)
+					environment = environment.merge &@configure
 				end
 				
-				environment = environment.flatten.to_string_hash
+				# Flatten the environment to a hash:
+				values = environment.flatten
+			
+				puts "Executing command #{command} for #{root}...".color(:cyan)
+			
+				# Show the environment to the user:
+				Environment::System::dump(values)
 				
-				puts YAML::dump(environment).color(:magenta)
-				
-				self.send(command, environment, *arguments)
+				self.send(command, values, *arguments)
 			end
 		end
 	
@@ -111,14 +112,14 @@ module Teapot
 				case source_file.extname
 				when ".cpp"
 					Commands.run(
-						Commands.split(environment[:cxx]),
-						Commands.split(environment[:cxxflags]),
+						environment[:cxx],
+						environment[:cxxflags],
 						"-c", source_file, "-o", object_file
 					)
 				when ".c"
 					Commands.run(
-						Commands.split(environment[:cc]),
-						Commands.split(environment[:ccflags]),
+						environment[:cc],
+						environment[:ccflags],
 						"-c", source_file, "-o", object_file
 					)
 				end
@@ -191,10 +192,10 @@ module Teapot
 				executable_file = build_prefix!(environment) + "#{@name}"
 			
 				Commands.run(
-					Commands.split(environment[:cxx]),
-					Commands.split(environment[:cxxflags]),
+					environment[:cxx],
+					environment[:cxxflags],
 					"-o", executable_file, objects,
-					Commands.split(environment[:ldflags])
+					environment[:ldflags]
 				)
 			
 				return executable_file

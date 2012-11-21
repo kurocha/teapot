@@ -18,8 +18,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/environment/base'
-require 'teapot/environment/constructor'
-require 'teapot/environment/evaluator'
-require 'teapot/environment/flatten'
-require 'teapot/environment/system'
+module Teapot
+	class Environment
+		class Evaluator
+			def initialize(environment)
+				@environment = environment
+			end
+			
+			def method_missing(name)
+				object_value(@environment[name])
+			end
+			
+			# Compute the literal object value for a given key:
+			def object_value(value)
+				case value
+				when Array
+					value.collect{|item| object_value(item)}.flatten
+				when Symbol
+					object_value(@environment[value])
+				when Proc
+					object_value(instance_exec(&value))
+				when Default
+					object_value(value.value)
+				when Replace
+					object_value(value.value)
+				else
+					value
+				end
+			end
+		end
+	end
+end

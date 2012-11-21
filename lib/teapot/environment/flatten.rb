@@ -18,8 +18,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/environment/base'
-require 'teapot/environment/constructor'
-require 'teapot/environment/evaluator'
-require 'teapot/environment/flatten'
-require 'teapot/environment/system'
+module Teapot
+	class Environment
+		def flatten
+			hash = {}
+			
+			# Flatten this chain of environments:
+			flatten_to_hash(hash)
+			
+			# Evaluate all items to their respective object value:
+			evaluator = Evaluator.new(hash)
+			
+			# Evaluate all the individual environment values so that they are flat:
+			Hash[hash.map{|key, value| [key, evaluator.object_value(value)]}]
+		end
+		
+		protected
+		
+		def flatten_to_hash(hash)
+			if @parent
+				@parent.flatten_to_hash(hash)
+			end
+			
+			@values.each do |key, value|
+				previous = hash[key]
+
+				if Replace === value
+					# Replace the parent value
+					hash[key] = value
+				elsif Array === previous
+					# Merge with the parent value
+					hash[key] = previous + Array(value)
+				elsif Default === value
+					# Update the parent value if not defined.
+					hash[key] = previous || value
+				else
+					hash[key] = value
+				end
+			end
+		end
+
+	end
+end

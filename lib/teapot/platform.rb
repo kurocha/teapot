@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'fileutils'
-require 'rexec/environment'
+require 'teapot/environment'
 
 module Teapot
 	class UnavailableError < StandardError

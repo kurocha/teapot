@@ -24,13 +24,13 @@ module Teapot
 			def self.link_static(environment, library_file, objects)
 				if RUBY_PLATFORM =~ /darwin/
 					Teapot::Commands.run(
-						Commands.split(environment[:libtool] || "libtool"),
+						environment[:libtool] || "libtool",
 						"-static", "-o", library_file, objects,
 					)
 				elsif RUBY_PLATFORM =~ /linux/
 					Commands.run(
-						Commands.split(environment[:ar] || 'ar'),
-						Commands.split(environment[:arflags] || "-cru"),
+						environment[:ar] || 'ar',
+						environment[:arflags] || "-cru",
 						library_file, objects
 					)
 				else

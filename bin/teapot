@@ -29,6 +29,7 @@ require 'rainbow'
 $app = Rake.application = Rake::Application.new
 $app.init('teapot')
 
+# Fetch remote packages and link local packages based on the Teapot configuration:
 task :fetch do
 	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
@@ -50,6 +51,9 @@ task :fetch do
 			puts "Linking local #{record}...".color(:cyan)
 			
 			local_path = config.root + record.options[:local]
+			
+			# Make the top level directory if required:
+			FileUtils.mkdir_p(destination_path.dirname.to_s)
 			
 			unless File.exist? destination_path
 				FileUtils.ln_s local_path, destination_path
@@ -100,6 +104,7 @@ task :fetch do
 	puts "Completed fetch successfully.".color(:green)
 end
 
+# Build packages based on the Teapot configuration:
 task :build do |task, arguments|
 	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
@@ -107,7 +112,8 @@ task :build do |task, arguments|
 	config.records.each do |record|
 		record.load(context)
 	end
-
+	
+	# Configure the packages and platforms based on the ENV provided by the user:
 	build_package = ENV['PACKAGE']
 	build_platform = ENV['PLATFORM']
 	
@@ -115,9 +121,7 @@ task :build do |task, arguments|
 		package = context.packages[build_package]
 		
 		unless package
-			puts "Could not find package #{build_package}".color(:red)
-			
-			next
+			fail "Could not find package #{build_package}".color(:red)
 		end
 		
 		packages = [package]
@@ -129,9 +133,7 @@ task :build do |task, arguments|
 		platform = context.platforms[build_platform]
 		
 		unless platform
-			puts "Could not find platform #{build_platform}".color(:red)
-			
-			next
+			fail "Could not find platform #{build_platform}".color(:red)
 		end
 		
 		platforms = [platform]
@@ -177,6 +179,7 @@ task :build do |task, arguments|
 	puts "Completed build successfully.".color(:green)
 end
 
+# List available/installed packages based on the Teapot configuration:
 task :list do
 	config = Teapot::Config.load_default
 	context = Teapot::Context.new(config)
@@ -209,8 +212,6 @@ task :list do
 	end
 end
 
-task :install => [:fetch, :build, :list]
-
-task :default => :install
+task :default => [:fetch, :build, :list]
 
 $app.top_level

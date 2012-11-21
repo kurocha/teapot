@@ -18,8 +18,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/environment/base'
-require 'teapot/environment/constructor'
-require 'teapot/environment/evaluator'
-require 'teapot/environment/flatten'
-require 'teapot/environment/system'
+module Teapot
+	# This is the basic environment data structure which is essentially a linked list of hashes. It is primarily used for organising build configurations across a wide range of different sub-systems, e.g. platform configuration, target configuration, local project configuration, etc. The majority of the actual functionality is exposed in the `environment/*.rb` files.
+	class Environment
+		def initialize(parent = nil, values = {}, &block)
+			@values = (values || {}).to_hash
+			@parent = parent
+			
+			if block_given?
+				Constructor.new(self).instance_exec(&block)
+			end
+		end
+		
+		attr :values
+		attr :parent
+		
+		def lookup(name)
+			if @values.include? name
+				self
+			elsif @parent
+				@parent.lookup(name)
+			end
+		end
+		
+		def [] (key)
+			environment = lookup(key)
+			
+			environment ? environment.values[key] : nil
+		end
+		
+		def []= (key, value)
+			@values[key] = value
+		end
+		
+		def to_hash
+			@values
+		end
+		
+		def to_s
+			"<#{self.class} #{self.values}>"
+		end
+	end
+end
