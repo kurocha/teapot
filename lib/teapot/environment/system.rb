@@ -18,17 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rexec'
+require 'rexec/environment'
 require 'rainbow'
-require 'shellwords'
 
 module Teapot
 	class Environment
 		module System
+			def self.shell_escape(value)
+				case value
+				when Array
+					value.flatten.collect{|argument| shell_escape(argument)}.join(' ')
+				else
+					# Ensure that any whitespace has been escaped:
+					value.to_s.gsub(/ /, '\ ')
+				end
+			end
+			
 			def self.convert_to_shell(values)
-				Hash[values.each{|key, value| [
+				Hash[values.map{|key, value| [
 					key.to_s.upcase,
-					Shellwords.join(Array(value))
+					shell_escape(value)
 				]}]
 			end
 			
@@ -41,7 +50,7 @@ module Teapot
 		
 		# Construct an environment from a given system environment:
 		def self.system_environment(env = ENV)
-			self.new(Hash[env.to_hash.collect{|key, value| [key.downcase.to_sym, value]}])
+			self.new(Hash[env.map{|key, value| [key.downcase.to_sym, value]}])
 		end
 		
 		# Apply the environment to the current process temporarily:
@@ -50,14 +59,14 @@ module Teapot
 			values = flatten
 			
 			# Convert the hash to suit typical shell specific arguments:
-			system_environment = System::convert_to_shell(environment)
+			build_environment = System::convert_to_shell(values)
 			
 			# Show the environment to the user:
-			System::dump(values)
+			System::dump(build_environment)
 			
 			Dir.chdir(options[:in] || ".") do
-				RExec.env(system_environment) do
-					block.call(values)
+				RExec.env(build_environment) do
+					block.call(Environment::Evaluator.new(values))
 				end
 			end
 		end
