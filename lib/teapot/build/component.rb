@@ -18,60 +18,50 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
-require 'teapot/environment'
-
 module Teapot
-	class UnavailableError < StandardError
-	end
-	
-	class Platform
-		def initialize(context, record, name)
-			@context = context
-			@record = record
-
-			@name = name
-			@configure = nil
-
-			@available = false
-		end
+	module Build
+		class Component
+			def initialize(root, name, environment)
+				@root = root
+				@name = name
+				@environment = environment
 		
-		attr :name
-		
-		def prefix
-			@context.config.build_path + @name.to_s
-		end
-		
-		def configure(&block)
-			@configure = Proc.new &block
-		end
-		
-		def environment
-			if @available
-				return Environment.combine(
-					Environment.new(&@configure),
-					@record.options[:environment],
-					{:platform => @name},
-				)
-			else
-				raise UnavailableError.new("Platform is not available for configuration!")
+				@parts = [@name]
 			end
-		end
+	
+			attr :root
+			attr :name
+			attr :parts
+	
+			def add(path)
+				@parts << path
+			end
+	
+			def variant
+				@environment[:variant]
+			end
+	
+			def destination_path
+				@environment[:build_prefix] + "source"
+			end
+	
+			def prepare!
+				source_path = destination_path + @name
 		
-		def make_available!
-			@available = true
-		end
+				if source_path.exist?
+					source_path.rmtree
+				end
 		
-		def available?
-			@available
-		end
+				source_path.mkpath
 		
-		def to_s
-			"<Platform: #{@name} (#{@available ? 'available' : 'inactive'})>"
-		end
+				@parts.each do |path|
+					full_path = @root + path
+			
+					FileUtils.cp_r(full_path.children, source_path.to_s)
+				end
 		
-		def prepare!
-			FileUtils.mkdir_p prefix
+				return source_path
+			end
 		end
 	end
 end

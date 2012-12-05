@@ -26,6 +26,8 @@ require 'rainbow'
 require 'shellwords'
 
 require 'teapot/build/linker'
+require 'teapot/build/component'
+require 'teapot/build/file_list'
 
 module Teapot
 	module Build
@@ -91,11 +93,19 @@ module Teapot
 			end
 			
 			def build_prefix!(environment)
-				build_prefix = Pathname.new(environment[:build_prefix]) + @name
+				build_prefix = Pathname.new(environment[:build_prefix]) + "compiled"
 				
 				build_prefix.mkpath
 				
 				return build_prefix
+			end
+			
+			def link_prefix!(environment)
+				prefix = Pathname.new(environment[:build_prefix]) + "products"
+				
+				prefix.mkpath
+				
+				return prefix
 			end
 			
 			def install_prefix!(environment)
@@ -106,21 +116,24 @@ module Teapot
 				return install_prefix
 			end
 			
-			def compile(environment, source_file)
-				object_file = (build_prefix!(environment) + source_file.basename).sub_ext('.o')
-			
+			def compile(environment, root, source_file)
+				object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
+				
+				# Ensure there is a directory for the output file:
+				object_file.dirname.mkpath
+				
 				case source_file.extname
-				when ".cpp"
+				when ".cpp", ".mm"
 					Commands.run(
 						environment[:cxx],
 						environment[:cxxflags],
-						"-c", source_file, "-o", object_file
+						"-c", root + source_file, "-o", object_file
 					)
-				when ".c"
+				when ".c", ".m"
 					Commands.run(
 						environment[:cc],
 						environment[:cflags],
-						"-c", source_file, "-o", object_file
+						"-c", root + source_file, "-o", object_file
 					)
 				end
 			
@@ -134,7 +147,7 @@ module Teapot
 			end
 			
 			def link(environment, objects)
-				library_file = build_prefix!(environment) + "lib#{@name}.a"
+				library_file = link_prefix!(environment) + "lib#{@name}.a"
 				
 				Linker.link_static(environment, library_file, objects)
 				
@@ -142,15 +155,27 @@ module Teapot
 			end
 			
 			def build(environment)
-				files = sources
-			
-				objects = sources.collect do |file|
-					compile(environment, file)
+				file_list = self.sources(environment)
+				
+				objects = file_list.collect do |source_file|
+					relative_path = source_file.relative_path_from(file_list.root)
+					
+					compile(environment, file_list.root, relative_path)
 				end
 			
 				return Array link(environment, objects)
 			end
-		
+			
+			def install_file_list(file_list, prefix)
+				file_list.each do |path|
+					relative_path = path.relative_path_from(file_list.root)
+					destination_path = prefix + relative_path
+					
+					destination_path.dirname.mkpath
+					FileUtils.cp path, destination_path
+				end
+			end
+			
 			def install(environment)
 				prefix = install_prefix!(environment)
 				
@@ -158,27 +183,16 @@ module Teapot
 					destination_path = prefix + subdirectory + path.basename
 					
 					destination_path.dirname.mkpath
+					
 					FileUtils.cp path, destination_path
 				end
 				
-				if defined? headers
-					headers.each do |path|
-						relative_path = path.relative_path_from(root)
-						destination_path = prefix + "include" + relative_path
-					
-						destination_path.dirname.mkpath
-						FileUtils.cp path, destination_path
-					end
+				if self.respond_to? :headers
+					install_file_list(self.headers(environment), prefix + "include")
 				end
 				
-				if defined? files
-					files.each do |path|
-						relative_path = path.relative_path_from(root)
-						destination_path = prefix + relative_path
-					
-						destination_path.dirname.mkpath
-						FileUtils.cp path, destination_path
-					end
+				if self.respond_to? :files
+					install_file_list(self.files(environment), prefix)
 				end
 			end
 		end
@@ -189,7 +203,7 @@ module Teapot
 			end
 			
 			def link(environment, objects)
-				executable_file = build_prefix!(environment) + "#{@name}"
+				executable_file = link_prefix!(environment) + @name
 			
 				Commands.run(
 					environment[:cxx],

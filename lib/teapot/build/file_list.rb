@@ -18,60 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
-require 'teapot/environment'
-
 module Teapot
-	class UnavailableError < StandardError
-	end
-	
-	class Platform
-		def initialize(context, record, name)
-			@context = context
-			@record = record
-
-			@name = name
-			@configure = nil
-
-			@available = false
-		end
-		
-		attr :name
-		
-		def prefix
-			@context.config.build_path + @name.to_s
-		end
-		
-		def configure(&block)
-			@configure = Proc.new &block
-		end
-		
-		def environment
-			if @available
-				return Environment.combine(
-					Environment.new(&@configure),
-					@record.options[:environment],
-					{:platform => @name},
-				)
-			else
-				raise UnavailableError.new("Platform is not available for configuration!")
+	module Build
+		class FileList
+			include Enumerable
+			
+			def self.[] (root, pattern)
+				self.new(root, pattern)
 			end
-		end
-		
-		def make_available!
-			@available = true
-		end
-		
-		def available?
-			@available
-		end
-		
-		def to_s
-			"<Platform: #{@name} (#{@available ? 'available' : 'inactive'})>"
-		end
-		
-		def prepare!
-			FileUtils.mkdir_p prefix
+			
+			def initialize(root, pattern)
+				@root = root
+				@pattern = pattern
+			end
+
+			attr :root
+			attr :pattern
+
+			def each(&block)
+				Pathname.glob(@root + @pattern).each &block
+			end
 		end
 	end
 end
