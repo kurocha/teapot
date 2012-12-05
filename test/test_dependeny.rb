@@ -22,11 +22,11 @@ require 'pathname'
 require 'test/unit'
 require 'stringio'
 
-require 'teapot/provider'
+require 'teapot/dependency'
 
 class TestProvider < Test::Unit::TestCase
 	class BasicProvider
-		include Teapot::Provider
+		include Teapot::Dependency
 	end
 	
 	def test_provides
@@ -42,13 +42,13 @@ class TestProvider < Test::Unit::TestCase
 			fruit ['orange']
 		end
 		
-		environment = Teapot::Provider.environment_for(['apple', 'orange'], [a, b]).flatten
+		environment = Teapot::Dependency.environment_for(['apple', 'orange'], [a, b]).flatten
 		assert_equal ['apple', 'orange'], environment[:fruit]
 
-		environment = Teapot::Provider.environment_for(['apple'], [a, b]).flatten
+		environment = Teapot::Dependency.environment_for(['apple'], [a, b]).flatten
 		assert_equal ['apple'], environment[:fruit]
 		
-		environment = Teapot::Provider.environment_for(['orange'], [a, b]).flatten
+		environment = Teapot::Dependency.environment_for(['orange'], [a, b]).flatten
 		assert_equal ['orange'], environment[:fruit]
 	end
 	
@@ -74,7 +74,7 @@ class TestProvider < Test::Unit::TestCase
 		c.depends 'apple'
 		c.depends 'orange'
 		
-		chain = Teapot::Provider::dependency_chain(['fruit-juice'], [a, b, c])
+		chain = Teapot::Dependency::chain(['fruit-juice'], [a, b, c])
 		assert_equal [a, b, c], chain[:ordered].collect(&:first)
 		
 		d = BasicProvider.new
@@ -84,7 +84,7 @@ class TestProvider < Test::Unit::TestCase
 		
 		d.depends 'apple'
 		
-		chain = Teapot::Provider::dependency_chain(['pie'], [a, b, c, d])
+		chain = Teapot::Dependency::chain(['pie'], [a, b, c, d])
 		assert_equal [], chain[:unresolved]
 		assert_equal [a, d], chain[:ordered].collect(&:first)
 	end

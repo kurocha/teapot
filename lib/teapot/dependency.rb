@@ -23,27 +23,13 @@ require 'set'
 require 'teapot/environment'
 
 module Teapot
-	module Provider
-		class Controller
-			def initialize
-				@provides = {}
-				@depends = Set.new
-			end
-		
-			attr :provides
-			attr :depends
-		end
-		
-		def provider
-			@provider ||= Controller.new
-		end
-		
+	module Dependency
 		def provides? name
-			provider.provides.key? name
+			provisions.key? name
 		end
 		
 		def environment_for name
-			configuration = provider.provides[name]
+			configuration = provisions[name]
 			
 			if configuration
 				Environment.new(&configuration)
@@ -51,22 +37,26 @@ module Teapot
 		end
 		
 		def provides(name, &block)
-			provider.provides[name] = Proc.new &block
+			provisions[name] = Proc.new &block
+		end
+		
+		def provisions
+			@provisions ||= {}
 		end
 		
 		def depends(name)
-			provider.depends << name
+			dependencies << name
 		end
 		
 		def depends? name
-			provider.depends.include? name
+			dependencies.include? name
 		end
 		
 		def dependencies
-			provider.depends
+			@dependencies ||= Set.new
 		end
 		
-		def self.dependency_chain(dependencies, providers)
+		def self.chain(dependencies, providers)
 			resolved = Set.new
 			ordered = []
 			unresolved = []
