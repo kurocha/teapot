@@ -51,12 +51,12 @@ class TestEnvironment < Test::Unit::TestCase
 			cflags ["-pipe"]
 		end
 		
-		expected = {'SDK' => "bob-2.8", 'CCFLAGS' => "-sdk=bob-2.8"}
+		expected = {'SDK' => "bob-2.8", 'CFLAGS' => "-sdk=bob-2.8"}
 		
 		assert_equal [:cflags, :sdk], b.flatten.to_hash.keys.sort
-		assert_equal expected, b.flatten.to_system_environment_hash
+		assert_equal expected, Teapot::Environment::System::convert_to_shell(b.flatten)
 		
-		assert_equal "-sdk=bob-2.8 -pipe", c.flatten.to_string_hash[:cflags]
+		assert_equal %W{-sdk=bob-2.8 -pipe}, c.flatten[:cflags]
 	end
 	
 	def test_environment_nested_lambda
