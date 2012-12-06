@@ -18,60 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
-require 'teapot/environment'
+require 'pathname'
+require 'test/unit'
+require 'stringio'
 
-module Teapot
-	class UnavailableError < StandardError
-	end
+require 'teapot/config'
+
+class TestConfig < Test::Unit::TestCase
+	ROOT = Pathname.new(__FILE__).dirname
 	
-	class Platform
-		def initialize(context, record, name)
-			@context = context
-			@record = record
-
-			@name = name
-			@configure = nil
-
-			@available = false
+	def test_config
+		config = Teapot::Config.new(ROOT)
+		
+		config.instance_eval do
+			source "../infusions/"
+			package "png"
 		end
 		
-		attr :name
-		
-		def prefix
-			@context.config.build_path + @name.to_s
-		end
-		
-		def configure(&block)
-			@configure = Proc.new &block
-		end
-		
-		def environment
-			if @available
-				return Environment.combine(
-					Environment.new(&@configure),
-					@record.options[:environment],
-					{:platform => @name},
-				)
-			else
-				raise UnavailableError.new("Platform is not available for configuration!")
-			end
-		end
-		
-		def make_available!
-			@available = true
-		end
-		
-		def available?
-			@available
-		end
-		
-		def to_s
-			"<Platform: #{@name} (#{@available ? 'available' : 'inactive'})>"
-		end
-		
-		def prepare!
-			FileUtils.mkdir_p prefix
-		end
+		assert_equal "../infusions/", config.options[:source]
+		assert_equal 1, config.packages.size
 	end
 end

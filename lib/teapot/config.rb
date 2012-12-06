@@ -26,10 +26,9 @@ require 'teapot/commands'
 
 module Teapot
 	class Config
-		class Record
-			def initialize(config, klass, name, options = {})
+		class Package
+			def initialize(config, name, options = {})
 				@config = config
-				@klass = klass
 				
 				if options[:name]
 					@name = options[:name]
@@ -47,83 +46,66 @@ module Teapot
 				@global = Environment.new
 			end
 			
-			attr :klass
 			attr :name
 			attr :uri
 			attr :options
 			attr :global
 			
-			def transient?
-				@klass == FakePackage
+			def relative_url(base_uri)
+				source_uri = URI(@uri)
+
+				unless source_uri.absolute?
+					source_uri = base_uri + source_uri
+				end
+		
+				# Git can't handle the default formatting that Ruby uses for file URIs.
+				if source_uri.scheme == "file"
+					source_uri = "file://" + source_uri.path
+				end
+				
+				return source_uri
 			end
 			
 			def local?
 				@options.key? :local
 			end
 			
-			def load(context)
-				if @klass == FakePackage
-					context.packages[@name] = @klass.new(@context, self, @name)
-				else
-					context.load(self)
-				end
-			end
-			
 			def loader_path
 				"infusion.rb"
 			end
 			
-			def destination_path
-				@config.base_path_for_record(self) + @name
+			def package_path
+				@config.packages_path + @name
 			end
 			
 			def to_s
-				"<#{@klass} #{@name}>"
-			end
-		end
-		
-		def base_path_for_record(record)
-			if record.klass == Package
-				packages_path
-			elsif record.klass == Platform
-				platforms_path
+				"<#{@name}>"
 			end
 		end
 		
 		def initialize(root, options = {})
 			@root = Pathname.new(root)
 			@options = options
-		
+
 			@packages = []
-			@platforms = []
-			
-			@environment = Environment.new
+
+			@environment = Environment.new do
+				default variant (ENV['TEAPOT_VARIANT'] || "debug")
+			end
 		end
 
 		attr :root
+		attr :packages
+		attr :options
+		
+		attr :environment
 
 		def packages_path
 			@root + (@options[:packages_path] || "packages")
 		end
 		
-		def platforms_path
-			@root + (@options[:platforms_path] || "platforms")
-		end
-		
 		def build_path
 			@root + (@options[:build_path] || "build")
-		end
-		
-		def variant(*args, &block)
-			name = @options[:variant] || 'debug'
-			
-			if block_given?
-				if args.find{|arg| arg === name}
-					yield
-				end
-			else
-				name
-			end
 		end
 		
 		def host(*args, &block)
@@ -140,28 +122,13 @@ module Teapot
 		
 		attr :options
 		attr :packages
-		attr :platforms
-		attr :environment
 
 		def source(path)
 			@options[:source] = path
 		end
 
-		def records
-			@packages + @platforms
-		end
-
 		def package(name, options = {})
-			@packages << Record.new(self, Package, name, options)
-		end
-
-		def platform(name, options = {})
-			options = {:environment => @environment}.merge(options)
-			@platforms << Record.new(self, Platform, name, options)
-		end
-
-		def provides(name, options = {})
-			@packages << Record.new(self, FakePackage, name, options)
+			@packages << Package.new(self, name, options)
 		end
 
 		def load(teapot_path)
@@ -180,8 +147,6 @@ module Teapot
 		end
 		
 		def self.load_default(root = Dir.getwd, options = {})
-			options.merge!(:variant => ENV['TEAPOT_VARIANT'])
-			
 			# Load project specific Teapot file
 			load(root, options) do |config|
 				user_path = File.expand_path("~/.Teapot")

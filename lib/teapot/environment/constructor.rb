@@ -49,6 +49,10 @@ module Teapot
 			def replace(name)
 				@environment[name] = Replace.new(@environment[name])
 			end
+			
+			def append(name)
+				@environment[name] = [@environment[name]]
+			end
 		end
 		
 		def self.combine(*environments)

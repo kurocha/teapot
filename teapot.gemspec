@@ -21,7 +21,6 @@ Gem::Specification.new do |gem|
 	gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
 	gem.require_paths = ["lib"]
 	
-	gem.add_dependency "rake"
 	gem.add_dependency "rainbow"
 	gem.add_dependency "rexec"
 end

@@ -19,146 +19,76 @@
 # THE SOFTWARE.
 
 require 'pathname'
+require 'teapot/build'
+require 'teapot/dependency'
 
 module Teapot
 	class BuildError < StandardError
 	end
 	
-	class Task
-		def initialize
-			@callbacks = {}
-		end
-			
-		def define(name, &callback)
-			@callbacks[name] = callback
-		end
-			
-		def [](name)
-			@callbacks[name] || @callbacks[:all]
-		end
-	end
-	
-	class FakePackage
-		def initialize(context, record, name)
-			@context = context
-			@record = record
-			@name = name
-			@version = nil
-			@path = nil
-		end
-		
-		attr :context
-		attr :record
-		
-		attr :name
-		attr :version
-		
-		attr :path
-
-		def depends
-			@record.options.fetch(:depends, [])
-		end
-		
-		def build!(platform = :all, config = {})
-		end
-		
-		def to_s
-			"<FakePackage: #{@name}>"
-		end
-	end
-	
 	class Package
+		include Dependency
+		
 		def initialize(context, record, name)
 			@context = context
 			@record = record
 
-			parts = name.split('-')
-			@name = parts[0..-2].join('-')
-			@version = parts[-1]
+			@name = name
 
-			@build = Task.new
+			@install = nil
 
-			@depends = []
-
-			@path = @record.destination_path
-			@source_path = @path + name
+			@path = @record.package_path
 		end
 
 		attr :context
 		attr :record
-		
 		attr :name
-		attr :version
-		
+
 		attr :path
 
-		attr :depends, true
-		attr :source_path, true
-
-		def build(platform, &block)
-			@build.define(platform, &block)
+		def builder
+			Build.top(@path)
 		end
 
-		def build!(platform = :all, config = {})
-			task = @build[platform.name]
+		def install(&block)
+			@install = Proc.new(&block)
+		end
+
+		def install!(context, config = {})
+			return unless @install
 			
-			if task
-				environment = Environment.combine(
-					@record.options[:environment],
-					platform.environment,
-					config,
-				)
-				
-				local_build = environment.merge do
-					default build_prefix Pathname.new("build/cache/#{platform.name}-#{config[:variant]}")
-					default install_prefix platform.prefix
+			chain = Dependency::chain(context.selection, dependencies, context.packages.values)
 			
-					buildflags [
-						->{"-I" + (platform.prefix + "include").to_s},
-					]
-					
-					linkflags [
-						->{"-L" + (platform.prefix + "lib").to_s},
-					]
-				end
-				
-				Dir.chdir(@path) do
-					task.call(platform, local_build)
-				end
-			else
-				raise BuildError.new("Could not find build task for #{platform.name}!")
+			environments = []
+			
+			# The base configuration environment:
+			environments << context.config.environment
+			
+			# The dependencies environments':
+			environments += chain.provisions.collect do |provision|
+				Environment.new(&provision.value)
 			end
+			
+			# Per-configuration package record environment:
+			environments << @record.options[:environment]
+			
+			# Merge all the environments together:
+			environment = Environment.combine(*environments)
+				
+			local_build = environment.merge do
+				default working_directory Pathname.new('.').realpath
+				default build_prefix {working_directory + "build/cache/#{platform_name}-#{variant}"}
+				default install_prefix {working_directory + "build/#{platform_name}-#{variant}"}
+			
+				append buildflags {"-I#{install_prefix + "include"}"}
+				append linkflags {"-L#{install_prefix + "lib"}"}
+			end
+			
+			@install.call(local_build)
 		end
 
 		def to_s
 			"<Package: #{@name}>"
-		end
-
-		def self.build_order(available, packages)
-			ordered = []
-			unresolved = []
-
-			expand = lambda do |name, parent|
-				package = available[name]
-
-				unless package
-					unresolved << [name, parent]
-				else
-					package.depends.each do |dependency|
-						expand.call(dependency, package)
-					end
-
-					unless ordered.include? package
-						ordered << package
-					end
-				end
-			end
-
-			packages.each do |package|
-				expand.call(package.name, nil)
-			end
-
-			return {:ordered => ordered, :unresolved => unresolved}
 		end
 	end
 end

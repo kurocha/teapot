@@ -24,20 +24,29 @@ require 'teapot/environment'
 
 module Teapot
 	module Dependency
-		def provides? name
+		Provision = Struct.new(:value)
+		Alias = Struct.new(:dependencies)
+		
+		def provides?(name)
 			provisions.key? name
 		end
 		
-		def environment_for name
-			configuration = provisions[name]
-			
-			if configuration
-				Environment.new(&configuration)
+		def provides(name_or_aliases, &block)
+			if String === name_or_aliases || Symbol === name_or_aliases
+				name = name_or_aliases
+				
+				if block_given?
+					provisions[name] = Provision.new(block)
+				else
+					provisions[name] = Provision.new(nil)
+				end
+			else
+				aliases = name_or_aliases
+				
+				aliases.each do |(name, dependencies)|
+					provisions[name] = Alias.new(Array dependencies)
+				end
 			end
-		end
-		
-		def provides(name, &block)
-			provisions[name] = Proc.new &block
 		end
 		
 		def provisions
@@ -48,7 +57,7 @@ module Teapot
 			dependencies << name
 		end
 		
-		def depends? name
+		def depends?(name)
 			dependencies.include? name
 		end
 		
@@ -56,45 +65,115 @@ module Teapot
 			@dependencies ||= Set.new
 		end
 		
-		def self.chain(dependencies, providers)
-			resolved = Set.new
-			ordered = []
-			unresolved = []
-
-			expand = lambda do |dependency, parent|
-				provider = providers.find{|provider| provider.provides? dependency}
-
-				unless provider
-					unresolved << [dependency, parent]
-				else
-					provider.dependencies.each do |dependency|
-						expand.call(dependency, provider)
-					end
-
-					unless resolved.include? dependency
-						ordered << [provider, dependency]
-						resolved << dependency
-					end
+		class Chain
+			def initialize(selection, dependencies, providers)
+				# Explicitly selected packages which will be used when resolving ambiguity:
+				@selection = Set.new(selection)
+				
+				# The list of dependencies that needs to be satisfied:
+				@dependencies = dependencies
+				
+				# The available providers which match up to required dependencies:
+				@providers = providers
+				
+				@resolved = Set.new
+				@ordered = []
+				@provisions = []
+				@unresolved = []
+				@conflicts = {}
+				
+				@dependencies.each do |dependency|
+					expand(dependency, nil)
 				end
 			end
+			
+			attr :selection
+			attr :dependencies
+			attr :providers
+			
+			attr :resolved
+			attr :ordered
+			attr :provisions
+			attr :unresolved
+			attr :conflicts
+			
+			private
+			
+			def find_provider(dependency, parent)
+				# Mostly, only one package will satisfy the dependency...
+				viable_providers = @providers.select{|provider| provider.provides? dependency}
 
-			dependencies.each do |dependency|
-				expand.call(dependency, nil)
+				if viable_providers.size > 1
+					# ... however in some cases (typically where aliases are being used) an explicit selection must be made for the build to work correctly.
+					explicit_providers = viable_providers.select{|provider| @selection.include? provider.name}
+					
+					if explicit_providers.size == 0
+						# No provider was explicitly specified, thus we require explicit conflict resolution:
+						@conflicts[dependency] = viable_providers
+						return nil
+					elsif explicit_providers.size == 1
+						# The best outcome, a specific provider was named:
+						return explicit_providers.first
+					else
+						# Multiple providers were explicitly mentioned that satisfy the dependency.
+						@conflicts[dependency] = explicit_providers
+						return nil
+					end
+				else
+					return viable_providers.first
+				end
 			end
+			
+			def expand(dependency, parent)
+				puts "** Expanding #{dependency} from #{parent}"
+				
+				if @resolved.include? dependency
+					puts "** Already resolved dependency!"
+					
+					return
+				end
+				
+				provider = find_provider(dependency, parent)
 
-			return {:ordered => ordered, :resolved => resolved, :unresolved => unresolved}
+				if provider == nil
+					puts "** Couldn't find provider -> unresolved"
+					@unresolved << [dependency, parent]
+					return nil
+				end
+				
+				provision = provider.provisions[dependency]
+				
+				# We will now satisfy this dependency by satisfying any dependent dependencies, but we no longer need to revisit this one.
+				@resolved << dependency
+				
+				if Alias === provision
+					puts "** Resolving alias #{provision}"
+					
+					provision.dependencies.each do |dependency|
+						expand(dependency, provider)
+					end
+				elsif provision != nil
+					puts "** Resolving #{dependency} -> provisions"
+					@provisions << provision
+				end
+				
+				unless @resolved.include?(provider)
+					puts "** Resolving provider -> ordered"
+					
+					# We are now satisfying the provider by expanding all its own dependencies:
+					@resolved << provider
+					
+					provider.dependencies.each do |dependency|
+						expand(dependency, provider)
+					end
+					
+					@ordered << [provider, dependency]
+				end
+			end
 		end
 		
-		def self.environment_for(dependencies, providers)
-			environments = dependencies.collect do |name|
-				provider = providers.find{|provider| provider.provides? name}
-				
-				if provider
-					provider.environment_for(name)
-				end
-			end.compact
-			
-			return Environment.combine(*environments)
+		def self.chain(selection, dependencies, providers)
+			Chain.new(selection, dependencies, providers)
 		end
 	end
 end

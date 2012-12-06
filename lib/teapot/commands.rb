@@ -41,5 +41,11 @@ module Teapot
 				raise CommandError.new("Non-zero exit status")
 			end
 		end
+		
+		def self.run!(*args)
+			run(*args)
+		rescue CommandError
+			false
+		end
 	end
 end

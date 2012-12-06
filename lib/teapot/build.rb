@@ -236,7 +236,6 @@ module Teapot
 			def add_directory(path)
 				directory = Directory.target(self, @root + path)
 			
-				$stderr.puts "Loading #{directory.root}..."
 				build_path = (directory.root + "build.rb").to_s
 				directory.instance_eval(File.read(build_path), build_path)
 			

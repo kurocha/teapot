@@ -22,10 +22,9 @@ require 'pathname'
 require 'rainbow'
 
 require 'teapot/package'
-require 'teapot/platform'
 
 module Teapot
-	INFUSION_VERSION = "0.4"
+	INFUSION_VERSION = "0.5"
 	
 	class IncompatibleInfusion < StandardError
 	end
@@ -61,18 +60,6 @@ module Teapot
 			@defined << package
 		end
 		
-		def define_platform(*args, &block)
-			platform = Platform.new(@context, @record, *args)
-
-			yield(platform)
-
-			if platform.available?
-				@context.platforms[platform.name] = platform
-			end
-
-			@defined << platform
-		end
-		
 		def load(path)
 			self.instance_eval(File.read(path), path)
 		end
@@ -82,18 +69,26 @@ module Teapot
 		def initialize(config)
 			@config = config
 
+			@selection = nil
+
 			@packages = {}
-			@platforms = {}
 		end
 
 		attr :config
 		attr :packages
-		attr :platforms
 
+		def select(package_names)
+			@selection = package_names
+		end
+		
+		def selection
+			@selection || @packages.keys
+		end
+		
 		def load(record)
 			infusion = Infusion.new(self, record)
 			
-			path = (record.destination_path + record.loader_path).to_s
+			path = (record.package_path + record.loader_path).to_s
 			infusion.load(path)
 			
 			if infusion.version == nil

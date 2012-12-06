@@ -23,195 +23,129 @@
 require 'teapot/config'
 
 require 'uri'
-require 'rake'
 require 'rainbow'
+require 'fileutils'
 
-$app = Rake.application = Rake::Application.new
-$app.init('teapot')
-
-# Fetch remote packages and link local packages based on the Teapot configuration:
-task :fetch do
-	config = Teapot::Config.load_default
-	context = Teapot::Context.new(config)
+module Application
+	def self.fetch
+		config = Teapot::Config.load_default
+		context = Teapot::Context.new(config)
 	
-	base_uri = URI(config.options[:source].to_s)
+		base_uri = URI(config.options[:source].to_s)
 	
-	if base_uri.scheme == nil || base_uri.scheme == 'file'
-		base_uri = URI "file://" + File.expand_path(base_uri.path, config.root) + "/"
-	end
+		if base_uri.scheme == nil || base_uri.scheme == 'file'
+			base_uri = URI "file://" + File.expand_path(base_uri.path, config.root) + "/"
+		end
 	
-	puts "Base URI: #{base_uri}".color(:cyan)
+		puts "Base URI: #{base_uri}".color(:cyan)
 	
-	config.records.each do |record|
-		next if record.transient?
+		config.packages.each do |record|
+			destination_path = record.package_path
 		
-		destination_path = record.destination_path
-		
-		if record.local?
-			puts "Linking local #{record}...".color(:cyan)
+			if record.local?
+				puts "Linking local #{record}...".color(:cyan)
 			
-			local_path = config.root + record.options[:local]
+				local_path = config.root + record.options[:local]
 			
-			# Make the top level directory if required:
-			FileUtils.mkdir_p(destination_path.dirname.to_s)
+				# Make the top level directory if required:
+				destination_path.dirname.mkpath
 			
-			unless File.exist? destination_path
-				FileUtils.ln_s local_path, destination_path
-			end
-		else
-			puts "Fetching #{record}...".color(:cyan)
-		
-			branch = record.options.fetch(:version, 'master')
-		
-			unless File.exist? destination_path
-				puts "Cloning package at path #{destination_path} ...".color(:cyan)
-				FileUtils.mkdir_p(destination_path.to_s)
-			
-				source_uri = URI record.uri
-		
-				unless source_uri.absolute?
-					source_uri = base_uri + source_uri
-				end
-		
-				# Git can't handle the default formatting that Ruby uses for file URIs.
-				if source_uri.scheme == "file"
-					source_uri = "file://" + source_uri.path
-				end
-			
-				Teapot::Commands.run("git", "clone", source_uri, destination_path, "--branch", branch)
-			
-				Dir.chdir(destination_path) do
-					Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+				unless destination_path.exist?
+					destination_path.make_symlink(local_path)
 				end
 			else
-				puts "Updating package at path #{destination_path} ...".color(:cyan)
+				puts "Fetching #{record}...".color(:cyan)
+		
+				branch = record.options.fetch(:version, 'master')
+		
+				unless destination_path.exist?
+					puts "Cloning package at path #{destination_path} ...".color(:cyan)
+					destination_path.mkpath
 			
-				Dir.chdir(destination_path) do
-					Teapot::Commands.run("git", "fetch", "origin")
+					Teapot::Commands.run("git", "clone", record.relative_url(base_uri), destination_path, "--branch", branch)
+			
+					Dir.chdir(destination_path) do
+						Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+					end
+				else
+					puts "Updating package at path #{destination_path} ...".color(:cyan)
+			
+					Dir.chdir(destination_path) do
+						Teapot::Commands.run("git", "fetch", "origin")
 				
-					Teapot::Commands.run("git", "checkout", branch)
+						Teapot::Commands.run("git", "checkout", branch)
 				
-					# Pull any changes, if you might get the error from above:
-					# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
-					Teapot::Commands.run("git", "pull")
+						# Pull any changes, if you might get the error from above:
+						# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
+						Teapot::Commands.run("git", "pull")
 				
-					Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+						Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+					end
+				end
+			end
+		end
+	
+		puts "Completed fetch successfully.".color(:green)
+	end
+	
+	def self.install(package_names = ARGV)
+		config = Teapot::Config.load_default
+		context = Teapot::Context.new(config)
+	
+		config.packages.each do |record|
+			context.load(record)
+		end
+		
+		context.select(package_names)
+		
+		chain = Teapot::Dependency::chain(context.selection, context.selection, context.packages.values)
+	
+		if chain.unresolved.size > 0
+			puts "Unresolved dependencies:"
+		
+			chain.unresolved.each do |(name, parent)|
+				puts "#{parent} depends on #{name.inspect}".color(:red)
+				
+				conflicts = chain.conflicts[name]
+				
+				conflicts.each do |conflict|
+					puts " - provided by #{conflict.inspect}".color(:red)
+				end
+			end
+			
+			abort "Cannot continue build due to unresolved dependencies!"
+		end
+	
+		chain.ordered.each do |(package, dependency)|
+			puts "Building #{package.name} for dependency #{dependency}...".color(:cyan)
+		
+			package.install!(context)
+		end
+	
+		puts "Completed build successfully.".color(:green)
+	end
+	
+	def self.list
+		config = Teapot::Config.load_default
+		context = Teapot::Context.new(config)
+	
+		config.packages.each do |record|
+			packages = context.load(record)
+		
+			packages.each do |package|
+				puts "Package #{package.name}"
+			
+				package.dependencies.each do |name|
+					puts " - depends on #{name.inspect}".color(:red)
+				end
+			
+				package.provisions.each do |(name, _)|
+					puts " - provides #{name.inspect}".color(:green)
 				end
 			end
 		end
 	end
-	
-	puts "Completed fetch successfully.".color(:green)
 end
 
-# Build packages based on the Teapot configuration:
-task :build do |task, arguments|
-	config = Teapot::Config.load_default
-	context = Teapot::Context.new(config)
-	
-	config.records.each do |record|
-		record.load(context)
-	end
-	
-	# Configure the packages and platforms based on the ENV provided by the user:
-	build_package = ENV['PACKAGE']
-	build_platform = ENV['PLATFORM']
-	
-	if build_package
-		package = context.packages[build_package]
-		
-		unless package
-			fail "Could not find package #{build_package}".color(:red)
-		end
-		
-		packages = [package]
-	else
-		packages = context.packages.values
-	end
-	
-	if build_platform
-		platform = context.platforms[build_platform]
-		
-		unless platform
-			fail "Could not find platform #{build_platform}".color(:red)
-		end
-		
-		platforms = [platform]
-	else
-		platforms = context.platforms.values
-	end
-	
-	unless ENV['ONLY']
-		build_order = Teapot::Package.build_order(context.packages, packages)
-	else
-		build_order = {:ordered => packages, :unresolved => []}
-	end
-	
-	if build_order[:unresolved].size > 0
-		puts "Unresolved packages:"
-		build_order[:unresolved].each do |(name, from)|
-			puts "\tPackage: #{name} (from #{from})".color(:red)
-		end
-		
-		fail "Cannot continue build due to unresolved dependencies!".color(:red)
-	else
-		ordered = build_order[:ordered]
-	end
-	
-	puts "Building #{ordered.join(', ')} for variant #{config.variant}".color(:cyan)
-	
-	platforms.each do |platform|
-		next unless platform.available?
-		
-		puts "Building for #{platform}...".color(:cyan)
-		
-		platform.prepare!
-		
-		ordered.each do |package|
-			next if package.record.transient?
-			
-			puts "Building #{package}...".color(:cyan)
-			
-			package.build!(platform, :variant => config.variant)
-		end
-	end
-	
-	puts "Completed build successfully.".color(:green)
-end
-
-# List available/installed packages based on the Teapot configuration:
-task :list do
-	config = Teapot::Config.load_default
-	context = Teapot::Context.new(config)
-	
-	config.records.each do |record|
-		record.load(context)
-	end
-	
-	build_order = Teapot::Package.build_order(context.packages, context.packages.values)
-	
-	if build_order[:unresolved].size > 0
-		puts "Unresolved packages:"
-		build_order[:unresolved].each do |(name, from)|
-			puts "\tPackage: #{name} (from #{from})".color(:red)
-		end
-	end
-	
-	puts "Ordered packages:"
-	build_order[:ordered].each do |package|
-		puts "\t#{package.class}: #{package.name}".color(:green)
-		
-		if package.depends.size > 0
-			puts "\t\t(depends on #{package.depends.join(', ')})".color(:green)
-		end
-	end
-	
-	puts "Platforms:"
-	context.platforms.each do |name, platform|
-		puts "\t#{platform.class}: #{platform.name}".color(:green)
-	end
-end
-
-task :default => [:fetch, :build, :list]
-
-$app.top_level
+action = ARGV.shift.to_sym
+Application.send(action) if Application.methods.include?(action)
