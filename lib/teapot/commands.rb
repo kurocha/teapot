@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'set'
 require 'rainbow'
 require 'shellwords'
 
@@ -46,6 +47,62 @@ module Teapot
 			run(*args)
 		rescue CommandError
 			false
+		end
+		
+		def wait
+			# No parallel execution supported by default.
+		end
+		
+		class Pool
+			def initialize(options = {})
+				@commands = []
+				@limit = options[:limit] || 16
+				
+				@running = Set.new
+			end
+			
+			def run(*args)
+				args = args.flatten.collect &:to_s
+			
+				puts args.join(' ').color(:blue)
+				
+				@commands << args
+				
+				schedule!
+			end
+			
+			def schedule!
+				while @running.size < @limit and @commands.size > 0
+					command = @commands.shift
+					
+					pid = Process.fork do
+						exec(*command)
+						
+						exit!(0)
+					end
+					
+					@running << pid
+				end
+			end
+			
+			def wait
+				while @running.size > 0
+					pid = Process.wait(0)
+					@running.delete(pid)
+					
+					schedule!
+				end
+			end
+		end
+		
+		def self.pipeline(parallel = false)
+			if parallel == false
+				# Non-parallel execution pipeline
+				Commands
+			else
+				# Pool based parallel execution pipeline
+				Pool.new(parallel == true ? {} : parallel)
+			end
 		end
 	end
 end

@@ -25,6 +25,7 @@ require 'teapot/config'
 require 'uri'
 require 'rainbow'
 require 'fileutils'
+require 'benchmark'
 
 module Application
 	def self.fetch
@@ -147,5 +148,9 @@ module Application
 	end
 end
 
-action = ARGV.shift.to_sym
-Application.send(action) if Application.methods.include?(action)
+time = Benchmark.measure do
+	action = ARGV.shift.to_sym
+	Application.send(action) if Application.methods.include?(action)
+end
+
+puts time.format("Elapsed Time: %r").color(:magenta)

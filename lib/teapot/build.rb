@@ -116,7 +116,7 @@ module Teapot
 				return install_prefix
 			end
 			
-			def compile(environment, root, source_file)
+			def compile(environment, root, source_file, commands)
 				object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
 				
 				# Ensure there is a directory for the output file:
@@ -124,13 +124,13 @@ module Teapot
 				
 				case source_file.extname
 				when ".cpp", ".mm"
-					Commands.run(
+					commands.run(
 						environment[:cxx],
 						environment[:cxxflags],
 						"-c", root + source_file, "-o", object_file
 					)
 				when ".c", ".m"
-					Commands.run(
+					commands.run(
 						environment[:cc],
 						environment[:cflags],
 						"-c", root + source_file, "-o", object_file
@@ -157,12 +157,16 @@ module Teapot
 			def build(environment)
 				file_list = self.sources(environment)
 				
+				pool = Commands::Pool.new
+				
 				objects = file_list.collect do |source_file|
 					relative_path = source_file.relative_path_from(file_list.root)
 					
-					compile(environment, file_list.root, relative_path)
+					compile(environment, file_list.root, relative_path, pool)
 				end
-			
+				
+				pool.wait
+				
 				return Array link(environment, objects)
 			end
 			
