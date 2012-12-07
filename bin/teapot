@@ -99,7 +99,7 @@ module Application
 		
 		context.select(package_names)
 		
-		chain = Teapot::Dependency::chain(context.selection, context.selection, context.packages.values)
+		chain = Teapot::Dependency::chain(context.selection, context.dependencies, context.packages.values)
 	
 		if chain.unresolved.size > 0
 			puts "Unresolved dependencies:"
@@ -109,8 +109,10 @@ module Application
 				
 				conflicts = chain.conflicts[name]
 				
-				conflicts.each do |conflict|
-					puts " - provided by #{conflict.inspect}".color(:red)
+				if conflicts
+					conflicts.each do |conflict|
+						puts " - provided by #{conflict.inspect}".color(:red)
+					end
 				end
 			end
 			

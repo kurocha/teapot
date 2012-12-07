@@ -72,18 +72,26 @@ module Teapot
 			@selection = nil
 
 			@packages = {}
+
+			@dependencies = []
+			@selection = Set.new
 		end
 
 		attr :config
 		attr :packages
 
-		def select(package_names)
-			@selection = package_names
+		def select(names)
+			names.each do |name|
+				if @packages.key? name
+					@selection << name
+				else
+					@dependencies << name
+				end
+			end
 		end
 		
-		def selection
-			@selection || @packages.keys
-		end
+		attr :dependencies
+		attr :selection
 		
 		def load(record)
 			infusion = Infusion.new(self, record)
