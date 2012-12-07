@@ -103,10 +103,14 @@ module Teapot
 				# Mostly, only one package will satisfy the dependency...
 				viable_providers = @providers.select{|provider| provider.provides? dependency}
 
+				puts "** Found #{viable_providers.collect(&:name).join(', ')} viable providers."
+
 				if viable_providers.size > 1
 					# ... however in some cases (typically where aliases are being used) an explicit selection must be made for the build to work correctly.
 					explicit_providers = viable_providers.select{|provider| @selection.include? provider.name}
-					
+
+					puts "** Filtering to #{explicit_providers.collect(&:name).join(', ')} explicit providers."
+
 					if explicit_providers.size == 0
 						# No provider was explicitly specified, thus we require explicit conflict resolution:
 						@conflicts[dependency] = viable_providers
