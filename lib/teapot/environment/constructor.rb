@@ -51,7 +51,7 @@ module Teapot
 			end
 			
 			def append(name)
-				@environment[name] = [@environment[name]]
+				@environment[name] = Array(@environment[name])
 			end
 		end
 		

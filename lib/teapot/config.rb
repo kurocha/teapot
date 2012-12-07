@@ -26,6 +26,8 @@ require 'teapot/commands'
 
 module Teapot
 	class Config
+		include Dependency
+		
 		class Package
 			def initialize(config, name, options = {})
 				@config = config
@@ -71,10 +73,10 @@ module Teapot
 			end
 			
 			def loader_path
-				"infusion.rb"
+				"teapot.rb"
 			end
 			
-			def package_path
+			def path
 				@config.packages_path + @name
 			end
 			
@@ -89,23 +91,25 @@ module Teapot
 
 			@packages = []
 
-			@environment = Environment.new do
-				default variant (ENV['TEAPOT_VARIANT'] || "debug")
-			end
+			@environment = Environment.new
+		end
+
+		def name
+			:config
 		end
 
 		attr :root
 		attr :packages
 		attr :options
-		
+
 		attr :environment
 
 		def packages_path
 			@root + (@options[:packages_path] || "packages")
 		end
 		
-		def build_path
-			@root + (@options[:build_path] || "build")
+		def platforms_path
+			@root + (@options[:platforms_path] || "platforms")
 		end
 		
 		def host(*args, &block)

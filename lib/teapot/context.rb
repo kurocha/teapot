@@ -21,43 +21,43 @@
 require 'pathname'
 require 'rainbow'
 
-require 'teapot/package'
+require 'teapot/target'
 
 module Teapot
-	INFUSION_VERSION = "0.5"
+	LOADER_VERSION = "0.5"
 	
-	class IncompatibleInfusion < StandardError
+	class IncompatibleTeapot < StandardError
 	end
 	
-	class Infusion
-		def initialize(context, record)
+	class Loader
+		def initialize(context, package)
 			@context = context
-			@record = record
+			@package = package
 			
 			@defined = []
 			@version = nil
 		end
 		
-		attr :record
+		attr :package
 		attr :defined
 		attr :version
 		
 		def required_version(version)
-			if version <= INFUSION_VERSION
+			if version <= LOADER_VERSION
 				@version = version
 			else
-				raise IncompatibleInfusion.new("Version #{version} more recent than #{INFUSION_VERSION}!")
+				raise IncompatibleTeapot.new("Version #{version} more recent than #{LOADER_VERSION}!")
 			end
 		end
 
-		def define_package(*args, &block)
-			package = Package.new(@context, @record, *args)
+		def define_target(*args, &block)
+			target = Target.new(@context, @package, *args)
 
-			yield(package)
+			yield(target)
 
-			@context.packages[package.name] = package
+			@context.targets[target.name] = target
 
-			@defined << package
+			@defined << target
 		end
 		
 		def load(path)
@@ -71,18 +71,18 @@ module Teapot
 
 			@selection = nil
 
-			@packages = {}
+			@targets = {config.name => config}
 
 			@dependencies = []
 			@selection = Set.new
 		end
 
 		attr :config
-		attr :packages
+		attr :targets
 
 		def select(names)
 			names.each do |name|
-				if @packages.key? name
+				if @targets.key? name
 					@selection << name
 				else
 					@dependencies << name
@@ -93,17 +93,17 @@ module Teapot
 		attr :dependencies
 		attr :selection
 		
-		def load(record)
-			infusion = Infusion.new(self, record)
+		def load(package)
+			loader = Loader.new(self, package)
 			
-			path = (record.package_path + record.loader_path).to_s
-			infusion.load(path)
+			path = (package.path + package.loader_path).to_s
+			loader.load(path)
 			
-			if infusion.version == nil
-				raise IncompatibleInfusion.new("No version specified in #{path}!")
+			if loader.version == nil
+				raise IncompatibleTeapot.new("No version specified in #{path}!")
 			end
 			
-			infusion.defined
+			loader.defined
 		end
 	end
 end

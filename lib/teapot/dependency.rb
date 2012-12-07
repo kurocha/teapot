@@ -67,7 +67,7 @@ module Teapot
 		
 		class Chain
 			def initialize(selection, dependencies, providers)
-				# Explicitly selected packages which will be used when resolving ambiguity:
+				# Explicitly selected targets which will be used when resolving ambiguity:
 				@selection = Set.new(selection)
 				
 				# The list of dependencies that needs to be satisfied:

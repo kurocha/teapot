@@ -40,13 +40,13 @@ module Application
 	
 		puts "Base URI: #{base_uri}".color(:cyan)
 	
-		config.packages.each do |record|
-			destination_path = record.package_path
+		config.packages.each do |package|
+			destination_path = package.path
 		
-			if record.local?
-				puts "Linking local #{record}...".color(:cyan)
+			if package.local?
+				puts "Linking local #{package}...".color(:cyan)
 			
-				local_path = config.root + record.options[:local]
+				local_path = config.root + package.options[:local]
 			
 				# Make the top level directory if required:
 				destination_path.dirname.mkpath
@@ -55,15 +55,15 @@ module Application
 					destination_path.make_symlink(local_path)
 				end
 			else
-				puts "Fetching #{record}...".color(:cyan)
+				puts "Fetching #{package}...".color(:cyan)
 		
-				branch = record.options.fetch(:version, 'master')
+				branch = package.options.fetch(:version, 'master')
 		
 				unless destination_path.exist?
 					puts "Cloning package at path #{destination_path} ...".color(:cyan)
 					destination_path.mkpath
 			
-					Teapot::Commands.run("git", "clone", record.relative_url(base_uri), destination_path, "--branch", branch)
+					Teapot::Commands.run("git", "clone", package.relative_url(base_uri), destination_path, "--branch", branch)
 			
 					Dir.chdir(destination_path) do
 						Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
@@ -93,13 +93,13 @@ module Application
 		config = Teapot::Config.load_default
 		context = Teapot::Context.new(config)
 	
-		config.packages.each do |record|
-			context.load(record)
+		config.packages.each do |package|
+			context.load(package)
 		end
 		
 		context.select(package_names)
 		
-		chain = Teapot::Dependency::chain(context.selection, context.dependencies, context.packages.values)
+		chain = Teapot::Dependency::chain(context.selection, context.dependencies, context.targets.values)
 	
 		if chain.unresolved.size > 0
 			puts "Unresolved dependencies:"
@@ -119,10 +119,14 @@ module Application
 			abort "Cannot continue build due to unresolved dependencies!"
 		end
 	
-		chain.ordered.each do |(package, dependency)|
-			puts "Building #{package.name} for dependency #{dependency}...".color(:cyan)
+		puts "Resolved: #{chain.resolved.inspect}".color(:magenta)
+	
+		chain.ordered.each do |(target, dependency)|
+			puts "Building #{target.name} for dependency #{dependency}...".color(:cyan)
 		
-			package.install!(context)
+			if target.respond_to? :install! and !ENV['TEAPOT_DRY']
+				target.install!(context)
+			end
 		end
 	
 		puts "Completed build successfully.".color(:green)
@@ -132,21 +136,29 @@ module Application
 		config = Teapot::Config.load_default
 		context = Teapot::Context.new(config)
 	
-		config.packages.each do |record|
-			packages = context.load(record)
+		config.packages.each do |package|
+			targets = context.load(package)
 		
-			packages.each do |package|
-				puts "Package #{package.name}"
+			targets.each do |target|
+				puts "Target #{target.name} from #{package.name}"
 			
-				package.dependencies.each do |name|
+				target.dependencies.each do |name|
 					puts " - depends on #{name.inspect}".color(:red)
 				end
 			
-				package.provisions.each do |(name, _)|
-					puts " - provides #{name.inspect}".color(:green)
+				target.provisions.each do |(name, provision)|
+					if Teapot::Dependency::Alias === provision
+						puts " - provides #{name.inspect} => #{provision.dependencies.inspect}".color(:green)
+					else
+						puts " - provides #{name.inspect}".color(:green)
+					end
 				end
 			end
 		end
+	end
+	
+	def self.debug
+		puts ARGV.inspect
 	end
 end
 

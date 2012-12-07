@@ -26,22 +26,22 @@ module Teapot
 	class BuildError < StandardError
 	end
 	
-	class Package
+	class Target
 		include Dependency
 		
-		def initialize(context, record, name)
+		def initialize(context, package, name)
 			@context = context
-			@record = record
+			@package = package
 
 			@name = name
 
 			@install = nil
 
-			@path = @record.package_path
+			@path = @package.path
 		end
 
 		attr :context
-		attr :record
+		attr :package
 		attr :name
 
 		attr :path
@@ -57,7 +57,7 @@ module Teapot
 		def install!(context, config = {})
 			return unless @install
 			
-			chain = Dependency::chain(context.selection, dependencies, context.packages.values)
+			chain = Dependency::chain(context.selection, dependencies, context.targets.values)
 			
 			environments = []
 			
@@ -69,16 +69,16 @@ module Teapot
 				Environment.new(&provision.value)
 			end
 			
-			# Per-configuration package record environment:
-			environments << @record.options[:environment]
+			# Per-configuration package package environment:
+			environments << @package.options[:environment]
 			
 			# Merge all the environments together:
 			environment = Environment.combine(*environments)
 				
 			local_build = environment.merge do
-				default working_directory Pathname.new('.').realpath
-				default build_prefix {working_directory + "build/cache/#{platform_name}-#{variant}"}
-				default install_prefix {working_directory + "build/#{platform_name}-#{variant}"}
+				default platforms_path context.config.platforms_path
+				default build_prefix {platforms_path + "cache/#{platform_name}-#{variant}"}
+				default install_prefix {platforms_path + "#{platform_name}-#{variant}"}
 			
 				append buildflags {"-I#{install_prefix + "include"}"}
 				append linkflags {"-L#{install_prefix + "lib"}"}
@@ -88,7 +88,7 @@ module Teapot
 		end
 
 		def to_s
-			"<Package: #{@name}>"
+			"<Target: #{@name}>"
 		end
 	end
 end
