@@ -37,6 +37,8 @@ module Teapot
 				@configure = nil
 			end
 		
+			attr :parent
+		
 			def root
 				@parent.root
 			end
