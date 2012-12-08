@@ -103,13 +103,13 @@ module Teapot
 				# Mostly, only one package will satisfy the dependency...
 				viable_providers = @providers.select{|provider| provider.provides? dependency}
 
-				puts "** Found #{viable_providers.collect(&:name).join(', ')} viable providers."
+				puts "** Found #{viable_providers.collect(&:name).join(', ')} viable providers.".color(:magenta)
 
 				if viable_providers.size > 1
 					# ... however in some cases (typically where aliases are being used) an explicit selection must be made for the build to work correctly.
 					explicit_providers = viable_providers.select{|provider| @selection.include? provider.name}
 
-					puts "** Filtering to #{explicit_providers.collect(&:name).join(', ')} explicit providers."
+					puts "** Filtering to #{explicit_providers.collect(&:name).join(', ')} explicit providers.".color(:magenta)
 
 					if explicit_providers.size == 0
 						# No provider was explicitly specified, thus we require explicit conflict resolution:
@@ -129,10 +129,10 @@ module Teapot
 			end
 			
 			def expand(dependency, parent)
-				puts "** Expanding #{dependency} from #{parent}"
+				puts "** Expanding #{dependency} from #{parent}".color(:magenta)
 				
 				if @resolved.include? dependency
-					puts "** Already resolved dependency!"
+					puts "** Already resolved dependency!".color(:magenta)
 					
 					return
 				end
@@ -140,7 +140,7 @@ module Teapot
 				provider = find_provider(dependency, parent)
 
 				if provider == nil
-					puts "** Couldn't find provider -> unresolved"
+					puts "** Couldn't find provider -> unresolved".color(:magenta)
 					@unresolved << [dependency, parent]
 					return nil
 				end
@@ -151,19 +151,17 @@ module Teapot
 				@resolved << dependency
 				
 				if Alias === provision
-					puts "** Resolving alias #{provision}"
+					puts "** Resolving alias #{provision}".color(:magenta)
 					
 					provision.dependencies.each do |dependency|
 						expand(dependency, provider)
 					end
 				elsif provision != nil
-					puts "** Resolving #{dependency} -> provisions"
+					puts "** Appending #{dependency} -> provisions".color(:magenta)
 					@provisions << provision
 				end
 				
 				unless @resolved.include?(provider)
-					puts "** Resolving provider -> ordered"
-					
 					# We are now satisfying the provider by expanding all its own dependencies:
 					@resolved << provider
 					
@@ -171,6 +169,7 @@ module Teapot
 						expand(dependency, provider)
 					end
 					
+					puts "** Appending #{dependency} -> ordered".color(:magenta)
 					@ordered << [provider, dependency]
 				end
 			end
