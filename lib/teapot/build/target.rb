@@ -63,7 +63,7 @@ module Teapot
 				# Flatten the environment to a hash:
 				values = environment.flatten
 			
-				puts "Executing command #{command} for #{root}...".color(:cyan)
+				puts "Performing #{self.class}/#{command} for #{root}...".color(:cyan)
 			
 				# Show the environment to the user:
 				Environment::System::dump(values)

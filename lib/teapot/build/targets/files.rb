@@ -18,43 +18,63 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
+require 'teapot/build/target'
+require 'teapot/build/targets/directory'
+require 'teapot/build/targets/compiler'
+
 require 'fileutils'
 
 module Teapot
 	module Build
-		class FileList
-			include Enumerable
-			
-			def self.[] (root, pattern, prefix = nil)
-				self.new(root, pattern, prefix)
+		module Targets
+			module Installation
+				def install_prefix!(environment)
+					install_prefix = Pathname.new(environment[:install_prefix])
+				
+					install_prefix.mkpath
+				
+					return install_prefix
+				end
 			end
 			
-			def initialize(root, pattern, prefix = nil)
-				@root = root
-				@pattern = pattern
-				@prefix = Pathname.new(prefix || ".")
-			end
-
-			attr :root
-			attr :pattern
-			attr :prefix
-
-			def each(&block)
-				Pathname.glob(@root + @pattern).each &block
-			end
-			
-			def copy(destination)
-				self.each do |path|
-					# Compute the destination path, which is formed using the relative path:
-					relative_path = path.relative_path_from(@root)
-					destination_path = destination + @prefix + relative_path
+			class Files < Build::Target
+				include Installation
+				
+				def initialize(parent, options = {})
+					super parent
+					@options = options
+				end
+				
+				attr :options
+				
+				def subdirectory
+					options[:subdirectory] || "./"
+				end
+				
+				def install(environment)
+					prefix = install_prefix!(environment)
 					
-					# Make the path if it doesn't already exist:
-					destination_path.dirname.mkpath
-					
-					# Copy the file:
-					FileUtils.cp path, destination_path
+					if self.respond_to? :source_files
+						file_list = self.source_files(environment)
+						
+						file_list.copy(prefix + subdirectory)
+					end
+				end
+			end
+			
+			class Headers < Files
+				def subdirectory
+					super + "include/"
+				end
+			end
+			
+			class Directory
+				def copy_files(*args, &block)
+					self << Files.target(self, *args, &block)
+				end
+				
+				def copy_headers(*args, &block)
+					self << Headers.target(self, *args, &block)
 				end
 			end
 		end

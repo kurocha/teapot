@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 require 'teapot/build/target'
+require 'teapot/build/targets/directory'
+require 'teapot/build/targets/files'
 require 'teapot/build/targets/compiler'
 
 require 'fileutils'
@@ -28,7 +30,8 @@ module Teapot
 		module Targets
 			class Library < Build::Target
 				include Compiler
-				
+				include Installation
+
 				def initialize(parent, name, options = {})
 					super parent
 			
@@ -36,10 +39,12 @@ module Teapot
 					@options = options
 				end
 				
+				attr :options
+				
 				def subdirectory
-					"lib"
+					options[:subdirectory] || "lib"
 				end
-			
+				
 				def link(environment, objects)
 					library_file = link_prefix!(environment) + "lib#{@name}.a"
 				
@@ -49,7 +54,7 @@ module Teapot
 				end
 			
 				def build(environment)
-					file_list = self.sources(environment)
+					file_list = self.source_files(environment)
 				
 					pool = Commands::Pool.new
 				
@@ -67,7 +72,7 @@ module Teapot
 				def install_file_list(file_list, prefix)
 					file_list.each do |path|
 						relative_path = path.relative_path_from(file_list.root)
-						destination_path = prefix + relative_path
+						destination_path = prefix + file_list.prefix + relative_path
 					
 						destination_path.dirname.mkpath
 						FileUtils.cp path, destination_path
@@ -76,7 +81,7 @@ module Teapot
 			
 				def install(environment)
 					prefix = install_prefix!(environment)
-				
+					
 					build(environment).each do |path|
 						destination_path = prefix + subdirectory + path.basename
 					
@@ -84,14 +89,16 @@ module Teapot
 					
 						FileUtils.cp path, destination_path
 					end
-				
+					
 					if self.respond_to? :headers
 						install_file_list(self.headers(environment), prefix + "include")
 					end
-				
-					if self.respond_to? :files
-						install_file_list(self.files(environment), prefix)
-					end
+				end
+			end
+			
+			class Directory
+				def compile_library(*args, &block)
+					self << Library.target(self, *args, &block)
 				end
 			end
 		end

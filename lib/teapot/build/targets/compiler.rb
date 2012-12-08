@@ -39,15 +39,7 @@ module Teapot
 				
 					return prefix
 				end
-			
-				def install_prefix!(environment)
-					install_prefix = Pathname.new(environment[:install_prefix])
 				
-					install_prefix.mkpath
-				
-					return install_prefix
-				end
-			
 				def compile(environment, root, source_file, commands)
 					object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
 				

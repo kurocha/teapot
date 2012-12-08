@@ -18,43 +18,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'fileutils'
+require 'teapot/build/targets/library'
+require 'teapot/build/targets/directory'
 
 module Teapot
 	module Build
-		class FileList
-			include Enumerable
-			
-			def self.[] (root, pattern, prefix = nil)
-				self.new(root, pattern, prefix)
-			end
-			
-			def initialize(root, pattern, prefix = nil)
-				@root = root
-				@pattern = pattern
-				@prefix = Pathname.new(prefix || ".")
-			end
-
-			attr :root
-			attr :pattern
-			attr :prefix
-
-			def each(&block)
-				Pathname.glob(@root + @pattern).each &block
-			end
-			
-			def copy(destination)
-				self.each do |path|
-					# Compute the destination path, which is formed using the relative path:
-					relative_path = path.relative_path_from(@root)
-					destination_path = destination + @prefix + relative_path
+		module Targets
+			class Application < Directory
+				def initialize(parent, name, options = {})
+					super parent, name
 					
-					# Make the path if it doesn't already exist:
-					destination_path.dirname.mkpath
+					@name = name
+					@options = options
+				end
+				
+				def subdirectory
+					"apps/#{@name}"
+				end
+				
+				def << target
+					if target.respond_to? :subdirectory
+						target.options[:subdirectory] = subdirectory
+					end
 					
-					# Copy the file:
-					FileUtils.cp path, destination_path
+					super
+				end
+			end
+			
+			class Directory
+				def add_application(*args, &block)
+					self << Application.target(self, *args, &block)
 				end
 			end
 		end

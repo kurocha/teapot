@@ -19,11 +19,23 @@
 # THE SOFTWARE.
 
 require 'teapot/build/targets/directory'
+require 'teapot/build/targets/files'
+require 'teapot/build/targets/library'
+require 'teapot/build/targets/executable'
+require 'teapot/build/targets/application'
 
 module Teapot
 	module Build
 		def self.top(path)
 			Targets::Directory.target(nil, path)
+		end
+		
+		def self.install_directory(root, directory, *args)
+			target = top(root)
+		
+			target.add_directory(directory)
+		
+			target.execute(:install, *args)
 		end
 	end
 end

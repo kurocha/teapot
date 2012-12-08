@@ -25,7 +25,7 @@ module Teapot
 		module Targets
 			class Executable < Library
 				def subdirectory
-					"bin"
+					options[:subdirectory] || "bin"
 				end
 			
 				def link(environment, objects)
@@ -39,6 +39,12 @@ module Teapot
 					)
 			
 					return executable_file
+				end
+			end
+			
+			class Directory
+				def compile_executable(*args, &block)
+					self << Executable.target(self, *args, &block)
 				end
 			end
 		end

@@ -18,8 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/build/targets/library'
-require 'teapot/build/targets/executable'
+require 'teapot/build/target'
 
 module Teapot
 	module Build
@@ -31,31 +30,23 @@ module Teapot
 					@root = root
 					@targets = []
 				end
-		
+				
 				attr :root
 				attr :tasks
-		
+				
 				def << (target)
 					@targets << target
 				end
-		
-				def add_library(*args, &block)
-					@targets << Library.target(self, *args, &block)
-				end
-		
-				def add_executable(*args, &block)
-					@targets << Executable.target(self, *args, &block)
-				end
-		
+				
 				def add_directory(path)
 					directory = Directory.target(self, @root + path)
 			
 					build_path = (directory.root + BUILD_FILE).to_s
 					directory.instance_eval(File.read(build_path), build_path)
 			
-					@targets << directory
+					self << directory
 				end
-		
+				
 				def execute(command, *arguments)
 					@targets.each do |target|
 						target.execute(command, *arguments)
