@@ -26,12 +26,17 @@ module Teapot
 			class Directory < Build::Target
 				BUILD_FILE = "build.rb"
 				
-				def initialize(parent, root)
+				def initialize(parent, root = nil)
+					super parent
+					
 					@root = root
 					@targets = []
 				end
 				
-				attr :root
+				def root
+					@root || @parent.root
+				end
+				
 				attr :tasks
 				
 				def << (target)

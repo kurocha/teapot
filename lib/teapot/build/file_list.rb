@@ -50,11 +50,16 @@ module Teapot
 					relative_path = path.relative_path_from(@root)
 					destination_path = destination + @prefix + relative_path
 					
-					# Make the path if it doesn't already exist:
-					destination_path.dirname.mkpath
+					if path.directory?
+						# Make a directory at the destination:
+						destination_path.mkpath
+					else
+						# Make the path if it doesn't already exist:
+						destination_path.dirname.mkpath
 					
-					# Copy the file:
-					FileUtils.cp path, destination_path
+						# Copy the file to the destination:
+						FileUtils.cp path, destination_path
+					end
 				end
 			end
 		end

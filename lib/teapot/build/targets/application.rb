@@ -26,7 +26,7 @@ module Teapot
 		module Targets
 			class Application < Directory
 				def initialize(parent, name, options = {})
-					super parent, name
+					super parent
 					
 					@name = name
 					@options = options
