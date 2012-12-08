@@ -18,51 +18,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
+require 'teapot/build/targets/library'
 
 module Teapot
 	module Build
-		class Component
-			def initialize(root, name, environment)
-				@root = root
-				@name = name
-				@environment = environment
-		
-				@parts = [@name]
-			end
-	
-			attr :root
-			attr :name
-			attr :parts
-	
-			def add(path)
-				@parts << path
-			end
-	
-			def variant
-				@environment[:variant]
-			end
-	
-			def destination_path
-				@environment[:build_prefix] + "source"
-			end
-	
-			def prepare!
-				source_path = destination_path + @name
-		
-				if source_path.exist?
-					source_path.rmtree
+		module Targets
+			class Executable < Library
+				def subdirectory
+					"bin"
 				end
-		
-				source_path.mkpath
-		
-				@parts.each do |path|
-					full_path = @root + path
 			
-					FileUtils.cp_r(full_path.children, source_path.to_s)
+				def link(environment, objects)
+					executable_file = link_prefix!(environment) + @name
+			
+					Commands.run(
+						environment[:cxx],
+						environment[:cxxflags],
+						"-o", executable_file, objects,
+						environment[:ldflags]
+					)
+			
+					return executable_file
 				end
-		
-				return source_path
 			end
 		end
 	end

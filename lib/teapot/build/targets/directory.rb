@@ -18,51 +18,49 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
+require 'teapot/build/targets/library'
+require 'teapot/build/targets/executable'
 
 module Teapot
 	module Build
-		class Component
-			def initialize(root, name, environment)
-				@root = root
-				@name = name
-				@environment = environment
-		
-				@parts = [@name]
-			end
-	
-			attr :root
-			attr :name
-			attr :parts
-	
-			def add(path)
-				@parts << path
-			end
-	
-			def variant
-				@environment[:variant]
-			end
-	
-			def destination_path
-				@environment[:build_prefix] + "source"
-			end
-	
-			def prepare!
-				source_path = destination_path + @name
-		
-				if source_path.exist?
-					source_path.rmtree
+		module Targets
+			class Directory < Build::Target
+				BUILD_FILE = "build.rb"
+				
+				def initialize(parent, root)
+					@root = root
+					@targets = []
 				end
 		
-				source_path.mkpath
+				attr :root
+				attr :tasks
 		
-				@parts.each do |path|
-					full_path = @root + path
+				def << (target)
+					@targets << target
+				end
+		
+				def add_library(*args, &block)
+					@targets << Library.target(self, *args, &block)
+				end
+		
+				def add_executable(*args, &block)
+					@targets << Executable.target(self, *args, &block)
+				end
+		
+				def add_directory(path)
+					directory = Directory.target(self, @root + path)
 			
-					FileUtils.cp_r(full_path.children, source_path.to_s)
+					build_path = (directory.root + BUILD_FILE).to_s
+					directory.instance_eval(File.read(build_path), build_path)
+			
+					@targets << directory
 				end
 		
-				return source_path
+				def execute(command, *arguments)
+					@targets.each do |target|
+						target.execute(command, *arguments)
+					end
+				end
 			end
 		end
 	end

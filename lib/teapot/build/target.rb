@@ -18,51 +18,57 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'teapot/commands'
+require 'teapot/environment'
+
+require 'pathname'
+require 'rainbow'
 require 'fileutils'
+
+require 'teapot/build/linker'
+require 'teapot/build/component'
+require 'teapot/build/file_list'
 
 module Teapot
 	module Build
-		class Component
-			def initialize(root, name, environment)
-				@root = root
-				@name = name
-				@environment = environment
-		
-				@parts = [@name]
+		class Target
+			def initialize(parent)
+				@parent = parent
+				@configure = nil
 			end
-	
-			attr :root
-			attr :name
-			attr :parts
-	
-			def add(path)
-				@parts << path
-			end
-	
-			def variant
-				@environment[:variant]
-			end
-	
-			def destination_path
-				@environment[:build_prefix] + "source"
-			end
-	
-			def prepare!
-				source_path = destination_path + @name
 		
-				if source_path.exist?
-					source_path.rmtree
-				end
+			def root
+				@parent.root
+			end
 		
-				source_path.mkpath
+			def configure(&block)
+				@configure = Proc.new &block
+			end
 		
-				@parts.each do |path|
-					full_path = @root + path
+			def self.target(*args, &block)
+				instance = self.new(*args)
 			
-					FileUtils.cp_r(full_path.children, source_path.to_s)
+				if block_given?
+					instance.instance_eval(&block)
 				end
+			
+				return instance
+			end
 		
-				return source_path
+			def execute(command, environment, *arguments)
+				if @configure
+					environment = environment.merge &@configure
+				end
+				
+				# Flatten the environment to a hash:
+				values = environment.flatten
+			
+				puts "Executing command #{command} for #{root}...".color(:cyan)
+			
+				# Show the environment to the user:
+				Environment::System::dump(values)
+				
+				self.send(command, values, *arguments)
 			end
 		end
 	end

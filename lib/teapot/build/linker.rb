@@ -18,12 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'teapot/commands'
+
 module Teapot
 	module Build
 		module Linker
+			class UnsupportedPlatform < StandardError
+			end
+			
 			def self.link_static(environment, library_file, objects)
 				if RUBY_PLATFORM =~ /darwin/
-					Teapot::Commands.run(
+					Commands.run(
 						environment[:libtool] || "libtool",
 						"-static", "-o", library_file, objects,
 					)

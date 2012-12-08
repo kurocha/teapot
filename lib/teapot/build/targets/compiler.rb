@@ -18,51 +18,59 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'fileutils'
+require 'pathname'
 
 module Teapot
 	module Build
-		class Component
-			def initialize(root, name, environment)
-				@root = root
-				@name = name
-				@environment = environment
-		
-				@parts = [@name]
-			end
-	
-			attr :root
-			attr :name
-			attr :parts
-	
-			def add(path)
-				@parts << path
-			end
-	
-			def variant
-				@environment[:variant]
-			end
-	
-			def destination_path
-				@environment[:build_prefix] + "source"
-			end
-	
-			def prepare!
-				source_path = destination_path + @name
-		
-				if source_path.exist?
-					source_path.rmtree
+		module Targets
+			module Compiler
+				def build_prefix!(environment)
+					build_prefix = Pathname.new(environment[:build_prefix]) + "compiled"
+				
+					build_prefix.mkpath
+				
+					return build_prefix
 				end
-		
-				source_path.mkpath
-		
-				@parts.each do |path|
-					full_path = @root + path
 			
-					FileUtils.cp_r(full_path.children, source_path.to_s)
+				def link_prefix!(environment)
+					prefix = Pathname.new(environment[:build_prefix]) + "linked"
+				
+					prefix.mkpath
+				
+					return prefix
 				end
-		
-				return source_path
+			
+				def install_prefix!(environment)
+					install_prefix = Pathname.new(environment[:install_prefix])
+				
+					install_prefix.mkpath
+				
+					return install_prefix
+				end
+			
+				def compile(environment, root, source_file, commands)
+					object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
+				
+					# Ensure there is a directory for the output file:
+					object_file.dirname.mkpath
+				
+					case source_file.extname
+					when ".cpp", ".mm"
+						commands.run(
+							environment[:cxx],
+							environment[:cxxflags],
+							"-c", root + source_file, "-o", object_file
+						)
+					when ".c", ".m"
+						commands.run(
+							environment[:cc],
+							environment[:cflags],
+							"-c", root + source_file, "-o", object_file
+						)
+					end
+			
+					return Array object_file
+				end
 			end
 		end
 	end
