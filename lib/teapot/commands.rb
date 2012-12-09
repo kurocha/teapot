@@ -21,9 +21,18 @@
 require 'set'
 require 'rainbow'
 require 'shellwords'
+require 'facter'
 
 module Teapot
 	module Commands
+		def self.processor_count
+			# Get the number of virtual/physical processors
+			count = Facter.processorcount.to_i rescue 1
+			
+			# Make sure we always return at least 1:
+			count < 1 ? 1 : count
+		end
+		
 		class CommandError < StandardError
 		end
 		
@@ -56,15 +65,13 @@ module Teapot
 		class Pool
 			def initialize(options = {})
 				@commands = []
-				@limit = options[:limit] || 16
+				@limit = options[:limit] || Commands.processor_count
 				
 				@running = Set.new
 			end
 			
 			def run(*args)
 				args = args.flatten.collect &:to_s
-			
-				puts args.join(' ').color(:blue)
 				
 				@commands << args
 				
@@ -74,6 +81,8 @@ module Teapot
 			def schedule!
 				while @running.size < @limit and @commands.size > 0
 					command = @commands.shift
+					
+					puts command.join(' ').color(:blue)
 					
 					pid = Process.fork do
 						exec(*command)
