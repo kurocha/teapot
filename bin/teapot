@@ -26,6 +26,13 @@ require 'uri'
 require 'rainbow'
 require 'fileutils'
 require 'benchmark'
+require 'yaml'
+
+require 'trollop'
+
+OPTIONS = Trollop::options do
+	opt :only, "Only compiled direct dependencies."
+end
 
 module Application
 	def self.fetch
@@ -37,9 +44,9 @@ module Application
 		if base_uri.scheme == nil || base_uri.scheme == 'file'
 			base_uri = URI "file://" + File.expand_path(base_uri.path, config.root) + "/"
 		end
-	
+		
 		puts "Base URI: #{base_uri}".color(:cyan)
-	
+		
 		config.packages.each do |package|
 			destination_path = package.path
 		
@@ -100,7 +107,7 @@ module Application
 		context.select(package_names)
 		
 		chain = Teapot::Dependency::chain(context.selection, context.dependencies, context.targets.values)
-	
+		
 		if chain.unresolved.size > 0
 			puts "Unresolved dependencies:"
 		
@@ -121,7 +128,13 @@ module Application
 	
 		puts "Resolved: #{chain.resolved.inspect}".color(:magenta)
 	
-		chain.ordered.each do |(target, dependency)|
+		ordered = chain.ordered
+		
+		if OPTIONS[:only]
+			ordered = context.direct_targets(ordered)
+		end
+		
+		ordered.each do |(target, dependency)|
 			puts "Building #{target.name} for dependency #{dependency}...".color(:cyan)
 		
 			if target.respond_to? :install! and !ENV['TEAPOT_DRY']

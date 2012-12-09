@@ -23,4 +23,5 @@ Gem::Specification.new do |gem|
 	
 	gem.add_dependency "rainbow"
 	gem.add_dependency "rexec"
+	gem.add_dependency "trollop"
 end

@@ -93,6 +93,12 @@ module Teapot
 		attr :dependencies
 		attr :selection
 		
+		def direct_targets(ordered)
+			@dependencies.collect do |dependency|
+				ordered.find{|(package, _)| package.provides? dependency}
+			end.compact
+		end
+		
 		def load(package)
 			loader = Loader.new(self, package)
 			
