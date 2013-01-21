@@ -83,7 +83,7 @@ module Teapot
 				@conflicts = {}
 				
 				@dependencies.each do |dependency|
-					expand(dependency, nil)
+					expand(dependency, "<top>")
 				end
 			end
 			
