@@ -23,6 +23,7 @@ require 'teapot/build/targets/files'
 require 'teapot/build/targets/library'
 require 'teapot/build/targets/executable'
 require 'teapot/build/targets/application'
+require 'teapot/build/targets/external'
 
 module Teapot
 	module Build
@@ -30,12 +31,22 @@ module Teapot
 			Targets::Directory.target(nil, path)
 		end
 		
-		def self.install_directory(root, directory, *args)
-			target = top(root)
+		module Helpers
+			def install_directory(root, directory, *args)
+				target = Build.top(root)
 		
-			target.add_directory(directory)
+				target.add_directory(directory)
 		
-			target.execute(:install, *args)
+				target.execute(:install, *args)
+			end
+		
+			def install_external(root, directory, *args, &block)
+				target = Build.top(root)
+			
+				target << Targets::External.new(target, directory, &block)
+			
+				target.execute(:install, *args)
+			end
 		end
 	end
 end

@@ -52,23 +52,5 @@ module Teapot
 		def self.system_environment(env = ENV)
 			self.new(Hash[env.map{|key, value| [key.downcase.to_sym, value]}])
 		end
-		
-		# Apply the environment to the current process temporarily:
-		def use(options = {}, &block)
-			# Flatten the environment to a hash:
-			values = flatten
-			
-			# Convert the hash to suit typical shell specific arguments:
-			build_environment = System::convert_to_shell(values)
-			
-			# Show the environment to the user:
-			System::dump(build_environment)
-			
-			Dir.chdir(options[:in] || ".") do
-				RExec.env(build_environment) do
-					block.call(Environment::Evaluator.new(values))
-				end
-			end
-		end
 	end
 end

@@ -22,14 +22,19 @@ require 'pathname'
 require 'rainbow'
 
 require 'teapot/target'
+require 'teapot/build'
 
 module Teapot
-	LOADER_VERSION = "0.5"
+	LOADER_VERSION = "0.6"
+	MINIMUM_LOADER_VERSION = "0.6"
 	
 	class IncompatibleTeapot < StandardError
 	end
 	
 	class Loader
+		# Provides install_directory and install_external methods
+		include Build::Helpers
+		
 		def initialize(context, package)
 			@context = context
 			@package = package
@@ -43,17 +48,18 @@ module Teapot
 		attr :version
 		
 		def required_version(version)
-			if version <= LOADER_VERSION
+			if version >= MINIMUM_LOADER_VERSION && version <= LOADER_VERSION
 				@version = version
 			else
-				raise IncompatibleTeapot.new("Version #{version} more recent than #{LOADER_VERSION}!")
+				raise IncompatibleTeapot.new("Version #{version} isn't compatible with current loader!\n" \
+				"Minimum supported version: #{MINIMUM_LOADER_VERSION}; Current version: #{LOADER_VERSION}.")
 			end
 		end
 
 		def define_target(*args, &block)
 			target = Target.new(@context, @package, *args)
 
-			yield(target)
+			yield target
 
 			@context.targets[target.name] = target
 

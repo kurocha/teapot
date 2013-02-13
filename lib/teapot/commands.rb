@@ -62,6 +62,10 @@ module Teapot
 			# No parallel execution supported by default.
 		end
 		
+		def self.make_install(*args)
+			run("make", "install", "-j", processor_count, *args)
+		end
+		
 		class Pool
 			def initialize(options = {})
 				@commands = []

@@ -37,7 +37,7 @@ module Teapot
 					@root || @parent.root
 				end
 				
-				attr :tasks
+				attr :targets
 				
 				def << (target)
 					@targets << target
