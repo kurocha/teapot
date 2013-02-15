@@ -48,7 +48,7 @@ module Teapot
 			if system(*args)
 				true
 			else
-				raise CommandError.new("Non-zero exit status")
+				raise CommandError.new("Non-zero exit status!")
 			end
 		end
 		
@@ -62,8 +62,12 @@ module Teapot
 			# No parallel execution supported by default.
 		end
 		
-		def self.make_install(*args)
-			run("make", "install", "-j", processor_count, *args)
+		def self.make(*args)
+			run("make", *args, "-j", processor_count)
+		end
+		
+		def self.make_install
+			make("install")
 		end
 		
 		class Pool

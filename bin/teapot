@@ -169,10 +169,6 @@ module Application
 			end
 		end
 	end
-	
-	def self.debug
-		puts ARGV.inspect
-	end
 end
 
 time = Benchmark.measure do
