@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/config'
+require 'teapot/configuration'
+require 'teapot/version'
 
 require 'uri'
 require 'rainbow'
@@ -32,28 +33,54 @@ require 'trollop'
 
 OPTIONS = Trollop::options do
 	opt :only, "Only compiled direct dependencies."
+	opt :in, "Work in the given directory.", :type => :string
+	
+	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
 end
 
 module Application
+	private
+	
+	def self.load_teapot
+		root = Dir.getwd
+		configuration_name = OPTIONS[:configuration]
+		
+		context = Teapot::Context.new(root)
+		configuration = context.configurations[configuration_name]
+		
+		return context, configuration
+	end
+	
+	public
+	
+	def self.clean
+		context, configuration = load_teapot
+		
+		puts "Removing #{configuration.platforms_path}...".color(:cyan)
+		FileUtils.rm_rf configuration.platforms_path
+		
+		puts "Removing #{configuration.packages_path}...".color(:cyan)
+		FileUtils.rm_rf configuration.packages_path
+	end
+	
 	def self.fetch
-		config = Teapot::Config.load_default
-		context = Teapot::Context.new(config)
-	
-		base_uri = URI(config.options[:source].to_s)
-	
+		context, configuration = load_teapot
+
+		base_uri = URI(configuration.source.to_s)
+
 		if base_uri.scheme == nil || base_uri.scheme == 'file'
-			base_uri = URI "file://" + File.expand_path(base_uri.path, config.root) + "/"
+			base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
 		end
 		
 		puts "Base URI: #{base_uri}".color(:cyan)
 		
-		config.packages.each do |package|
+		configuration.packages.each do |package|
 			destination_path = package.path
 		
 			if package.local?
 				puts "Linking local #{package}...".color(:cyan)
-			
-				local_path = config.root + package.options[:local]
+				
+				local_path = context.root + package.options[:local]
 			
 				# Make the top level directory if required:
 				destination_path.dirname.mkpath
@@ -97,12 +124,9 @@ module Application
 	end
 	
 	def self.install(package_names = ARGV)
-		config = Teapot::Config.load_default
-		context = Teapot::Context.new(config)
-	
-		config.packages.each do |package|
-			context.load(package)
-		end
+		context, configuration = load_teapot
+		
+		configuration.load_all
 		
 		context.select(package_names)
 		
@@ -123,7 +147,7 @@ module Application
 				end
 			end
 			
-			abort "Cannot continue build due to unresolved dependencies!"
+			abort "Cannot continue build due to unresolved dependencies!".color(:red)
 		end
 	
 		puts "Resolved: #{chain.resolved.inspect}".color(:magenta)
@@ -138,7 +162,7 @@ module Application
 			puts "Building #{target.name} for dependency #{dependency}...".color(:cyan)
 		
 			if target.respond_to? :install! and !ENV['TEAPOT_DRY']
-				target.install!(context)
+				target.install!(configuration)
 			end
 		end
 	
@@ -146,33 +170,105 @@ module Application
 	end
 	
 	def self.list
-		config = Teapot::Config.load_default
-		context = Teapot::Context.new(config)
-	
-		config.packages.each do |package|
-			targets = context.load(package)
+		context, configuration = load_teapot
 		
-			targets.each do |target|
-				puts "Target #{target.name} from #{package.name}"
+		# Should this somehow consider context.root_package?
+		configuration.packages.each do |package|
+			puts "Package #{package.name}:".bright
 			
-				target.dependencies.each do |name|
-					puts " - depends on #{name.inspect}".color(:red)
-				end
+			begin
+				definitions = context.load(package)
+				
+				definitions.each do |definition|
+					puts "\t#{definition}"
+				
+					definition.description.each_line do |line|
+						puts "\t\t#{line.chomp}".color(:cyan)
+					end if definition.description
+				
+					case definition
+					when Teapot::Target
+						definition.dependencies.each do |name|
+							puts "\t\t- depends on #{name.inspect}".color(:red)
+						end
 			
-				target.provisions.each do |(name, provision)|
-					if Teapot::Dependency::Alias === provision
-						puts " - provides #{name.inspect} => #{provision.dependencies.inspect}".color(:green)
-					else
-						puts " - provides #{name.inspect}".color(:green)
+						definition.provisions.each do |(name, provision)|
+							if Teapot::Dependency::Alias === provision
+								puts "\t\t- provides #{name.inspect} => #{provision.dependencies.inspect}".color(:green)
+							else
+								puts "\t\t- provides #{name.inspect}".color(:green)
+							end
+						end
 					end
 				end
+			rescue Teapot::NonexistantTeapotError => error
+				puts "\t#{error.message}".color(:red)
+				puts "\tHave you fetched it yet?".color(:red)
 			end
 		end
+	end
+	
+	def self.init
+		root = Pathname(ARGV.shift)
+		
+		if root.exist?
+			abort "#{root} already exists!".color(:red)
+		end
+		
+		puts "Creating teapot at path #{root}...".color(:cyan)
+		root.mkpath
+		
+		packages = []
+		
+		File.open(root + Teapot::TEAPOT_FILE, "w") do |output|
+			output.puts "\# Teapot configuration generated at #{Time.now.to_s}", ''
+			
+			output.puts "required_version #{Teapot::VERSION.dump}", ''
+			
+			output.puts "define_configuration do |configuration|"
+			
+			source = ARGV.shift
+			output.puts "\tconfiguration.source = #{source.dump}", ''
+			
+			ARGV.each do |package|
+				output.puts "\tconfiguration.package #{package.dump}"
+				packages << package
+			end
+			
+			output.puts "end"
+		end
+		
+		Dir.chdir(root) do
+			self.fetch
+			
+			# self.generate('project')
+		end
+	end
+	
+	def self.generate(arguments = ARGV)
+		context, configuration = load_teapot
+		
+		configuration.load_all
+		
+		name, *arguments = Array(arguments)
+		
+		generator = context.generators[name]
+		
+		unless generator
+			abort "Could not find generator with name #{name.inspect}".color(:red)
+		end
+		
+		puts "Generating #{name.inspect} with arguments #{arguments.inspect}".color(:cyan)
+		generator.generate!(*arguments)
 	end
 end
 
 time = Benchmark.measure do
 	action = ARGV.shift.to_sym
+	
+	# The generate method has special handling of the :in option.
+	Dir.chdir(OPTIONS[:in]) if OPTIONS[:in]
+	
 	Application.send(action) if Application.methods.include?(action)
 end
 

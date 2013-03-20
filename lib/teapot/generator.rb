@@ -1,4 +1,4 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2013, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,6 +18,42 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'teapot/definition'
+
 module Teapot
-	VERSION = "0.7.0"
+	class Generator < Definition
+		def initialize(context, package, name)
+			super context, package, name
+			
+			@generate = nil
+		end
+
+		def generate(&block)
+			@generate = Proc.new(&block)
+		end
+
+		def generate!(*args)
+			@generate[*args]
+		end
+		
+		def substitute(text, substitutions)
+			return text unless substitutions
+			
+			# Use positive look behind so that the pattern is just the substitution key:
+			pattern = Regexp.new('(?<=\$)' + substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
+			
+			text.gsub(pattern) {|key| substitutions[key]}
+		end
+		
+		def append(source, destination, substitutions = nil)
+			source_path = Pathname(path) + source
+			destination_path = Pathname(context.config.root) + destination
+			
+			File.open(destination_path, "a") do |file|
+				text = File.read(source_path)
+				
+				file.write substitute(text, substitutions)
+			end
+		end
+	end
 end

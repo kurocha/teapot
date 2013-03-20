@@ -18,73 +18,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'rainbow'
-
-require 'teapot/target'
-require 'teapot/build'
+require 'teapot/loader'
+require 'teapot/package'
 
 module Teapot
-	LOADER_VERSION = "0.6"
-	MINIMUM_LOADER_VERSION = "0.6"
-	
-	class IncompatibleTeapot < StandardError
-	end
-	
-	class Loader
-		# Provides install_directory and install_external methods
-		include Build::Helpers
-		
-		def initialize(context, package)
-			@context = context
-			@package = package
-			
-			@defined = []
-			@version = nil
-		end
-		
-		attr :package
-		attr :defined
-		attr :version
-		
-		def required_version(version)
-			if version >= MINIMUM_LOADER_VERSION && version <= LOADER_VERSION
-				@version = version
-			else
-				raise IncompatibleTeapot.new("Version #{version} isn't compatible with current loader!\n" \
-				"Minimum supported version: #{MINIMUM_LOADER_VERSION}; Current version: #{LOADER_VERSION}.")
-			end
-		end
-
-		def define_target(*args, &block)
-			target = Target.new(@context, @package, *args)
-
-			yield target
-
-			@context.targets[target.name] = target
-
-			@defined << target
-		end
-		
-		def load(path)
-			self.instance_eval(File.read(path), path)
-		end
-	end
+	TEAPOT_FILE = "teapot.rb"
 	
 	class Context
-		def initialize(config)
-			@config = config
+		def initialize(root, options = {})
+			@root = Pathname(root)
+			@options = options
 
 			@selection = nil
 
-			@targets = {config.name => config}
+			@targets = {}
+			@generators = {}
+			@configurations = {}
 
 			@dependencies = []
 			@selection = Set.new
+			
+			load(root_package)
 		end
 
-		attr :config
+		attr :root
+
 		attr :targets
+		attr :generators
+		attr :configurations
+
+		def host(*args, &block)
+			name = @options[:host_platform] || RUBY_PLATFORM
+			
+			if block_given?
+				if args.find{|arg| arg === name}
+					yield
+				end
+			else
+				name
+			end
+		end
 
 		def select(names)
 			names.each do |name|
@@ -108,7 +81,7 @@ module Teapot
 		def load(package)
 			loader = Loader.new(self, package)
 			
-			path = (package.path + package.loader_path).to_s
+			path = (package.path + TEAPOT_FILE).to_s
 			loader.load(path)
 			
 			if loader.version == nil
@@ -116,6 +89,13 @@ module Teapot
 			end
 			
 			loader.defined
+		end
+		
+		private
+		
+		# The root package is a special package which is used to load definitions from a given root path. It won't be included in any configuration by default.
+		def root_package
+			Package.new(@root, "local")
 		end
 	end
 end

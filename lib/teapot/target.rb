@@ -21,30 +21,20 @@
 require 'pathname'
 require 'teapot/build'
 require 'teapot/dependency'
+require 'teapot/definition'
 
 module Teapot
 	class BuildError < StandardError
 	end
 	
-	class Target
+	class Target < Definition
 		include Dependency
 		
 		def initialize(context, package, name)
-			@context = context
-			@package = package
-
-			@name = name
+			super context, package, name
 
 			@install = nil
-
-			@path = @package.path
 		end
-
-		attr :context
-		attr :package
-		attr :name
-
-		attr :path
 
 		def builder
 			Build.top(@path)
@@ -54,15 +44,18 @@ module Teapot
 			@install = Proc.new(&block)
 		end
 
-		def install!(context, config = {})
+		def install!(configuration, config = {})
 			return unless @install
+			
+			# Reduce the number of keystrokes for good health:
+			context = configuration.context
 			
 			chain = Dependency::chain(context.selection, dependencies, context.targets.values)
 			
 			environments = []
 			
 			# The base configuration environment:
-			environments << context.config.environment
+			environments << configuration.environment
 			
 			# Calculate the dependency chain's ordered environments:
 			environments += chain.provisions.collect do |provision|
@@ -76,7 +69,7 @@ module Teapot
 			environment = Environment.combine(*environments)
 				
 			local_build = environment.merge do
-				default platforms_path context.config.platforms_path
+				default platforms_path configuration.platforms_path
 				default build_prefix {platforms_path + "cache/#{platform_name}-#{variant}"}
 				default install_prefix {platforms_path + "#{platform_name}-#{variant}"}
 			
@@ -85,10 +78,6 @@ module Teapot
 			end
 			
 			@install.call(local_build)
-		end
-
-		def to_s
-			"<Target: #{@name}>"
 		end
 	end
 end

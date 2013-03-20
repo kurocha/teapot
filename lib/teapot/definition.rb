@@ -1,4 +1,4 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2013, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,5 +19,43 @@
 # THE SOFTWARE.
 
 module Teapot
-	VERSION = "0.7.0"
+	class Definition
+		def initialize(context, package, name)
+			@context = context
+			@package = package
+			
+			@name = name
+			
+			@description = nil
+		end
+
+		# The context in which the definition was loaded:
+		attr :context
+		
+		# The package in which the definition was specified:
+		attr :package
+		
+		# The name of the definition:
+		attr :name
+
+		# A textual description of the definition, possibly in markdown format:
+		attr :description, true
+		
+		def description=(text)
+			if text =~ /^(\t+)/
+				text = text.gsub(/#{$1}/, '')
+			end
+			
+			@description = text
+		end
+		
+		# The path that the definition is relative to:
+		def path
+			@package.path
+		end
+		
+		def to_s
+			"<#{self.class.name} #{@name.dump}>"
+		end
+	end
 end

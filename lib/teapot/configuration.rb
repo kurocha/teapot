@@ -19,23 +19,50 @@
 # THE SOFTWARE.
 
 require 'pathname'
-require 'test/unit'
-require 'stringio'
 
-require 'teapot/config'
+require 'teapot/context'
+require 'teapot/environment'
+require 'teapot/commands'
 
-class TestConfig < Test::Unit::TestCase
-	ROOT = Pathname.new(__FILE__).dirname
-	
-	def test_config
-		config = Teapot::Config.new(ROOT)
+require 'teapot/definition'
+
+module Teapot
+	class Configuration < Definition
+		include Dependency
 		
-		config.instance_eval do
-			source "../infusions/"
-			package "png"
+		def initialize(context, package, name)
+			super context, package, name
+
+			@source = nil
+			@packages = []
+			@environment = Environment.new
 		end
 		
-		assert_equal "../infusions/", config.options[:source]
-		assert_equal 1, config.packages.size
+		# The source against which other packages may be fetched:
+		attr :source, true
+		
+		# A list of packages which are required by this configuration:
+		attr :packages
+
+		# Configuration specific environment:
+		attr :environment
+
+		def package(name, options = {})
+			@packages << Package.new(packages_path + name.to_s, name, options)
+		end
+
+		def packages_path
+			context.root + "teapot/packages/#{name}"
+		end
+		
+		def platforms_path
+			context.root + "teapot/platforms/#{name}"
+		end
+		
+		def load_all
+			@packages.each do |package|
+				@context.load(package)
+			end
+		end
 	end
 end

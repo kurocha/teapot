@@ -18,6 +18,64 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'pathname'
+
+require 'teapot/context'
+require 'teapot/environment'
+require 'teapot/commands'
+
+require 'teapot/definition'
+
 module Teapot
-	VERSION = "0.7.0"
+	class Package
+		def initialize(path, name, options = {})
+			@path = path
+			
+			if options[:name]
+				@name = options[:name]
+			end
+			
+			if Symbol === name
+				@uri = name.to_s
+				@name ||= @uri
+			else
+				@name ||= File.basename(name)
+				@uri = name
+			end
+			
+			@options = options
+			@environment = Environment.new
+		end
+		
+		attr :name
+		attr :path
+		
+		attr :uri
+		attr :options
+		
+		attr :environment
+		
+		def relative_url(base_uri)
+			source_uri = URI(@uri)
+
+			unless source_uri.absolute?
+				source_uri = base_uri + source_uri
+			end
+	
+			# Git can't handle the default formatting that Ruby uses for file URIs.
+			if source_uri.scheme == "file"
+				source_uri = "file://" + source_uri.path
+			end
+			
+			return source_uri
+		end
+		
+		def local?
+			@options.key? :local
+		end
+		
+		def to_s
+			"<#{self.class.name} #{@name.dump} path=#{path}>"
+		end
+	end
 end

@@ -18,6 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-module Teapot
-	VERSION = "0.7.0"
+require 'pathname'
+require 'test/unit'
+require 'stringio'
+
+require 'teapot/context'
+
+class TestConfig < Test::Unit::TestCase
+	ROOT = Pathname.new(__FILE__).dirname
+	
+	def test_context
+		context = Teapot::Context.new(ROOT)
+		
+		# There is one configuration:
+		assert_equal 1, context.configurations.count
+		
+		# ...and thus one automatically created target/dependency:
+		assert_equal 1, context.targets.count
+		
+		default_configuration = context.configurations['default']
+		
+		assert_equal 13, default_configuration.packages.count
+	end
 end
