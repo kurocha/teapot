@@ -43,7 +43,7 @@ module Teapot
 			else
 				aliases = name_or_aliases
 				
-				aliases.each do |(name, dependencies)|
+				aliases.each do |name, dependencies|
 					provisions[name] = Alias.new(Array dependencies)
 				end
 			end
