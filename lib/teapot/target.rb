@@ -77,7 +77,7 @@ module Teapot
 				append linkflags {"-L#{install_prefix + "lib"}"}
 			end
 			
-			@install.call(local_build)
+			@build.call(local_build)
 		end
 	end
 end

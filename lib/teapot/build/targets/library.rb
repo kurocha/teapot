@@ -53,7 +53,7 @@ module Teapot
 					return library_file
 				end
 			
-				def build(environment)
+				def compile_and_link(environment)
 					file_list = self.source_files(environment)
 				
 					pool = Commands::Pool.new
@@ -82,7 +82,7 @@ module Teapot
 				def build(environment)
 					prefix = install_prefix!(environment)
 					
-					build(environment).each do |path|
+					compile_and_link(environment).each do |path|
 						destination_path = prefix + subdirectory + path.basename
 					
 						destination_path.dirname.mkpath

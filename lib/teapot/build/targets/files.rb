@@ -51,7 +51,7 @@ module Teapot
 					options[:subdirectory] || "./"
 				end
 				
-				def install(environment)
+				def build(environment)
 					prefix = install_prefix!(environment)
 					
 					if self.respond_to? :source_files
