@@ -54,12 +54,13 @@ module Teapot
 			@loaded = {}
 
 			defined = load(root_package)
-			
+
 			# Find the default configuration, if it exists:
 			@default_configuration = defined.find{|definition| Configuration === definition}
 		end
 
 		attr :root
+		attr :options
 
 		attr :targets
 		attr :generators
