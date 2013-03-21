@@ -133,7 +133,7 @@ module Application
 		puts "Completed fetch successfully.".color(:green)
 	end
 	
-	def self.install(package_names = ARGV)
+	def self.build(package_names = ARGV)
 		context, configuration = load_teapot
 		
 		configuration.load_all
@@ -171,8 +171,8 @@ module Application
 		ordered.each do |(target, dependency)|
 			puts "Building #{target.name} for dependency #{dependency}...".color(:cyan)
 		
-			if target.respond_to? :install! and !ENV['TEAPOT_DRY']
-				target.install!(configuration)
+			if target.respond_to? :build! and !ENV['TEAPOT_DRY']
+				target.build!(configuration)
 			end
 		end
 	

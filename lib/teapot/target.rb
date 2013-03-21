@@ -33,19 +33,19 @@ module Teapot
 		def initialize(context, package, name)
 			super context, package, name
 
-			@install = nil
+			@build = nil
 		end
 
 		def builder
 			Build.top(@path)
 		end
 
-		def install(&block)
-			@install = Proc.new(&block)
+		def build(&block)
+			@build = Proc.new(&block)
 		end
 
-		def install!(configuration, config = {})
-			return unless @install
+		def build!(configuration, config = {})
+			return unless @build
 			
 			# Reduce the number of keystrokes for good health:
 			context = configuration.context

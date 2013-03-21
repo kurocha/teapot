@@ -41,7 +41,7 @@ module Teapot
 	end
 	
 	class Loader
-		# Provides install_directory and install_external methods
+		# Provides build_directory and build_external methods
 		include Build::Helpers
 		
 		def initialize(context, package)

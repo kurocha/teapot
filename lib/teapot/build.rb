@@ -32,20 +32,20 @@ module Teapot
 		end
 		
 		module Helpers
-			def install_directory(root, directory, *args)
+			def build_directory(root, directory, *args)
 				target = Build.top(root)
 		
 				target.add_directory(directory)
 		
-				target.execute(:install, *args)
+				target.execute(:build, *args)
 			end
 		
-			def install_external(root, directory, *args, &block)
+			def build_external(root, directory, *args, &block)
 				target = Build.top(root)
 			
 				target << Targets::External.new(target, directory, &block)
 			
-				target.execute(:install, *args)
+				target.execute(:build, *args)
 			end
 		end
 	end

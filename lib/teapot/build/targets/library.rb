@@ -79,7 +79,7 @@ module Teapot
 					end
 				end
 			
-				def install(environment)
+				def build(environment)
 					prefix = install_prefix!(environment)
 					
 					build(environment).each do |path|
