@@ -6,7 +6,6 @@ Teapot is a decentralised build tool for managing complex cross-platform project
 - Decentralised dependency management allows use within private organisations without exposing code.
 - Generators can simplify the construction of new projects as well as assist with the development of existing ones.
 - The build subsystem provides a simple set of canonical operations for building libraries and executables to minimise configuration overhead.
-- 
 
 [![Build Status](https://secure.travis-ci.org/ioquatix/teapot.png)](http://travis-ci.org/ioquatix/teapot)
 
