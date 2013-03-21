@@ -209,6 +209,16 @@ module Application
 								puts "\t\t- provides #{name.inspect}".color(:green)
 							end
 						end
+					when Teapot::Configuration
+						definition.packages.each do |package|
+							if package.local?
+								puts "\t\t- links #{package.name} from #{package.options[:local]}".color(:green)
+							elsif package.external?
+								puts "\t\t- clones #{package.name} from #{package.external_url(context.root)}".color(:green)
+							else
+								puts "\t\t- references #{package.name} from #{package.path}".color(:green)
+							end
+						end
 					end
 				end
 			rescue Teapot::NonexistantTeapotError => error
