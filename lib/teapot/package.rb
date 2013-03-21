@@ -30,11 +30,11 @@ module Teapot
 	class Package
 		def initialize(path, name, options = {})
 			@path = path
-			
+
 			if options[:name]
 				@name = options[:name]
 			end
-			
+
 			if Symbol === name
 				@uri = name.to_s
 				@name ||= @uri
@@ -42,18 +42,42 @@ module Teapot
 				@name ||= File.basename(name)
 				@uri = name
 			end
-			
+
 			@options = options
 			@environment = Environment.new
 		end
-		
+
 		attr :name
 		attr :path
-		
+
 		attr :uri
 		attr :options
-		
+
 		attr :environment
+
+		def local?
+			@options.key? :local
+		end
+
+		def external?
+			@options.key? :source
+		end
+
+		def external_url(relative_root)
+			base_uri = URI(@options[:source].to_s)
+
+			if base_uri.scheme == nil || base_uri.scheme == 'file'
+				base_uri = URI "file://" + File.expand_path(base_uri.path, relative_root) + "/"
+			end
+
+			return relative_url(base_uri)
+		end
+
+		def to_s
+			"<#{self.class.name} #{@name.dump} path=#{path}>"
+		end
+		
+		private
 		
 		def relative_url(base_uri)
 			source_uri = URI(@uri)
@@ -66,16 +90,8 @@ module Teapot
 			if source_uri.scheme == "file"
 				source_uri = "file://" + source_uri.path
 			end
-			
+
 			return source_uri
-		end
-		
-		def local?
-			@options.key? :local
-		end
-		
-		def to_s
-			"<#{self.class.name} #{@name.dump} path=#{path}>"
 		end
 	end
 end

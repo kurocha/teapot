@@ -46,7 +46,7 @@ module Application
 		configuration_name = OPTIONS[:configuration]
 		
 		context = Teapot::Context.new(root)
-		configuration = context.configurations[configuration_name]
+		configuration = context.configuration_named(configuration_name)
 		
 		return context, configuration
 	end
@@ -66,14 +66,6 @@ module Application
 	def self.fetch
 		context, configuration = load_teapot
 
-		base_uri = URI(configuration.source.to_s)
-
-		if base_uri.scheme == nil || base_uri.scheme == 'file'
-			base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
-		end
-		
-		puts "Base URI: #{base_uri}".color(:cyan)
-		
 		configuration.packages.each do |package|
 			destination_path = package.path
 		
@@ -88,23 +80,41 @@ module Application
 				unless destination_path.exist?
 					destination_path.make_symlink(local_path)
 				end
-			else
+			elsif package.external?
 				puts "Fetching #{package}...".color(:cyan)
 		
+				base_uri = URI(package.options[:source].to_s)
+
+				if base_uri.scheme == nil || base_uri.scheme == 'file'
+					base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
+				end
+
 				branch = package.options.fetch(:version, 'master')
-		
+
 				unless destination_path.exist?
 					puts "Cloning package at path #{destination_path} ...".color(:cyan)
-					destination_path.mkpath
+					
+					begin
+						destination_path.mkpath
+
+						external_url = package.external_url(context.root)
+
+						Teapot::Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
 			
-					Teapot::Commands.run("git", "clone", package.relative_url(base_uri), destination_path, "--branch", branch)
-			
-					Dir.chdir(destination_path) do
-						Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+						Dir.chdir(destination_path) do
+							Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+						end
+					rescue
+						puts "Removing incomplete package at path #{destination_path}...".color(:red)
+						
+						# Clean up if the git checkout process is interrupted:
+						destination_path.rmtree
+						
+						raise
 					end
 				else
 					puts "Updating package at path #{destination_path} ...".color(:cyan)
-			
+
 					Dir.chdir(destination_path) do
 						Teapot::Commands.run("git", "fetch", "origin")
 				
@@ -203,7 +213,6 @@ module Application
 				end
 			rescue Teapot::NonexistantTeapotError => error
 				puts "\t#{error.message}".color(:red)
-				puts "\tHave you fetched it yet?".color(:red)
 			end
 		end
 	end
@@ -228,7 +237,7 @@ module Application
 			output.puts "define_configuration do |configuration|"
 			
 			source = ARGV.shift
-			output.puts "\tconfiguration.source = #{source.dump}", ''
+			output.puts "\tconfiguration[:source] = #{source.dump}", ''
 			
 			ARGV.each do |package|
 				output.puts "\tconfiguration.package #{package.dump}"

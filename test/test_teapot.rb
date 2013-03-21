@@ -33,11 +33,12 @@ class TestConfig < Test::Unit::TestCase
 		# There is one configuration:
 		assert_equal 1, context.configurations.count
 		
-		# ...and thus one automatically created target/dependency:
-		assert_equal 1, context.targets.count
+		# No targets were defined:
+		assert_equal 0, context.targets.count
 		
-		default_configuration = context.configurations['default']
+		default_configuration = context.default_configuration
 		
-		assert_equal 13, default_configuration.packages.count
+		# 13 defined packages + 1 implicit package.
+		assert_equal 14, default_configuration.packages.count
 	end
 end

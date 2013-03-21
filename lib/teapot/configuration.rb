@@ -28,37 +28,52 @@ require 'teapot/definition'
 
 module Teapot
 	class Configuration < Definition
-		include Dependency
-		
 		def initialize(context, package, name)
 			super context, package, name
 
-			@source = nil
+			@options = {}
+
 			@packages = []
+
 			@environment = Environment.new
 		end
-		
-		# The source against which other packages may be fetched:
-		attr :source, true
-		
+
+		# Options used to bind packages to this configuration:
+		attr :options
+
 		# A list of packages which are required by this configuration:
 		attr :packages
 
-		# Configuration specific environment:
 		attr :environment
 
-		def package(name, options = {})
-			@packages << Package.new(packages_path + name.to_s, name, options)
+		def package(name, options = @options)
+			@packages << Package.new(packages_path + name.to_s, name, options.dup)
+		end
+
+		def group
+			options = @options.dup
+			
+			yield
+			
+			@options = options
+		end
+
+		def []= key, value
+			@options[key] = value
+		end
+
+		def [] key
+			@options[key]
 		end
 
 		def packages_path
-			context.root + "teapot/packages/#{name}"
+			context.root + "teapot/#{name}/packages/"
 		end
-		
+
 		def platforms_path
-			context.root + "teapot/platforms/#{name}"
+			context.root + "teapot/#{name}/platforms/"
 		end
-		
+
 		def load_all
 			@packages.each do |package|
 				@context.load(package)

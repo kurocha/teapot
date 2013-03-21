@@ -5,8 +5,8 @@
 
 required_version "0.7"
 
-define_configuration do |config|
-	config.source = "../dream-framework"
+define_configuration 'test' do |config|
+	config[:source] = "../dream-framework"
 
 	config.package "variants"
 

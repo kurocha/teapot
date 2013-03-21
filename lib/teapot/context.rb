@@ -23,7 +23,20 @@ require 'teapot/package'
 
 module Teapot
 	TEAPOT_FILE = "teapot.rb"
-	
+	DEFAULT_CONFIGURATION_NAME = 'default'
+
+	class AlreadyDefinedError < StandardError
+		def initialize(definition, previous)
+			super "Definition #{definition.name} in #{definition.path} has already been defined in #{previous.path}!"
+		end
+
+		def self.check(definition, definitions)
+			previous = definitions[definition.name]
+
+			raise new(definition, previous) if previous
+		end
+	end
+
 	class Context
 		def initialize(root, options = {})
 			@root = Pathname(root)
@@ -37,8 +50,12 @@ module Teapot
 
 			@dependencies = []
 			@selection = Set.new
+
+			@loaded = {}
+
+			defined = load(root_package)
 			
-			load(root_package)
+			@default_configuration = defined.find{|_| Configuration === _}
 		end
 
 		attr :root
@@ -68,34 +85,75 @@ module Teapot
 				end
 			end
 		end
-		
+
 		attr :dependencies
 		attr :selection
-		
+
 		def direct_targets(ordered)
 			@dependencies.collect do |dependency|
 				ordered.find{|(package, _)| package.provides? dependency}
 			end.compact
 		end
-		
-		def load(package)
-			loader = Loader.new(self, package)
-			
-			path = (package.path + TEAPOT_FILE).to_s
-			loader.load(path)
-			
-			if loader.version == nil
-				raise IncompatibleTeapot.new("No version specified in #{path}!")
+
+		def << definition
+			case definition
+			when Target
+				AlreadyDefinedError.check(definition, @targets)
+
+				@targets[definition.name] = definition
+			when Generator
+				AlreadyDefinedError.check(definition, @generators)
+
+				@generators[definition.name] = definition
+			when Configuration
+				# The root package implicitly defines the default configuration.
+				if definition.name == DEFAULT_CONFIGURATION_NAME
+					raise AlreadyDefinedError.new(definition, root_package)
+				end
+
+				AlreadyDefinedError.check(definition, @configurations)
+
+				@configurations[definition.name] = definition
 			end
-			
-			loader.defined
+		end
+
+		def load(package)
+			# In certain cases, a package record might be loaded twice. This typically occurs when multiple configurations are loaded in the same context, or if a package has already been loaded (as is typical with the root package).
+			@loaded.fetch(package) do
+				loader = Loader.new(self, package)
+
+				path = (package.path + TEAPOT_FILE).to_s
+				loader.load(path)
+
+				if loader.version == nil
+					raise IncompatibleTeapot.new("No version specified in #{path}!")
+				end
+
+				# Load the definitions into the current context:
+				loader.defined.each do |definition|
+					self << definition
+				end
+
+				# Save the definitions per-package:
+				@loaded[package] = loader.defined
+			end
+		end
+
+		attr :default_configuration
+
+		def configuration_named(name)
+			if name == DEFAULT_CONFIGURATION_NAME
+				return @default_configuration
+			else
+				return @configurations[name]
+			end
 		end
 		
 		private
-		
-		# The root package is a special package which is used to load definitions from a given root path. It won't be included in any configuration by default.
+
+		# The root package is a special package which is used to load definitions from a given root path.
 		def root_package
-			Package.new(@root, "local")
+			@root_package ||= Package.new(@root, "root")
 		end
 	end
 end

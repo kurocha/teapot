@@ -28,8 +28,6 @@ module Teapot
 	LOADER_VERSION = "0.7"
 	MINIMUM_LOADER_VERSION = "0.6"
 	
-	DEFAULT_CONFIGURATION_NAME = 'default'
-	
 	class IncompatibleTeapotError < StandardError
 		def initialize(version)
 			super "Version #{version} isn't compatible with current loader! Minimum supported version: #{MINIMUM_LOADER_VERSION}; Current version: #{LOADER_VERSION}."
@@ -75,32 +73,25 @@ module Teapot
 
 			yield target
 
-			@context.targets[target.name] = target
-
 			@defined << target
 		end
 		
 		def define_generator(*args)
 			generator = Generator.new(@context, @package, *args)
-			
+
 			yield generator
-			
-			@context.generators[generator.name] = generator
-			
+
 			@defined << generator
 		end
 		
-		def define_configuration(name = DEFAULT_CONFIGURATION_NAME, *args)
-			config = Configuration.new(@context, @package, name, *args)
-			
-			yield config
-			
-			@context.configurations[config.name] = config
-			
-			# A configuration also serves as a special build target:
-			@context.targets[config.name] = config
-			
-			@defined << config
+		def define_configuration(*args)
+			configuration = Configuration.new(@context, @package, *args)
+
+			yield configuration
+
+			configuration.packages << @package
+
+			@defined << configuration
 		end
 		
 		def load(path)
