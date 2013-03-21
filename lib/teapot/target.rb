@@ -55,7 +55,7 @@ module Teapot
 			environments = []
 			
 			# The base configuration environment:
-			environments << configuration.environment
+			# environments << configuration.environment
 			
 			# Calculate the dependency chain's ordered environments:
 			environments += chain.provisions.collect do |provision|

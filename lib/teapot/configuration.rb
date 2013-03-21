@@ -35,7 +35,6 @@ module Teapot
 
 			@packages = []
 
-			@environment = Environment.new
 		end
 
 		# Options used to bind packages to this configuration:
@@ -44,7 +43,6 @@ module Teapot
 		# A list of packages which are required by this configuration:
 		attr :packages
 
-		attr :environment
 
 		def package(name, options = @options)
 			@packages << Package.new(packages_path + name.to_s, name, options.dup)
