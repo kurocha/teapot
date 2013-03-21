@@ -111,8 +111,7 @@ module Teapot
 			@loaded.fetch(package) do
 				loader = Loader.new(self, package)
 
-				path = (package.path + TEAPOT_FILE).to_s
-				loader.load(path)
+				loader.load(TEAPOT_FILE)
 
 				if loader.version == nil
 					raise IncompatibleTeapot.new("No version specified in #{path}!")

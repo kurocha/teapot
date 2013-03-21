@@ -105,10 +105,13 @@ module Teapot
 				name
 			end
 		end
+		
 		def load(path)
-			raise NonexistantTeapotError.new(path) unless File.exist?(path)
+			absolute_path = @package.path + path
 			
-			self.instance_eval(File.read(path), path)
+			raise NonexistantTeapotError.new(absolute_path) unless File.exist?(absolute_path)
+			
+			self.instance_eval(absolute_path.read, absolute_path.to_s)
 		end
 	end
 end
