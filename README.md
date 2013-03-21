@@ -23,7 +23,7 @@ Firstly, create your project by running:
 
 	$ teapot init $PROJECT_NAME https://github.com/dream-framework project
 
-In the resulting project directory (`$PROJECT_NAME`/) that has been created, you can see the list of dependencies:
+In the resulting project directory that has been created, you can see the list of dependencies:
 
 	$ cd $PROJECT_NAME
 	$ teapot list
