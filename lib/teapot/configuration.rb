@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 require 'pathname'
+require 'set'
 
 require 'teapot/context'
 require 'teapot/environment'
@@ -33,8 +34,10 @@ module Teapot
 
 			@options = {}
 
-			@packages = []
-
+			@packages = Set.new
+			@imports = []
+			
+			top!
 		end
 
 		# Options used to bind packages to this configuration:
@@ -43,6 +46,12 @@ module Teapot
 		# A list of packages which are required by this configuration:
 		attr :packages
 
+		# A list of other configurations to include when materialising the list of packages:
+		attr :imports
+
+		def import(name)
+			@imports << name
+		end
 
 		def package(name, options = @options)
 			@packages << Package.new(packages_path + name.to_s, name, options.dup)
@@ -65,17 +74,53 @@ module Teapot
 		end
 
 		def packages_path
-			context.root + "teapot/#{name}/packages/"
+			context.root + "teapot/packages/#{name}"
 		end
 
 		def platforms_path
-			context.root + "teapot/#{name}/platforms/"
+			context.root + "teapot/platforms/#{name}"
 		end
 
 		def load_all
 			@packages.each do |package|
 				@context.load(package)
 			end
+		end
+		
+		def top!
+			@packages << @package
+		end
+		
+		def materialize
+			# Potentially no materialization is required:
+			return self if @imports.count == 0
+			
+			# Before trying to materialize, we should load all possible packages:
+			@packages.each{|package| @context.load(package) rescue nil}
+			
+			# Create a new configuration which will represent the materialised version:
+			configuration = self.class.new(@context, @package, @name)
+			
+			# Append all current packages to the new package:
+			configuration.append(self)
+			
+			# Enumerate all imports and attempt to resolve the packages:
+			@imports.each do |name|
+				resolved_configuration = @context.configuration_named(name)
+				
+				if resolved_configuration
+					configuration.append(resolved_configuration)
+				else
+					# It couldn't be resolved...
+					configuration.imports << name
+				end
+			end
+			
+			return configuration
+		end
+		
+		def append(configuration)
+			@packages += configuration.packages
 		end
 	end
 end

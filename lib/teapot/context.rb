@@ -132,9 +132,13 @@ module Teapot
 
 		def configuration_named(name)
 			if name == DEFAULT_CONFIGURATION_NAME
-				return @default_configuration
+				configuration = @default_configuration
 			else
-				return @configurations[name]
+				configuration = @configurations[name]
+			end
+			
+			if configuration
+				configuration.materialize
 			end
 		end
 		

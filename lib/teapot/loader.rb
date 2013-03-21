@@ -89,8 +89,6 @@ module Teapot
 
 			yield configuration
 
-			configuration.packages << @package
-
 			@defined << configuration
 		end
 		
