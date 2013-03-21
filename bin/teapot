@@ -219,6 +219,7 @@ module Application
 	
 	def self.init
 		root = Pathname(ARGV.shift)
+		project_name = root.basename.to_s
 		
 		if root.exist?
 			abort "#{root} already exists!".color(:red)
@@ -234,7 +235,7 @@ module Application
 			
 			output.puts "required_version #{Teapot::VERSION.dump}", ''
 			
-			output.puts "define_configuration do |configuration|"
+			output.puts "define_configuration #{project_name.dump} do |configuration|"
 			
 			source = ARGV.shift
 			output.puts "\tconfiguration[:source] = #{source.dump}", ''
