@@ -94,6 +94,17 @@ module Teapot
 			@defined << configuration
 		end
 		
+		def host(*args, &block)
+			name = @context.options[:host_platform] || RUBY_PLATFORM
+			
+			if block_given?
+				if args.find{|arg| arg === name}
+					yield
+				end
+			else
+				name
+			end
+		end
 		def load(path)
 			raise NonexistantTeapotError.new(path) unless File.exist?(path)
 			

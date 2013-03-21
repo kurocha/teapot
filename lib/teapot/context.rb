@@ -65,18 +65,6 @@ module Teapot
 		attr :generators
 		attr :configurations
 
-		def host(*args, &block)
-			name = @options[:host_platform] || RUBY_PLATFORM
-			
-			if block_given?
-				if args.find{|arg| arg === name}
-					yield
-				end
-			else
-				name
-			end
-		end
-
 		def select(names)
 			names.each do |name|
 				if @targets.key? name
