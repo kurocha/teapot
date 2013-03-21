@@ -55,7 +55,8 @@ module Teapot
 
 			defined = load(root_package)
 			
-			@default_configuration = defined.find{|_| Configuration === _}
+			# Find the default configuration, if it exists:
+			@default_configuration = defined.find{|definition| Configuration === definition}
 		end
 
 		attr :root
