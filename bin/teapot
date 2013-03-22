@@ -278,8 +278,6 @@ module Application
 		puts "Creating teapot at path #{root}...".color(:cyan)
 		root.mkpath
 		
-		packages = []
-		
 		File.open(root + Teapot::TEAPOT_FILE, "w") do |output|
 			output.puts "\# Teapot configuration generated at #{Time.now.to_s}", ''
 			
@@ -290,9 +288,8 @@ module Application
 			source = ARGV.shift
 			output.puts "\tconfiguration[:source] = #{source.dump}", ''
 			
-			ARGV.each do |package|
-				output.puts "\tconfiguration.package #{package.dump}"
-				packages << package
+			ARGV.each do |name|
+				output.puts "\tconfiguration.import! #{name.dump}"
 			end
 			
 			output.puts "end"
@@ -300,8 +297,6 @@ module Application
 		
 		Dir.chdir(root) do
 			self.fetch
-			
-			# self.generate('project')
 		end
 	end
 	
