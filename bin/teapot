@@ -332,4 +332,5 @@ time = Benchmark.measure do
 	Application.send(action) if Application.methods.include?(action)
 end
 
-puts time.format("Elapsed Time: %r").color(:magenta)
+$stdout.flush
+$stderr.puts time.format("Elapsed Time: %r").color(:magenta)
