@@ -321,6 +321,18 @@ module Application
 		puts "Generating #{name.inspect} with arguments #{arguments.inspect}".color(:cyan)
 		generator.generate!(*arguments)
 	end
+	
+	def self.environment
+		context, configuration = load_teapot
+		
+		puts YAML::dump(
+			'context.root' => context.root.to_s,
+			'configuration.name' => configuration.name.to_s,
+			'configuration.packages_path' => configuration.packages_path.to_s,
+			'configuration.platforms_path' => configuration.platforms_path.to_s,
+			'configuration.package.path' => configuration.package.path.to_s,
+		)
+	end
 end
 
 time = Benchmark.measure do
