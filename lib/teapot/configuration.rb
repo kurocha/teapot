@@ -29,15 +29,15 @@ require 'teapot/definition'
 
 module Teapot
 	class Configuration < Definition
-		def initialize(context, package, name)
+		Import = Struct.new(:name, :options)
+		
+		def initialize(context, package, name, packages = Set.new)
 			super context, package, name
 
 			@options = {}
 
-			@packages = Set.new
+			@packages = packages
 			@imports = []
-			
-			top!
 		end
 
 		# Options used to bind packages to this configuration:
@@ -50,11 +50,13 @@ module Teapot
 		attr :imports
 
 		def import(name)
-			@imports << name
+			@imports << Import.new(name, @options.dup)
 		end
 
-		def package(name, options = @options)
-			@packages << Package.new(packages_path + name.to_s, name, options.dup)
+		def package(name, options = nil)
+			options = options ? @options.merge(options) : @options.dup
+			
+			@packages << Package.new(packages_path + name.to_s, name, options)
 		end
 
 		def group
@@ -87,6 +89,7 @@ module Teapot
 			end
 		end
 		
+		# Conceptually, a configuration belongs to a package. Primarily, a configuration lists dependent packages, but this also includes itself as the dependencies are purely target based, e.g. this configuration has access to any targets exposed by its own package.
 		def top!
 			@packages << @package
 		end
@@ -99,28 +102,31 @@ module Teapot
 			@packages.each{|package| @context.load(package) rescue nil}
 			
 			# Create a new configuration which will represent the materialised version:
-			configuration = self.class.new(@context, @package, @name)
-			
-			# Append all current packages to the new package:
-			configuration.append(self)
+			configuration = self.class.new(@context, @package, @name, @packages.dup)
 			
 			# Enumerate all imports and attempt to resolve the packages:
-			@imports.each do |name|
-				resolved_configuration = @context.configuration_named(name)
+			@imports.each do |import|
+				resolved_configuration = @context.configuration_named(import.name)
 				
 				if resolved_configuration
-					configuration.append(resolved_configuration)
+					configuration.append(resolved_configuration, import.options)
 				else
 					# It couldn't be resolved...
-					configuration.imports << name
+					configuration.imports << import
 				end
 			end
 			
 			return configuration
 		end
 		
-		def append(configuration)
-			@packages += configuration.packages
+		def append(configuration, options)
+			@packages += configuration.packages.collect do |package|
+				package.dup.tap{|package| package.options = options.merge(package.options)}
+			end
+			
+			@imports += configuration.imports.collect do |import|
+				import.dup.tap{|import| import.options = options.merge(import.options)}
+			end
 		end
 	end
 end
