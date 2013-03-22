@@ -33,7 +33,7 @@ module Teapot
 				end
 				
 				def subdirectory
-					"apps/#{@name}"
+					"Applications/#{@name}"
 				end
 				
 				def << target
