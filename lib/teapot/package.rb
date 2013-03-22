@@ -44,8 +44,7 @@ module Teapot
 			end
 
 			@options = options
-			@environment = Environment.new
-		end
+ 		end
 
 		attr :name
 		attr :path
@@ -53,7 +52,6 @@ module Teapot
 		attr :uri
 		attr :options
 
-		attr :environment
 
 		def local?
 			@options.key? :local
