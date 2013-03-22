@@ -141,7 +141,21 @@ module Teapot
 				configuration.materialize
 			end
 		end
-		
+
+		def unresolved(packages)
+			failed_to_load = Set.new
+			
+			packages.collect do |package|
+				begin
+					definitions = load(package)
+				rescue NonexistantTeapotError
+					failed_to_load << package
+				end
+			end
+			
+			return failed_to_load
+		end
+
 		private
 
 		# The root package is a special package which is used to load definitions from a given root path.
