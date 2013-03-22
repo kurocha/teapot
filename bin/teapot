@@ -38,7 +38,10 @@ OPTIONS = Trollop::options do
 	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
 end
 
+# It would be nice to make this code a bit simpler, perhaps moving some parts of it to lib/teapot/application/{function}.rb
 module Application
+	MAXIMUM_FETCH_DEPTH = 20
+	
 	private
 	
 	def self.load_teapot
@@ -66,71 +69,102 @@ module Application
 	def self.fetch
 		context, configuration = load_teapot
 
-		configuration.packages.each do |package|
-			destination_path = package.path
-		
-			if package.local?
-				puts "Linking local #{package}...".color(:cyan)
+		resolved = Set.new
+		unresolved = context.unresolved(configuration.packages)
+		tries = 0
+
+		while tries < MAXIMUM_FETCH_DEPTH
+			configuration.packages.each do |package|
+				next if resolved.include? package
 				
-				local_path = context.root + package.options[:local]
+				destination_path = package.path
+				
+				if package.local?
+					puts "Linking local #{package}...".color(:cyan)
+				
+					local_path = context.root + package.options[:local]
 			
-				# Make the top level directory if required:
-				destination_path.dirname.mkpath
+					# Make the top level directory if required:
+					destination_path.dirname.mkpath
 			
-				unless destination_path.exist?
-					destination_path.make_symlink(local_path)
-				end
-			elsif package.external?
-				puts "Fetching #{package}...".color(:cyan)
+					unless destination_path.exist?
+						destination_path.make_symlink(local_path)
+					end
+				elsif package.external?
+					puts "Fetching #{package}...".color(:cyan)
 		
-				base_uri = URI(package.options[:source].to_s)
+					base_uri = URI(package.options[:source].to_s)
 
-				if base_uri.scheme == nil || base_uri.scheme == 'file'
-					base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
-				end
+					if base_uri.scheme == nil || base_uri.scheme == 'file'
+						base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
+					end
 
-				branch = package.options.fetch(:version, 'master')
+					branch = package.options.fetch(:version, 'master')
 
-				unless destination_path.exist?
-					puts "Cloning package at path #{destination_path} ...".color(:cyan)
+					unless destination_path.exist?
+						puts "Cloning package at path #{destination_path} ...".color(:cyan)
 					
-					begin
-						destination_path.mkpath
+						begin
+							destination_path.mkpath
 
-						external_url = package.external_url(context.root)
+							external_url = package.external_url(context.root)
 
-						Teapot::Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
+							Teapot::Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
 			
+							Dir.chdir(destination_path) do
+								Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
+							end
+						rescue
+							puts "Removing incomplete package at path #{destination_path}...".color(:red)
+						
+							# Clean up if the git checkout process is interrupted:
+							destination_path.rmtree
+						
+							raise
+						end
+					else
+						puts "Updating package at path #{destination_path} ...".color(:cyan)
+
 						Dir.chdir(destination_path) do
+							Teapot::Commands.run("git", "fetch", "origin")
+				
+							Teapot::Commands.run("git", "checkout", branch)
+				
+							# Pull any changes, if you might get the error from above:
+							# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
+							Teapot::Commands.run("git", "pull")
+				
 							Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
 						end
-					rescue
-						puts "Removing incomplete package at path #{destination_path}...".color(:red)
-						
-						# Clean up if the git checkout process is interrupted:
-						destination_path.rmtree
-						
-						raise
-					end
-				else
-					puts "Updating package at path #{destination_path} ...".color(:cyan)
-
-					Dir.chdir(destination_path) do
-						Teapot::Commands.run("git", "fetch", "origin")
-				
-						Teapot::Commands.run("git", "checkout", branch)
-				
-						# Pull any changes, if you might get the error from above:
-						# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
-						Teapot::Commands.run("git", "pull")
-				
-						Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
 					end
 				end
+				
+				# We are done with this package, don't try to process it again:
+				resolved << package
 			end
+			
+			# Resolve any/all imports:
+			configuration = configuration.materialize
+			
+			previously_unresolved = unresolved
+			unresolved = context.unresolved(configuration.packages)
+			
+			# No additional packages were resolved, we have reached a fixed point:
+			if previously_unresolved == unresolved || unresolved.count == 0
+				break
+			end
+			
+			tries += 1
 		end
-	
-		puts "Completed fetch successfully.".color(:green)
+		
+		if unresolved.count > 0
+			puts "Could not fetch all packages!".color(:red)
+			unresolved.each do |package|
+				puts "\t#{package}".color(:red)
+			end
+		else
+			puts "Completed fetch successfully.".color(:green)
+		end
 	end
 	
 	def self.build(package_names = ARGV)
@@ -184,7 +218,7 @@ module Application
 		
 		# Should this somehow consider context.root_package?
 		configuration.packages.each do |package|
-			puts "Package #{package.name}:".bright
+			puts "Package #{package.name} (from #{package.path}):".bright
 			
 			begin
 				definitions = context.load(package)
@@ -222,8 +256,8 @@ module Application
 							end
 						end
 						
-						definition.imports.each do |name|
-							puts "\t\t- unmaterialised import #{name}".color(:red)
+						definition.imports.each do |import|
+							puts "\t\t- unmaterialised import #{import.name}".color(:red)
 						end
 					end
 				end
