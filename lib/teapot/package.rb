@@ -29,20 +29,25 @@ require 'teapot/definition'
 module Teapot
 	class Package
 		def initialize(path, name, options = {})
+			# The path where the package is (or will be) located:
 			@path = path
 
+			# Get the name of the package from the options, if provided:
 			if options[:name]
 				@name = options[:name]
 			end
 
 			if Symbol === name
+				# If the name argument was symbolic, we convert it into a string, and use it for both the uri and the name itself:
 				@uri = name.to_s
 				@name ||= @uri
 			else
+				# Otherwise, we assume a path may have been given, and use that instead:
 				@name ||= File.basename(name)
 				@uri = name
 			end
-
+			
+			# Copy the options provided:
 			@options = options
  		end
 
