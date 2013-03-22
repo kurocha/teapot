@@ -21,24 +21,19 @@ Teapot doesn't have a centralised package management system. As such, this examp
 
 Firstly, create your project by running:
 
-	$ teapot init $PROJECT_NAME https://github.com/dream-framework project
+	$ teapot init my-project https://github.com/dream-framework project
+	$ cd my-project
+	$ teapot generate project "My Project"
 
 In the resulting project directory that has been created, you can see the list of dependencies:
 
-	$ cd $PROJECT_NAME
 	$ teapot list
-	Package project:
-		<Teapot::Generator "project">
-			Generates a basic project for use with the dream-framework.
-		<Teapot::Generator "class">
-			Generates a basic class file in the project.
-	Package root:
-		<Teapot::Configuration "foobar">
-	Elapsed Time: (0.000795)
 
 To build your project:
 
-	$ teapot build
+	$ teapot build Application/MyProject variant-debug
+
+When you build, you need to specify dependencies. If you haven't specified all dependencies, they will be suggested to you.
 
 The resulting libraries will be framework dependent, but are typically located in
 
