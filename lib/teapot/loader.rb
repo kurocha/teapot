@@ -89,6 +89,8 @@ module Teapot
 
 			yield configuration
 
+			configuration.top!
+
 			@defined << configuration
 		end
 		
