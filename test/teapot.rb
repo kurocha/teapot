@@ -5,27 +5,29 @@
 
 required_version "0.7"
 
-define_configuration 'test' do |config|
-	config[:source] = "../dream-framework"
+define_configuration 'test' do |configuration|
+	configuration.public!
+	
+	configuration[:source] = "../dream-framework"
 
-	config.package "variants"
+	configuration.require "variants"
 
-	config.package "platform-darwin-osx"
-	config.package "platform-darwin-ios"
+	configuration.require "platform-darwin-osx"
+	configuration.require "platform-darwin-ios"
 
-	config.package "unit-test"
-	config.package "euclid"
+	configuration.require "unit-test"
+	configuration.require "euclid"
 
-	config.package "ogg"
-	config.package "vorbis"
+	configuration.require "ogg"
+	configuration.require "vorbis"
 
-	config.package "jpeg"
-	config.package "png"
+	configuration.require "jpeg"
+	configuration.require "png"
 
-	config.package "freetype"
+	configuration.require "freetype"
 
-	config.package "dream"
-	config.package "tagged-format"
+	configuration.require "dream"
+	configuration.require "tagged-format"
 
-	config.package "opencv"
+	configuration.require "opencv"
 end
