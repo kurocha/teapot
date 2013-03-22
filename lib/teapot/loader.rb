@@ -26,7 +26,7 @@ require 'teapot/build'
 
 module Teapot
 	LOADER_VERSION = "0.7"
-	MINIMUM_LOADER_VERSION = "0.6"
+	MINIMUM_LOADER_VERSION = "0.7"
 	
 	class IncompatibleTeapotError < StandardError
 		def initialize(version)
