@@ -80,6 +80,16 @@ module Teapot
 			"<#{self.class.name} #{@name.dump} path=#{path}>"
 		end
 		
+		# Package may be used as hash key / in a set:
+		
+		def hash
+			@path.hash
+		end
+		
+		def eql?(other)
+			@path.eql?(other.path)
+		end
+		
 		private
 		
 		def relative_url(base_uri)
