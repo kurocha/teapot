@@ -41,7 +41,7 @@ module Teapot
 					@parent.root + @directory
 				end
 				
-				def install(values)
+				def build(values)
 					return unless @install
 					
 					source_path = @parent.root + @directory
