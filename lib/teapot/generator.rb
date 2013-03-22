@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 require 'teapot/definition'
+require 'tempfile'
 
 module Teapot
 	class Generator < Definition
@@ -40,19 +41,68 @@ module Teapot
 			return text unless substitutions
 			
 			# Use positive look behind so that the pattern is just the substitution key:
-			pattern = Regexp.new('(?<=\$)' + substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
+			pattern = Regexp.new(substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
 			
 			text.gsub(pattern) {|key| substitutions[key]}
 		end
 		
-		def append(source, destination, substitutions = nil)
+		def write(source, destination, substitutions = nil, mode = "a")
 			source_path = Pathname(path) + source
-			destination_path = Pathname(context.config.root) + destination
+			destination_path = Pathname(context.root) + destination
 			
-			File.open(destination_path, "a") do |file|
+			destination_path.dirname.mkpath
+			
+			File.open(destination_path, mode) do |file|
 				text = File.read(source_path)
 				
 				file.write substitute(text, substitutions)
+			end
+		end
+		
+		def append(source, destination, substitutions = nil)
+			write(source, destination, substitutions, "a")
+		end
+		
+		def merge(source, destination, substitutions = nil)
+			source_path = Pathname(path) + source
+			destination_path = Pathname(context.root) + destination
+			
+			if destination_path.exist?
+				temporary_file = Tempfile.new(destination_path.basename.to_s)
+				
+				# This functionality works, but needs improvements.
+				begin
+					# Need to ask user what to do?
+					write(source_path, temporary_file.path, substitutions, "w")
+					
+					if temporary_file.read != destination_path.read
+						if `which opendiff`.chomp != ''
+							system("opendiff", "-merge", destination_path.to_s, destination_path.to_s, temporary_file.path)
+						elsif `which sdiff`.chomp != ''
+							system("sdiff", "-o", destination_path.to_s, destination_path.to_s, temporary_file.path)
+						else
+							abort "Can't find diff/merge tools. Please install sdiff!"
+						end
+					end
+				ensure
+					temporary_file.unlink
+				end
+			else
+				write(source_path, destination_path, substitutions, "w")
+			end
+		end
+		
+		def copy(source, destination, substitutions = nil)
+			source_path = Pathname(path) + source
+			
+			if source_path.directory?
+				destination_path = Pathname(context.root) + destination
+				
+				source_path.children(false).each do |child_path|
+					copy(source_path + child_path, destination_path + substitute(child_path.to_s, substitutions), substitutions)
+				end
+			else
+				merge(source_path, destination, substitutions)
 			end
 		end
 	end
