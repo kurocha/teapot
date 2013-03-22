@@ -42,8 +42,6 @@ module Teapot
 			@root = Pathname(root)
 			@options = options
 
-			@selection = nil
-
 			@targets = {}
 			@generators = {}
 			@configurations = {}
@@ -53,10 +51,11 @@ module Teapot
 
 			@loaded = {}
 
+			# Load the root package:
 			defined = load(root_package)
 
 			# Find the default configuration, if it exists:
-			@default_configuration = defined.find{|definition| Configuration === definition}
+			@default_configuration = defined.default_configuration
 		end
 
 		attr :root
@@ -96,14 +95,16 @@ module Teapot
 
 				@generators[definition.name] = definition
 			when Configuration
-				# The root package implicitly defines the default configuration.
-				if definition.name == DEFAULT_CONFIGURATION_NAME
-					raise AlreadyDefinedError.new(definition, root_package)
+				if definition.public?
+					# The root package implicitly defines the default configuration.
+					if definition.name == DEFAULT_CONFIGURATION_NAME
+						raise AlreadyDefinedError.new(definition, root_package)
+					end
+
+					AlreadyDefinedError.check(definition, @configurations)
+
+					@configurations[definition.name] = definition
 				end
-
-				AlreadyDefinedError.check(definition, @configurations)
-
-				@configurations[definition.name] = definition
 			end
 		end
 
@@ -113,10 +114,6 @@ module Teapot
 				loader = Loader.new(self, package)
 
 				loader.load(TEAPOT_FILE)
-
-				if loader.version == nil
-					raise IncompatibleTeapot.new("No version specified in #{path}!")
-				end
 
 				# Load the definitions into the current context:
 				loader.defined.each do |definition|

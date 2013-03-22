@@ -41,23 +41,28 @@ module Teapot
 	end
 	
 	class Loader
+		class Definitions < Array
+			def default_configuration
+				find{|definition| Configuration === definition}
+			end
+		end
+		
 		# Provides build_directory and build_external methods
 		include Build::Helpers
 		
 		def initialize(context, package)
 			@context = context
 			@package = package
-			
-			@defined = []
+
+			@defined = Definitions.new
 			@version = nil
 		end
-		
+
 		attr :context
-		
 		attr :package
 		attr :defined
 		attr :version
-		
+
 		def required_version(version)
 			version = version[0..2]
 			
@@ -75,7 +80,7 @@ module Teapot
 
 			@defined << target
 		end
-		
+
 		def define_generator(*args)
 			generator = Generator.new(@context, @package, *args)
 
@@ -83,7 +88,7 @@ module Teapot
 
 			@defined << generator
 		end
-		
+
 		def define_configuration(*args)
 			configuration = Configuration.new(@context, @package, *args)
 
@@ -93,7 +98,8 @@ module Teapot
 
 			@defined << configuration
 		end
-		
+
+		# Checks the host patterns and executes the block if they match.
 		def host(*args, &block)
 			name = @context.options[:host_platform] || RUBY_PLATFORM
 			
@@ -105,13 +111,18 @@ module Teapot
 				name
 			end
 		end
-		
+
+		# Load a teapot.rb file relative to the root of the @package.
 		def load(path)
 			absolute_path = @package.path + path
-			
+
 			raise NonexistantTeapotError.new(absolute_path) unless File.exist?(absolute_path)
-			
+
 			self.instance_eval(absolute_path.read, absolute_path.to_s)
+			
+			if @version == nil
+				raise IncompatibleTeapotError.new("<unspecified>")
+			end
 		end
 	end
 end

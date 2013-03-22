@@ -38,27 +38,49 @@ module Teapot
 
 			@packages = packages
 			@imports = []
+
+			@visibility = :private
 		end
 
-		# Options used to bind packages to this configuration:
+		# Controls how the configuration is exposed in the context.
+		attr :visibility
+
+		def public?
+			@visibility == :public
+		end
+
+		def public!
+			@visibility = :public
+		end
+
+		# Options used to bind packages to this configuration.
 		attr :options
 
-		# A list of packages which are required by this configuration:
+		# A list of packages which are required by this configuration.
 		attr :packages
 
-		# A list of other configurations to include when materialising the list of packages:
+		# A list of other configurations to include when materialising the list of packages.
 		attr :imports
 
-		def import(name)
-			@imports << Import.new(name, @options.dup)
-		end
-
-		def package(name, options = nil)
+		# Specifies that this configuration depends on an external package of some sort.
+		def require(name, options = nil)
 			options = options ? @options.merge(options) : @options.dup
 			
 			@packages << Package.new(packages_path + name.to_s, name, options)
 		end
 
+		# Specifies that this package will import additional configuration records from another definition.
+		def import(name)
+			@imports << Import.new(name, @options.dup)
+		end
+
+		# Require and import the named package.
+		def import!(name, options = nil)
+			require(name, options)
+			import(name)
+		end
+
+		# Create a group for configuration options which will be only be active within the group block.
 		def group
 			options = @options.dup
 			
@@ -67,22 +89,27 @@ module Teapot
 			@options = options
 		end
 
+		# Set a configuration option.
 		def []= key, value
 			@options[key] = value
 		end
 
+		# Get a configuration option.
 		def [] key
 			@options[key]
 		end
 
+		# The path where packages will be located when fetched.
 		def packages_path
 			context.root + "teapot/packages/#{name}"
 		end
 
+		# The path where built products will be installed.
 		def platforms_path
 			context.root + "teapot/platforms/#{name}"
 		end
 
+		# Load all packages defined by this configuration.
 		def load_all
 			@packages.each do |package|
 				@context.load(package)
@@ -93,7 +120,8 @@ module Teapot
 		def top!
 			@packages << @package
 		end
-		
+
+		# Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.
 		def materialize
 			# Potentially no materialization is required:
 			return self if @imports.count == 0
@@ -127,6 +155,10 @@ module Teapot
 			@imports += configuration.imports.collect do |import|
 				import.dup.tap{|import| import.options = options.merge(import.options)}
 			end
+		end
+		
+		def to_s
+			"<#{self.class.name} #{@name.dump} visibility=#{@visibility}>"
 		end
 	end
 end
