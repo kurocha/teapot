@@ -55,8 +55,7 @@ module Teapot
 		attr :path
 
 		attr :uri
-		attr :options
-
+		attr :options, true
 
 		def local?
 			@options.key? :local
