@@ -48,7 +48,7 @@ module Teapot
 			if system(*args)
 				true
 			else
-				raise CommandError.new("Non-zero exit status!")
+				raise CommandError.new("Non-zero exit status: #{args.join(' ')}!")
 			end
 		end
 		

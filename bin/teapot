@@ -38,7 +38,8 @@ OPTIONS = Trollop::options do
 	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
 end
 
-def make_controller(root = Dir.getwd)
+def make_controller(root = nil)
+	root ||= OPTIONS[:in] || Dir.getwd
 	Teapot::Controller.new(root, OPTIONS)
 end
 
@@ -88,24 +89,23 @@ module Application
 	end
 end
 
+valid_actions = (Application.public_methods - Module.methods).collect(&:to_s)
+action = ARGV.shift
+
 # Check that the command was invoked correctly...
-VALID_METHODS = Application.public_methods - Module.methods
-if ARGV.count == 0 || !VALID_METHODS.include?(ARGV[0])
-	puts "You must specify an action from: #{VALID_METHODS}".color(:red)
+unless action and valid_actions.include?(action)
+	puts "You must specify an action from: #{valid_actions.join(', ')}".color(:red)
 	exit -1
 end
 
 time = Benchmark.measure do
-	action = ARGV.shift.to_sym
-	
-	# The generate method has special handling of the :in option.
-	Dir.chdir(OPTIONS[:in]) if OPTIONS[:in]
-	
 	begin
-		Application.send(action) if Application.methods.include?(action)
+		Application.send(action.to_sym)
 	rescue Teapot::NonexistantTeapotError => error
 		$stderr.puts error.message.color(:red)
 	rescue Teapot::IncompatibleTeapotError => error
+		$stderr.puts error.message.color(:red)
+	rescue Teapot::Commands::CommandError => error
 		$stderr.puts error.message.color(:red)
 	end
 end
