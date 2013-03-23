@@ -22,6 +22,7 @@ require 'teapot/target'
 require 'teapot/generator'
 require 'teapot/configuration'
 
+require 'teapot/name'
 require 'teapot/build'
 
 module Teapot
@@ -32,12 +33,16 @@ module Teapot
 		def initialize(version)
 			super "Version #{version} isn't compatible with current loader! Minimum supported version: #{MINIMUM_LOADER_VERSION}; Current version: #{LOADER_VERSION}."
 		end
+		
+		attr :version
 	end
 	
 	class NonexistantTeapotError < StandardError
 		def initialize(path)
 			super "Could not load #{path}!"
 		end
+		
+		attr :path
 	end
 	
 	class Loader
@@ -63,7 +68,7 @@ module Teapot
 		attr :defined
 		attr :version
 
-		def required_version(version)
+		def teapot_version(version)
 			version = version[0..2]
 			
 			if version >= MINIMUM_LOADER_VERSION && version <= LOADER_VERSION
@@ -72,6 +77,8 @@ module Teapot
 				raise IncompatibleTeapotError.new(version)
 			end
 		end
+
+		alias required_version teapot_version
 
 		def define_target(*args)
 			target = Target.new(@context, @package, *args)

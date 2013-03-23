@@ -20,15 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/configuration'
-require 'teapot/version'
+require 'teapot/controller'
+require 'teapot/controller/build'
+require 'teapot/controller/clean'
+require 'teapot/controller/create'
+require 'teapot/controller/fetch'
+require 'teapot/controller/generate'
+require 'teapot/controller/list'
 
-require 'uri'
-require 'rainbow'
-require 'fileutils'
 require 'benchmark'
-require 'yaml'
-
 require 'trollop'
 
 OPTIONS = Trollop::options do
@@ -38,296 +38,61 @@ OPTIONS = Trollop::options do
 	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
 end
 
+def make_controller(root = Dir.getwd)
+	Teapot::Controller.new(root, OPTIONS)
+end
+
 # It would be nice to make this code a bit simpler, perhaps moving some parts of it to lib/teapot/application/{function}.rb
 module Application
-	MAXIMUM_FETCH_DEPTH = 20
-	
-	private
-	
-	def self.load_teapot
-		root = Dir.getwd
-		configuration_name = OPTIONS[:configuration]
-		
-		context = Teapot::Context.new(root)
-		configuration = context.configuration_named(configuration_name)
-		
-		return context, configuration
-	end
-	
-	public
-	
 	def self.clean
-		context, configuration = load_teapot
-		
-		puts "Removing #{configuration.platforms_path}...".color(:cyan)
-		FileUtils.rm_rf configuration.platforms_path
-		
-		puts "Removing #{configuration.packages_path}...".color(:cyan)
-		FileUtils.rm_rf configuration.packages_path
+		make_controller.clean
 	end
 	
 	def self.fetch
-		context, configuration = load_teapot
-
-		resolved = Set.new
-		unresolved = context.unresolved(configuration.packages)
-		tries = 0
-
-		while tries < MAXIMUM_FETCH_DEPTH
-			configuration.packages.each do |package|
-				next if resolved.include? package
-				
-				destination_path = package.path
-				
-				if package.local?
-					puts "Linking local #{package}...".color(:cyan)
-				
-					local_path = context.root + package.options[:local]
-			
-					# Make the top level directory if required:
-					destination_path.dirname.mkpath
-			
-					unless destination_path.exist?
-						destination_path.make_symlink(local_path)
-					end
-				elsif package.external?
-					puts "Fetching #{package}...".color(:cyan)
-		
-					base_uri = URI(package.options[:source].to_s)
-
-					if base_uri.scheme == nil || base_uri.scheme == 'file'
-						base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
-					end
-
-					branch = package.options.fetch(:version, 'master')
-
-					unless destination_path.exist?
-						puts "Cloning package at path #{destination_path} ...".color(:cyan)
-					
-						begin
-							destination_path.mkpath
-
-							external_url = package.external_url(context.root)
-
-							Teapot::Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
-			
-							Dir.chdir(destination_path) do
-								Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
-							end
-						rescue
-							puts "Removing incomplete package at path #{destination_path}...".color(:red)
-						
-							# Clean up if the git checkout process is interrupted:
-							destination_path.rmtree
-						
-							raise
-						end
-					else
-						puts "Updating package at path #{destination_path} ...".color(:cyan)
-
-						Dir.chdir(destination_path) do
-							Teapot::Commands.run("git", "fetch", "origin")
-				
-							Teapot::Commands.run("git", "checkout", branch)
-				
-							# Pull any changes, if you might get the error from above:
-							# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
-							Teapot::Commands.run("git", "pull")
-				
-							Teapot::Commands.run("git", "submodule", "update", "--init", "--recursive")
-						end
-					end
-				end
-				
-				# We are done with this package, don't try to process it again:
-				resolved << package
-			end
-			
-			# Resolve any/all imports:
-			configuration = configuration.materialize
-			
-			previously_unresolved = unresolved
-			unresolved = context.unresolved(configuration.packages)
-			
-			# No additional packages were resolved, we have reached a fixed point:
-			if previously_unresolved == unresolved || unresolved.count == 0
-				break
-			end
-			
-			tries += 1
-		end
-		
-		if unresolved.count > 0
-			puts "Could not fetch all packages!".color(:red)
-			unresolved.each do |package|
-				puts "\t#{package}".color(:red)
-			end
-		else
-			puts "Completed fetch successfully.".color(:green)
-		end
+		make_controller.fetch
 	end
 	
-	def self.build(package_names = ARGV)
-		context, configuration = load_teapot
+	def self.build
+		targets = ARGV
 		
-		configuration.load_all
-		
-		context.select(package_names)
-		
-		chain = Teapot::Dependency::chain(context.selection, context.dependencies, context.targets.values)
-		
-		if chain.unresolved.size > 0
-			puts "Unresolved dependencies:"
-		
-			chain.unresolved.each do |(name, parent)|
-				puts "#{parent} depends on #{name.inspect}".color(:red)
-				
-				conflicts = chain.conflicts[name]
-				
-				if conflicts
-					conflicts.each do |conflict|
-						puts " - provided by #{conflict.inspect}".color(:red)
-					end
-				end
-			end
-			
-			abort "Cannot continue build due to unresolved dependencies!".color(:red)
-		end
-	
-		puts "Resolved: #{chain.resolved.inspect}".color(:magenta)
-	
-		ordered = chain.ordered
-		
-		if OPTIONS[:only]
-			ordered = context.direct_targets(ordered)
-		end
-		
-		ordered.each do |(target, dependency)|
-			puts "Building #{target.name} for dependency #{dependency}...".color(:cyan)
-		
-			if target.respond_to? :build! and !ENV['TEAPOT_DRY']
-				target.build!(configuration)
-			end
-		end
-	
-		puts "Completed build successfully.".color(:green)
+		make_controller.build(targets)
 	end
 	
 	def self.list
-		context, configuration = load_teapot
-		
-		# Should this somehow consider context.root_package?
-		configuration.packages.each do |package|
-			puts "Package #{package.name} (from #{package.path}):".bright
-			
-			begin
-				definitions = context.load(package)
-				
-				definitions.each do |definition|
-					puts "\t#{definition}"
-				
-					definition.description.each_line do |line|
-						puts "\t\t#{line.chomp}".color(:cyan)
-					end if definition.description
-				
-					case definition
-					when Teapot::Target
-						definition.dependencies.each do |name|
-							puts "\t\t- depends on #{name.inspect}".color(:red)
-						end
-			
-						definition.provisions.each do |(name, provision)|
-							if Teapot::Dependency::Alias === provision
-								puts "\t\t- provides #{name.inspect} => #{provision.dependencies.inspect}".color(:green)
-							else
-								puts "\t\t- provides #{name.inspect}".color(:green)
-							end
-						end
-					when Teapot::Configuration
-						definition = definition.materialize
-						
-						definition.packages.each do |package|
-							if package.local?
-								puts "\t\t- links #{package.name} from #{package.options[:local]}".color(:green)
-							elsif package.external?
-								puts "\t\t- clones #{package.name} from #{package.external_url(context.root)}".color(:green)
-							else
-								puts "\t\t- references #{package.name} from #{package.path}".color(:green)
-							end
-						end
-						
-						definition.imports.each do |import|
-							puts "\t\t- unmaterialised import #{import.name}".color(:red)
-						end
-					end
-				end
-			rescue Teapot::NonexistantTeapotError => error
-				puts "\t#{error.message}".color(:red)
-			end
-		end
+		make_controller.list
 	end
 	
-	def self.init
-		root = Pathname(ARGV.shift)
-		project_name = root.basename.to_s
+	def self.create
+		project_name = ARGV.shift
+		project_directory = project_name.gsub(/\s+/, '-').downcase
+		source = ARGV.shift
+		packages = ARGV
 		
+		root = Pathname(Dir.getwd) + project_directory
+	
 		if root.exist?
 			abort "#{root} already exists!".color(:red)
 		end
 		
-		puts "Creating teapot at path #{root}...".color(:cyan)
+		# Make the path:
 		root.mkpath
 		
-		File.open(root + Teapot::TEAPOT_FILE, "w") do |output|
-			output.puts "\# Teapot configuration generated at #{Time.now.to_s}", ''
-			
-			output.puts "required_version #{Teapot::VERSION.dump}", ''
-			
-			output.puts "define_configuration #{project_name.dump} do |configuration|"
-			
-			source = ARGV.shift
-			output.puts "\tconfiguration[:source] = #{source.dump}", ''
-			
-			ARGV.each do |name|
-				output.puts "\tconfiguration.import! #{name.dump}"
-			end
-			
-			output.puts "end"
-		end
-		
-		Dir.chdir(root) do
-			self.fetch
-		end
+		controller = make_controller(root)
+	
+		controller.create(project_name, source, packages)
+		controller.generate('project', [project_name])
 	end
 	
 	def self.generate(arguments = ARGV)
-		context, configuration = load_teapot
-		
-		configuration.load_all
-		
-		name, *arguments = Array(arguments)
-		
-		generator = context.generators[name]
-		
-		unless generator
-			abort "Could not find generator with name #{name.inspect}".color(:red)
-		end
-		
-		puts "Generating #{name.inspect} with arguments #{arguments.inspect}".color(:cyan)
-		generator.generate!(*arguments)
+		make_controller.generate(arguments)
 	end
-	
-	def self.environment
-		context, configuration = load_teapot
-		
-		puts YAML::dump(
-			'context.root' => context.root.to_s,
-			'configuration.name' => configuration.name.to_s,
-			'configuration.packages_path' => configuration.packages_path.to_s,
-			'configuration.platforms_path' => configuration.platforms_path.to_s,
-			'configuration.package.path' => configuration.package.path.to_s,
-		)
-	end
+end
+
+# Check that the command was invoked correctly...
+VALID_METHODS = Application.public_methods - Module.methods
+if ARGV.count == 0 || !VALID_METHODS.include?(ARGV[0])
+	puts "You must specify an action from: #{VALID_METHODS}".color(:red)
+	exit -1
 end
 
 time = Benchmark.measure do
@@ -336,7 +101,13 @@ time = Benchmark.measure do
 	# The generate method has special handling of the :in option.
 	Dir.chdir(OPTIONS[:in]) if OPTIONS[:in]
 	
-	Application.send(action) if Application.methods.include?(action)
+	begin
+		Application.send(action) if Application.methods.include?(action)
+	rescue Teapot::NonexistantTeapotError => error
+		$stderr.puts error.message.color(:red)
+	rescue Teapot::IncompatibleTeapotError => error
+		$stderr.puts error.message.color(:red)
+	end
 end
 
 $stdout.flush
