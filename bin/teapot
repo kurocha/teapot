@@ -78,6 +78,10 @@ module Application
 		# Make the path:
 		root.mkpath
 		
+		Dir.chdir(root) do
+			Teapot::Commands.run("git", "init")
+		end
+		
 		controller = make_controller(root)
 	
 		controller.create(project_name, source, packages)
