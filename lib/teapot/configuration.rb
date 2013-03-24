@@ -21,6 +21,8 @@
 require 'pathname'
 require 'set'
 
+require 'yaml/store'
+
 require 'teapot/context'
 require 'teapot/environment'
 require 'teapot/commands'
@@ -107,6 +109,14 @@ module Teapot
 		# The path where built products will be installed.
 		def platforms_path
 			context.root + "teapot/platforms/#{name}"
+		end
+
+		def lock_path
+			context.root + "#{@name}-lock.yml"
+		end
+
+		def lock_store
+			@lock_store ||= YAML::Store.new(lock_path.to_s)
 		end
 
 		# Load all packages defined by this configuration.
