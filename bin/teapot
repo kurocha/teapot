@@ -36,7 +36,6 @@ OPTIONS = Trollop::options do
 	opt :in, "Work in the given directory.", :type => :string
 	
 	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
-	opt :lock, "Use the configuration lock file.", :default => true
 end
 
 def make_controller(root = nil)
