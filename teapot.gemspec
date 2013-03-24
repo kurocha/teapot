@@ -20,11 +20,14 @@ Gem::Specification.new do |gem|
 	gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
 	gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
 	gem.require_paths = ["lib"]
-	
+
 	gem.required_ruby_version = '>= 1.9.3'
-	
+
 	gem.add_dependency "rainbow"
 	gem.add_dependency "rexec"
 	gem.add_dependency "trollop"
 	gem.add_dependency "facter"
+
+	# This could be a good option in the future for teapot fetch:
+	#gem.add_dependency "rugged"
 end
