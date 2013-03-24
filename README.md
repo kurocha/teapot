@@ -21,9 +21,8 @@ Teapot doesn't have a centralised package management system. As such, this examp
 
 Firstly, create your project by running:
 
-	$ teapot init my-project https://github.com/dream-framework project
+	$ teapot init "My Project" https://github.com/dream-framework project
 	$ cd my-project
-	$ teapot generate project "My Project"
 
 In the resulting project directory that has been created, you can see the list of dependencies:
 
