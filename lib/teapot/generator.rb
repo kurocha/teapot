@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 require 'teapot/definition'
+require 'teapot/substitutions'
+
 require 'tempfile'
 
 module Teapot
