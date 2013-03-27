@@ -65,8 +65,12 @@ module Teapot
 			@options.key? :source
 		end
 
+		def source
+			@options[:source].to_s + '/'
+		end
+
 		def external_url(relative_root)
-			base_uri = URI(@options[:source].to_s)
+			base_uri = URI(source)
 
 			if base_uri.scheme == nil || base_uri.scheme == 'file'
 				base_uri = URI "file://" + File.expand_path(base_uri.path, relative_root) + "/"
