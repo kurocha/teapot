@@ -46,7 +46,19 @@ module Teapot
 				output.puts "end"
 			end
 
+			# Fetch all packages:
 			fetch
+
+			# Generate the default project if it is possible to do so:
+			generate_project
+		end
+		
+		def generate_project
+			context, configuration = load_teapot
+
+			if context.generators.key? 'project'
+				generate('project', [project_name])
+			end
 		end
 	end
 end
