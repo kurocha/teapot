@@ -21,8 +21,10 @@ Teapot doesn't have a centralised package management system. As such, this examp
 
 Firstly, create your project by running:
 
-	$ teapot init "My Project" https://github.com/dream-framework project
+	$ teapot create "My Project" https://github.com/dream-framework project
 	$ cd my-project
+
+You will be asked to merge the project file. At present, merge tools are not very good and thus you may need to take a moment to review the changes. You want to keep most of the original file, but you would like to add the `define_target` blocks which are being added.
 
 In the resulting project directory that has been created, you can see the list of dependencies:
 
@@ -38,6 +40,22 @@ The resulting libraries will be framework dependent, but are typically located i
 
 	$ cd teapot/$PROJECT_NAME/platforms/$PLATFORM_NAME/bin/
 	$ ./$PROJECT_NAME
+
+### Example: Compiling TaggedFormat
+
+For Linux (requires `clang` and `libc++`):
+
+	$ teapot create "Local Tagged Format" https://github.com/dream-framework platform-linux variants tagged-format
+	$ cd local-tagged-format
+	$ teapot build Library/TaggedFormat variant-debug
+
+For Mac OS X (requires Xcode Command Line Tools):
+	
+	$ teapot create "Local Tagged Format" https://github.com/dream-framework platform-darwin-osx variants tagged-format
+	$ cd local-tagged-format
+	$ teapot build Library/TaggedFormat variant-debug
+
+You need to make sure any basic tools, e.g. compilers, system libraries, are installed correctly before building. Consult the platform and library documentation for any dependencies.
 
 ## Contributing
 
