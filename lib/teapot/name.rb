@@ -33,5 +33,9 @@ module Teapot
 		def target
 			@target ||= @text.gsub(/\s+/, '-').downcase
 		end
+		
+		def macro
+			@guard ||= @text.upcase.gsub(/\s+/, '_')
+		end
 	end
 end
