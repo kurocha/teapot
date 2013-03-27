@@ -43,20 +43,24 @@ class TestSubstitutions < Test::Unit::TestCase
 	
 	def test_nested_substitutions
 		input = <<-EOF
-		A<FOO>B
+		<FOO>
 		$BAR
 		</FOO>
 		EOF
 		
 		output = <<-EOF
-		Aenter fooB
+		enter
+		{
+			foo
+				Hello World
 			bar
-		exit foo
+		}
+		exit
 		EOF
 		
 		substitutions = Teapot::Substitutions.new
-		substitutions['FOO'] = ["enter foo", "exit foo"]
-		substitutions['BAR'] = 'bar'
+		substitutions['FOO'] = ["enter\n{\n", "foo\n", "bar\n", "}\nexit\n"]
+		substitutions['BAR'] = 'Hello World'
 		
 		assert_equal output, substitutions.apply(input)
 	end

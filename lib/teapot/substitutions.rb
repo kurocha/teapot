@@ -20,13 +20,14 @@
 
 module Teapot
 	class Indentation
-		def initialize(level, indent)
+		def initialize(prefix, level, indent)
+			@prefix = prefix
 			@level = level
 			@indent = indent
 		end
 
 		def indentation
-			@indentation ||= (@indent * @level)
+			@indentation ||= @prefix + (@indent * @level)
 		end
 
 		def + other
@@ -38,7 +39,15 @@ module Teapot
 		end
 
 		def by(depth)
-			Indentation.new(@level + depth, @indent)
+			Indentation.new(@prefix, @level + depth, @indent)
+		end
+		
+		def with_prefix(prefix)
+			Indentation.new(prefix, @level, @indent)
+		end
+		
+		def self.none
+			self.new('', 0, "\t")
 		end
 	end
 	
@@ -115,8 +124,6 @@ module Teapot
 				@open = open
 				@close = close
 
-				puts "open: #{@open} close: #{@close}"
-
 				@indent = indent
 			end
 
@@ -127,6 +134,34 @@ module Teapot
 				Regexp.new('^(.*?)' + tag_pattern + '(.*)$', Regexp::MULTILINE | Regexp::EXTENDED)
 			end
 
+			def write_open(prefix, postfix, output, indentation)
+				depth = @open.size
+				indentation = indentation.with_prefix(prefix)
+
+				#output.write(prefix)
+				(0...depth).each do |i|
+					chunk = @open[i]
+					chunk.chomp! if i == depth-1
+					
+					output.write(indentation.by(i) << chunk)
+				end
+				output.write(postfix)
+			end
+
+			def write_close(prefix, postfix, output, indentation)
+				depth = @close.size
+				indentation = indentation.with_prefix(prefix)
+
+				#output.write(prefix)
+				(0...depth).reverse_each do |i|
+					chunk = @close[-1 - i]
+					chunk.chomp! if i == 0
+					
+					output.write(indentation.by(i) << chunk)
+				end
+				output.write(postfix)
+			end
+
 			def apply(text, level = 0)
 				open_pattern = line_pattern
 				close_pattern = line_pattern('/')
@@ -134,24 +169,14 @@ module Teapot
 				lines = text.each_line
 				output = StringIO.new
 
-				indent = lambda do |level|
-					indentation = Indentation.new(level, @indent)
-
+				indent = lambda do |level, indentation|
 					while line = lines.next rescue nil
-						puts line.inspect
-						
 						if line =~ open_pattern
-							depth = @open.size
+							write_open($1, $2, output, indentation)
 
-							(0...depth).each do |i|
-								output.write(indentation.by(i) << ($1 + @open[i] + $2))
-							end
+							indent[level + @open.count, indentation.by(@open.count)]
 
-							indent[level + depth]
-
-							(0...depth).reverse_each do |i|
-								output.write(indentation.by(i) << ($1 + @close[-1 - i] + $2))
-							end
+							write_close($1, $2, output, indentation)
 						elsif line =~ close_pattern
 							break
 						else
@@ -160,7 +185,7 @@ module Teapot
 					end
 				end
 
-				indent[0]
+				indent[0, Indentation.none]
 
 				return output.string
 			end
