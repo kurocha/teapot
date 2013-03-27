@@ -62,6 +62,10 @@ module Teapot
 
 		attr :ordered
 
+		def call(text)
+			apply(text)
+		end
+
 		def apply(text)
 			return text unless @ordered.count
 			

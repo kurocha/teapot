@@ -40,10 +40,13 @@ module Teapot
 		def substitute(text, substitutions)
 			return text unless substitutions
 			
-			# Use positive look behind so that the pattern is just the substitution key:
-			pattern = Regexp.new(substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
+			if Hash === substitutions
+				pattern = Regexp.new(substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
 			
-			text.gsub(pattern) {|key| substitutions[key]}
+				text.gsub(pattern) {|key| substitutions[key]}
+			else
+				substitutions.call(text)
+			end
 		end
 		
 		def write(source, destination, substitutions = nil, mode = "a")
