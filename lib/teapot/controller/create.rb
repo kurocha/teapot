@@ -50,10 +50,12 @@ module Teapot
 			fetch
 
 			# Generate the default project if it is possible to do so:
-			generate_project
+			generate_project(project_name)
 		end
 		
-		def generate_project
+		private
+		
+		def generate_project(project_name)
 			context, configuration = load_teapot
 
 			if context.generators.key? 'project'
