@@ -86,7 +86,8 @@ module Application
 	end
 	
 	def self.generate(arguments = ARGV)
-		make_controller.generate(arguments)
+		generator_name = arguments.shift
+		make_controller.generate(generator_name, arguments)
 	end
 end
 
