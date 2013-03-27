@@ -19,30 +19,57 @@
 # THE SOFTWARE.
 
 module Teapot
-	module Substitutions
-		class Indentation
-			def initialize(level, indent)
-				@level = level
-				@indent = indent
-			end
+	class Indentation
+		def initialize(level, indent)
+			@level = level
+			@indent = indent
+		end
 
-			def indentation
-				@indentation ||= (@indent * @level)
-			end
+		def indentation
+			@indentation ||= (@indent * @level)
+		end
 
-			def + other
-				indentation + other
-			end
+		def + other
+			indentation + other
+		end
 
-			def << text
-				text.gsub(/^/){|m| m + indentation}
-			end
+		def << text
+			text.gsub(/^/){|m| m + indentation}
+		end
 
-			def by(depth)
-				Indentation.new(@level + depth, @indent)
+		def by(depth)
+			Indentation.new(@level + depth, @indent)
+		end
+	end
+	
+	class Substitutions
+		def initialize
+			@ordered = []
+		end
+		
+		def []= keyword, value
+			if Array === value
+				open, close = *value.each_slice(value.length / 2)
+				@ordered << NestedSubstitution.new(keyword, open, close)
+			else
+				@ordered << SymbolicSubstitution.new('$' + keyword, value.to_s)
 			end
 		end
 
+		def << substitution
+			@ordered << substition
+		end
+
+		attr :ordered
+
+		def apply(text)
+			@ordered.each do |substitution|
+				text = substitution.apply(text)
+			end
+			
+			return text
+		end
+		
 		class SymbolicSubstitution
 			def initialize(keyword, value)
 				@keyword = keyword
@@ -72,12 +99,21 @@ module Teapot
 				@open = open
 				@close = close
 
+				puts "open: #{@open} close: #{@close}"
+
 				@indent = indent
 			end
-	
+
+			def line_pattern(prefix = '')
+				tag_pattern = Regexp.escape('<' + prefix + @keyword + '>')
+				
+				# Line matching pattern:
+				Regexp.new('^(.*?)' + tag_pattern + '(.*)$', Regexp::MULTILINE | Regexp::EXTENDED)
+			end
+
 			def apply(text, level = 0)
-				open_pattern = Regexp.new(Regexp.escape('<' + @keyword + '>'))
-				close_pattern = Regexp.new(Regexp.escape('</' + @keyword + '>'))
+				open_pattern = line_pattern
+				close_pattern = line_pattern('/')
 
 				lines = text.each_line
 				output = StringIO.new
@@ -86,17 +122,19 @@ module Teapot
 					indentation = Indentation.new(level, @indent)
 
 					while line = lines.next rescue nil
+						puts line.inspect
+						
 						if line =~ open_pattern
 							depth = @open.size
 
 							(0...depth).each do |i|
-								output.write(indentation.by(i) << @open[i])
+								output.write(indentation.by(i) << ($1 + @open[i] + $2))
 							end
 
 							indent[level + depth]
 
 							(0...depth).reverse_each do |i|
-								output.write(indentation.by(i) << @close[-1 - i])
+								output.write(indentation.by(i) << ($1 + @close[-1 - i] + $2))
 							end
 						elsif line =~ close_pattern
 							break
