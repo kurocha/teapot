@@ -63,8 +63,20 @@ module Teapot
 		attr :ordered
 
 		def apply(text)
-			@ordered.each do |substitution|
-				text = substitution.apply(text)
+			return text unless @ordered.count
+			
+			grouped = [[@ordered.first]]
+			
+			@ordered.drop(1).each do |substitution|
+				if grouped.last[0].class == substitution.class
+					grouped.last << substitution
+				else
+					grouped << [substitution]
+				end
+			end
+			
+			grouped.each do |group|
+				text = group.first.class.apply(text, group)
 			end
 			
 			return text
@@ -83,8 +95,8 @@ module Teapot
 				text.gsub(@keyword, @value)
 			end
 
-			def self.apply(text, substitutions)
-				substitutions = Hash[substitutions.collect{|s| [s.keyword, s.value]}]
+			def self.apply(text, group)
+				substitutions = Hash[group.collect{|substitution| [substitution.keyword, substitution.value]}]
 
 				pattern = Regexp.new(substitutions.keys.map{|key| Regexp.escape(key)}.join('|'))
 
@@ -147,6 +159,14 @@ module Teapot
 				indent[0]
 
 				return output.string
+			end
+
+			def self.apply(text, group)
+				group.each do |substitution|
+					text = substitution.apply(text)
+				end
+				
+				return text
 			end
 		end
 	end
