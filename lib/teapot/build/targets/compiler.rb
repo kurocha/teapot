@@ -27,21 +27,25 @@ module Teapot
 	module Build
 		module Targets
 			module Compiler
+				@@graphs = {}
+				
 				def dependency_graph(environment)
-					graph = Graph.new
+					@@graphs.fetch(environment) do
+						graph = Graph.new
 
-					buildflags = environment[:buildflags]
-					roots = Extractors::PreprocessorExtractor.include_directories(buildflags)
+						buildflags = environment[:buildflags]
+						roots = Extractors::PreprocessorExtractor.include_directories(buildflags)
 					
-					patterns = [
-						/\.c(c|pp)?$/,
-						/\.h(pp)?$/,
-						/\.mm?/
-					]
+						patterns = [
+							/\.c(c|pp)?$/,
+							/\.h(pp)?$/,
+							/\.mm?/
+						]
 					
-					graph.extractors << Extractors::PreprocessorExtractor.new(patterns, roots)
-
-					return graph
+						graph.extractors << Extractors::PreprocessorExtractor.new(patterns, roots)
+						
+						@@graphs[environment] = graph
+					end
 				end
 				
 				def build_prefix!(environment)
