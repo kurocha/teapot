@@ -56,21 +56,21 @@ module Teapot
 			
 				return instance
 			end
-		
+
 			def execute(command, environment, *arguments)
 				if @configure
 					environment = environment.merge &@configure
 				end
-				
+
 				# Flatten the environment to a hash:
-				values = environment.flatten
-			
+				flat_environment = environment.flatten
+
 				puts "Performing #{self.class}/#{command} for #{root}...".color(:cyan)
-			
+
 				# Show the environment to the user:
-				Environment::System::dump(values)
-				
-				self.send(command, values, *arguments)
+				Environment::System::dump(flat_environment)
+
+				self.send(command, flat_environment, *arguments)
 			end
 		end
 	end

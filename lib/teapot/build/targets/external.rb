@@ -58,7 +58,7 @@ module Teapot
 					if !build_source_path.exist?
 						build_source_path.mkpath
 						
-						FileUtils.cp_r(source_path.children, build_source_path.to_s)
+						FileUtils.cp_r(source_path.children, build_source_path.to_s, :preserve => true)
 						
 						# Write the environment checksum out to a file:
 						File.write(build_source_checksum_path, checksum(values))

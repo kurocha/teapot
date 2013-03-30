@@ -75,7 +75,7 @@ module Teapot
 						destination_path = prefix + file_list.prefix + relative_path
 					
 						destination_path.dirname.mkpath
-						FileUtils.cp path, destination_path
+						FileUtils.cp(path, destination_path, :preserve => true)
 					end
 				end
 			
@@ -87,7 +87,7 @@ module Teapot
 					
 						destination_path.dirname.mkpath
 					
-						FileUtils.cp path, destination_path
+						FileUtils.cp(path, destination_path, :preserve => true)
 					end
 					
 					if self.respond_to? :headers

@@ -20,10 +20,30 @@
 
 require 'pathname'
 
+require 'teapot/graph'
+require 'teapot/extractors/preprocessor_extractor'
+
 module Teapot
 	module Build
 		module Targets
 			module Compiler
+				def dependency_graph(environment)
+					graph = Graph.new
+
+					buildflags = environment[:buildflags]
+					roots = Extractors::PreprocessorExtractor.include_directories(buildflags)
+					
+					patterns = [
+						/\.c(c|pp)?$/,
+						/\.h(pp)?$/,
+						/\.mm?/
+					]
+					
+					graph.extractors << Extractors::PreprocessorExtractor.new(patterns, roots)
+
+					return graph
+				end
+				
 				def build_prefix!(environment)
 					build_prefix = Pathname.new(environment[:build_prefix]) + "compiled"
 				
@@ -40,12 +60,13 @@ module Teapot
 					return prefix
 				end
 				
-				def compile(environment, root, source_file, commands)
-					object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
-				
+				def compile!(environment, root, source_file, object_file, commands)
 					# Ensure there is a directory for the output file:
 					object_file.dirname.mkpath
-				
+
+					# Make sure there is no pre-existing object file
+					object_file.rmtree if object_file.exist?
+
 					case source_file.extname
 					when ".cpp", ".mm"
 						commands.run(
@@ -60,8 +81,19 @@ module Teapot
 							"-c", root + source_file, "-o", object_file
 						)
 					end
-			
-					return Array object_file
+				end
+				
+				def compile(environment, root, source_file, commands)
+					object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
+
+					# The graph is recreated once per file. This could be improved.
+					graph = dependency_graph(environment)
+
+					if graph.regenerate?(object_file, root + source_file)
+						compile!(environment, root, source_file, object_file, commands)
+					end
+
+					return [object_file]
 				end
 			end
 		end

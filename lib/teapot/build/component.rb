@@ -59,7 +59,7 @@ module Teapot
 				@parts.each do |path|
 					full_path = @root + path
 			
-					FileUtils.cp_r(full_path.children, source_path.to_s)
+					FileUtils.cp_r(full_path.children, source_path.to_s, :preserve => true)
 				end
 		
 				return source_path

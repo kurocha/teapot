@@ -18,42 +18,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'teapot/graph'
+
 module Teapot
-	class Environment
-		def flatten
-			hash = {}
-			
-			# Flatten this chain of environments:
-			flatten_to_hash(hash)
-			
-			# Evaluate all items to their respective object value:
-			evaluator = Evaluator.new(hash)
-			
-			# Evaluate all the individual environment values so that they are flat:
-			Hash[hash.map{|key, value| [key, evaluator.object_value(value)]}]
-		end
+	module Extractors
+		class PreprocessorExtractor < Graph::Extractor
+			def self.include_directories(flags)
+				roots = []
+
+				# Extract include directories:
+				flags.each do |option|
+					if option.to_s =~ /^-I(.+)/
+						roots << Pathname($1)
+					end
+				end
+
+				return roots
+			end
 		
-		protected
-		
-		def flatten_to_hash(hash)
-			if @parent
-				@parent.flatten_to_hash(hash)
+			def initialize(patterns, roots = [])
+				super patterns
+				
+				@roots = roots
 			end
 
-			@values.each do |key, value|
-				previous = hash[key]
+			def extract(path)
+				local_root = Pathname(path).dirname
 
-				if Replace === value
-					# Replace the parent value
-					hash[key] = value
-				elsif Array === previous
-					# Merge with the parent value
-					hash[key] = previous + Array(value)
-				elsif Default === value
-					# Update the parent value if not defined.
-					hash[key] = previous || value
-				else
-					hash[key] = value
+				File.open(path).each do |line|
+					if line =~ /\#(?:include|import) "(.*?)"/
+						path = local_root + $1
+		
+						yield path if path.exist?
+					elsif line =~ /\#(?:include|import) \<(.*?)\>/
+						path = @roots.collect{|root| root+$1}.find{|path| path.exist?}
+		
+						yield path if path
+					end
 				end
 			end
 		end

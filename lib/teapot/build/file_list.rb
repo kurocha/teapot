@@ -58,7 +58,7 @@ module Teapot
 						destination_path.dirname.mkpath
 					
 						# Copy the file to the destination:
-						FileUtils.cp path, destination_path
+						FileUtils.cp(path, destination_path, :preserve => true)
 					end
 				end
 			end
