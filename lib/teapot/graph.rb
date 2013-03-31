@@ -37,14 +37,18 @@ module Teapot
 			@nodes[node.path] = node
 		end
 
-		def regenerate?(output_path, input_path)
+		def regenerate?(output_path, input_paths)
 			return true unless output_path.exist?
 
 			output_modified_time = output_path.mtime
 
-			input_node = fetch(input_path)
+			Array(input_paths).each do |path|
+				node = fetch(path)
 
-			return input_node.changed_since?(output_modified_time)
+				return true if node.changed_since?(output_modified_time)
+			end
+
+			return false
 		end
 
 		def extract(source_path)
@@ -86,7 +90,7 @@ module Teapot
 				if @changed == nil
 					# If the file was modified in the future relative to old modified_time:
 					if @path.mtime > modified_time
-						puts "#{path} changed!"
+						puts "Changed: #{path.to_s.inspect}"
 						return @changed = true
 					else
 						@changed = false

@@ -20,34 +20,12 @@
 
 require 'pathname'
 
-require 'teapot/graph'
-require 'teapot/extractors/preprocessor_extractor'
+require 'teapot/build/graph'
 
 module Teapot
 	module Build
 		module Targets
 			module Compiler
-				@@graphs = {}
-				
-				def dependency_graph(environment)
-					@@graphs.fetch(environment) do
-						graph = Graph.new
-
-						buildflags = environment[:buildflags]
-						roots = Extractors::PreprocessorExtractor.include_directories(buildflags)
-					
-						patterns = [
-							/\.c(c|pp)?$/,
-							/\.h(pp)?$/,
-							/\.mm?/
-						]
-					
-						graph.extractors << Extractors::PreprocessorExtractor.new(patterns, roots)
-						
-						@@graphs[environment] = graph
-					end
-				end
-				
 				def build_prefix!(environment)
 					build_prefix = Pathname.new(environment[:build_prefix]) + "compiled"
 				
@@ -91,13 +69,13 @@ module Teapot
 					object_file = (build_prefix!(environment) + source_file).sub_ext('.o')
 
 					# The graph is recreated once per file. This could be improved.
-					graph = dependency_graph(environment)
+					graph = Build::dependency_graph(environment)
 
 					if graph.regenerate?(object_file, root + source_file)
 						compile!(environment, root, source_file, object_file, commands)
 					end
 
-					return [object_file]
+					return object_file
 				end
 			end
 		end

@@ -23,6 +23,8 @@ require 'teapot/build/targets/directory'
 require 'teapot/build/targets/files'
 require 'teapot/build/targets/compiler'
 
+require 'teapot/build/graph'
+
 require 'fileutils'
 
 module Teapot
@@ -48,8 +50,12 @@ module Teapot
 				def link(environment, objects)
 					library_file = link_prefix!(environment) + "lib#{@name}.a"
 				
-					Linker.link_static(environment, library_file, objects)
-				
+					graph = Build::dependency_graph(environment)
+					
+					if graph.regenerate?(library_file, objects)
+						Linker.link_static(environment, library_file, objects)
+					end
+					
 					return library_file
 				end
 			
