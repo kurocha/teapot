@@ -31,13 +31,17 @@ module Teapot
 				def link(environment, objects)
 					executable_file = link_prefix!(environment) + @name
 			
-					Commands.run(
-						environment[:cxx],
-						environment[:cxxflags],
-						"-o", executable_file, objects,
-						environment[:ldflags]
-					)
-			
+					graph = Build::dependency_graph(environment)
+					
+					if graph.regenerate?(executable_file, objects)
+						Commands.run(
+							environment[:cxx],
+							environment[:cxxflags],
+							"-o", executable_file, objects,
+							environment[:ldflags]
+						)
+					end
+					
 					return executable_file
 				end
 			end
