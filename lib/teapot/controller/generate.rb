@@ -23,9 +23,7 @@ require 'teapot/controller'
 module Teapot
 	class Controller
 		def generate(name, arguments)
-			context, configuration = load_teapot
-
-			configuration.load_all
+			context.configuration.load_all
 
 			generator = context.generators[name]
 

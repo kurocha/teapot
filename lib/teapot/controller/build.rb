@@ -23,9 +23,7 @@ require 'teapot/controller'
 module Teapot
 	class Controller
 		def build(dependency_names)
-			context, configuration = load_teapot
-
-			chain = context.dependency_chain(dependency_names, configuration)
+			chain = context.dependency_chain(dependency_names, context.configuration)
 		
 			ordered = chain.ordered
 		
@@ -37,7 +35,7 @@ module Teapot
 				log "Building #{target.name} for dependency #{dependency}...".color(:cyan)
 		
 				if target.respond_to?(:build!) and !@options[:dry]
-					target.build!(configuration)
+					target.build!(context.configuration)
 				end
 			end
 	

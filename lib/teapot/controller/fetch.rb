@@ -23,9 +23,8 @@ require 'teapot/controller'
 module Teapot
 	class Controller
 		def fetch
-			context, configuration = load_teapot
-
 			resolved = Set.new
+			configuration = context.configuration
 			unresolved = context.unresolved(configuration.packages)
 			tries = 0
 

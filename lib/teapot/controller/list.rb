@@ -23,10 +23,8 @@ require 'teapot/controller'
 module Teapot
 	class Controller
 		def list
-			context, configuration = load_teapot
-		
 			# Should this somehow consider context.root_package?
-			configuration.packages.each do |package|
+			context.configuration.packages.each do |package|
 				log "Package #{package.name} (from #{package.path}):".bright
 			
 				begin

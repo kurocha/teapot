@@ -56,8 +56,6 @@ module Teapot
 		private
 		
 		def generate_project(project_name)
-			context, configuration = load_teapot
-
 			if context.generators.key? 'project'
 				generate('project', [project_name])
 			end

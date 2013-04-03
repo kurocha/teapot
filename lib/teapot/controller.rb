@@ -42,14 +42,10 @@ module Teapot
 			@log_output.puts *args
 		end
 		
-		private
-	
-		def load_teapot
-			context = Context.new(@root,
+		def context
+			@context ||= Context.new(@root,
 				:configuration => @options[:configuration]
 			)
-			
-			return context, context.configuration
 		end
 	end
 end
