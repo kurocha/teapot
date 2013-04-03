@@ -55,7 +55,17 @@ module Teapot
 			defined = load(root_package)
 
 			# Find the default configuration, if it exists:
+
 			@default_configuration = defined.default_configuration
+
+			if options[:configuration]
+				@configuration = @configurations[options[:configuration]]
+			else
+				@configuration = @default_configuration
+			end
+
+			# Materialize the configuration:
+			@configuration = @configuration.materialize if @configuration
 		end
 
 		attr :root
@@ -63,7 +73,15 @@ module Teapot
 
 		attr :targets
 		attr :generators
+
+		# All public configurations.
 		attr :configurations
+
+		# The context's primary configuration.
+		attr :configuration
+
+		attr :dependencies
+		attr :selection
 
 		def select(names)
 			names.each do |name|
@@ -75,8 +93,13 @@ module Teapot
 			end
 		end
 
-		attr :dependencies
-		attr :selection
+		def dependency_chain(dependency_names, configuration = @configuration)
+			configuration.load_all
+		
+			select(dependency_names)
+		
+			Dependency::chain(@selection, @dependencies, @targets.values)
+		end
 
 		def direct_targets(ordered)
 			@dependencies.collect do |dependency|
@@ -122,20 +145,6 @@ module Teapot
 
 				# Save the definitions per-package:
 				@loaded[package] = loader.defined
-			end
-		end
-
-		attr :default_configuration
-
-		def configuration_named(name)
-			if name == DEFAULT_CONFIGURATION_NAME
-				configuration = @default_configuration
-			else
-				configuration = @configurations[name]
-			end
-			
-			if configuration
-				configuration.materialize
 			end
 		end
 

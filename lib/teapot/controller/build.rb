@@ -22,35 +22,11 @@ require 'teapot/controller'
 
 module Teapot
 	class Controller
-		def build(package_names)
+		def build(dependency_names)
 			context, configuration = load_teapot
+
+			chain = context.dependency_chain(dependency_names, configuration)
 		
-			configuration.load_all
-		
-			context.select(package_names)
-		
-			chain = Dependency::chain(context.selection, context.dependencies, context.targets.values)
-		
-			if chain.unresolved.size > 0
-				log "Unresolved dependencies:"
-		
-				chain.unresolved.each do |(name, parent)|
-					log "#{parent} depends on #{name.inspect}".color(:red)
-				
-					conflicts = chain.conflicts[name]
-				
-					if conflicts
-						conflicts.each do |conflict|
-							log " - provided by #{conflict.inspect}".color(:red)
-						end
-					end
-				end
-			
-				abort "Cannot continue build due to unresolved dependencies!".color(:red)
-			end
-	
-			log "Resolved: #{chain.resolved.inspect}".color(:magenta)
-	
 			ordered = chain.ordered
 		
 			if @options[:only]

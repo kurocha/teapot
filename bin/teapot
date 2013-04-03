@@ -35,7 +35,7 @@ OPTIONS = Trollop::options do
 	opt :only, "Only compiled direct dependencies."
 	opt :in, "Work in the given directory.", :type => :string
 	
-	opt :configuration, "Specify a specific build configuration.", :type => :string, :default => Teapot::DEFAULT_CONFIGURATION_NAME
+	opt :configuration, "Specify a specific build configuration.", :type => :string
 end
 
 def make_controller(root = nil)
@@ -109,6 +109,22 @@ time = Benchmark.measure do
 		$stderr.puts error.message.color(:red)
 	rescue Teapot::Commands::CommandError => error
 		$stderr.puts error.message.color(:red)
+	rescue Teapot::Dependency::UnresolvedDependencyError => error
+		$stderr.puts "Unresolved dependencies:"
+
+		error.chain.unresolved.each do |(name, parent)|
+			$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
+		
+			conflicts = error.chain.conflicts[name]
+		
+			if conflicts
+				conflicts.each do |conflict|
+					$stderr.puts " - provided by #{conflict.inspect}".color(:red)
+				end
+			end
+		end
+	
+		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
 	end
 end
 

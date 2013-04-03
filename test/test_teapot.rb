@@ -36,7 +36,7 @@ class TestConfig < Test::Unit::TestCase
 		# No targets were defined:
 		assert_equal 0, context.targets.count
 		
-		default_configuration = context.default_configuration
+		default_configuration = context.configuration
 		
 		# 13 defined packages + 1 implicit package.
 		assert_equal 14, default_configuration.packages.count

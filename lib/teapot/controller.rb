@@ -45,12 +45,11 @@ module Teapot
 		private
 	
 		def load_teapot
-			configuration_name = @options[:configuration] || DEFAULT_CONFIGURATION_NAME
-		
-			context = Context.new(@root)
-			configuration = context.configuration_named(configuration_name)
-		
-			return context, configuration
+			context = Context.new(@root,
+				:configuration => @options[:configuration]
+			)
+			
+			return context, context.configuration
 		end
 	end
 end

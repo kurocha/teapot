@@ -144,10 +144,10 @@ module Teapot
 			
 			# Enumerate all imports and attempt to resolve the packages:
 			@imports.each do |import|
-				resolved_configuration = @context.configuration_named(import.name)
+				named_configuration = @context.configurations[import.name]
 				
-				if resolved_configuration
-					configuration.append(resolved_configuration, import.options)
+				if named_configuration
+					configuration.append(named_configuration.materialize, import.options)
 				else
 					# It couldn't be resolved...
 					configuration.imports << import
