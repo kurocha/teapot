@@ -44,18 +44,13 @@ module Teapot
 			@build = Proc.new(&block)
 		end
 
-		def build!(configuration, config = {})
-			return unless @build
-			
+		def build_environment(configuration)
 			# Reduce the number of keystrokes for good health:
 			context = configuration.context
 			
 			chain = Dependency::chain(context.selection, dependencies, context.targets.values)
 			
 			environments = []
-			
-			# The base configuration environment:
-			# environments << configuration.environment
 			
 			# Calculate the dependency chain's ordered environments:
 			environments += chain.provisions.collect do |provision|
@@ -68,7 +63,7 @@ module Teapot
 			# Merge all the environments together:
 			environment = Environment.combine(*environments)
 				
-			local_build = environment.merge do
+			environment.merge do
 				default platforms_path configuration.platforms_path
 				default build_prefix {platforms_path + "cache/#{platform_name}-#{variant}"}
 				default install_prefix {platforms_path + "#{platform_name}-#{variant}"}
@@ -76,8 +71,14 @@ module Teapot
 				append buildflags {"-I#{install_prefix + "include"}"}
 				append linkflags {"-L#{install_prefix + "lib"}"}
 			end
+		end
+
+		def build!(configuration)
+			return unless @build
 			
-			@build.call(local_build)
+			local_environment = build_environment(configuration)
+			
+			@build.call(local_environment)
 		end
 	end
 end
