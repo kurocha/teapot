@@ -76,7 +76,7 @@ module Teapot
 		end
 
 		def apply(text)
-			return text unless @ordered.count
+			return text unless @ordered.count > 0
 			
 			grouped = [[@ordered.first]]
 			
