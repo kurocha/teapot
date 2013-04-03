@@ -84,11 +84,11 @@ class TestDependency < Test::Unit::TestCase
 		salad.depends 'fruit'
 		salad.provides 'salad'
 		
-		chain = Teapot::Dependency::chain([], ['salad'], [apple, bananna, salad])
+		chain = Teapot::Dependency::Chain.new([], ['salad'], [apple, bananna, salad])
 		assert_equal ["fruit", salad], chain.unresolved.first
 		assert_equal({"fruit" => [apple, bananna]}, chain.conflicts)
 		
-		chain = Teapot::Dependency::chain(['apple'], ['salad'], [apple, bananna, salad])
+		chain = Teapot::Dependency::Chain.new(['apple'], ['salad'], [apple, bananna, salad])
 		assert_equal([], chain.unresolved)
 		assert_equal({}, chain.conflicts)
 	end

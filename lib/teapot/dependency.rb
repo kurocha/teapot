@@ -24,6 +24,16 @@ require 'teapot/environment'
 
 module Teapot
 	module Dependency
+		class UnresolvedDependencyError < StandardError
+			def initialize(chain)
+				super "Unresolved dependency chain!"
+				
+				@chain = chain
+			end
+			
+			attr :chain
+		end
+		
 		Provision = Struct.new(:value)
 		Alias = Struct.new(:dependencies)
 		
@@ -149,10 +159,10 @@ module Teapot
 				
 				# We will now satisfy this dependency by satisfying any dependent dependencies, but we no longer need to revisit this one.
 				@resolved << dependency
-				
+
 				if Alias === provision
 					# puts "** Resolving alias #{provision}".color(:magenta)
-					
+
 					provision.dependencies.each do |dependency|
 						expand(dependency, provider)
 					end
@@ -160,23 +170,30 @@ module Teapot
 					# puts "** Appending #{dependency} -> provisions".color(:magenta)
 					@provisions << provision
 				end
-				
+
 				unless @resolved.include?(provider)
 					# We are now satisfying the provider by expanding all its own dependencies:
 					@resolved << provider
-					
+
 					provider.dependencies.each do |dependency|
 						expand(dependency, provider)
 					end
-					
+
 					# puts "** Appending #{dependency} -> ordered".color(:magenta)
 					@ordered << [provider, dependency]
 				end
 			end
 		end
 		
+		# An `UnresolvedDependencyError` will be thrown if there are any unresolved dependencies.
 		def self.chain(selection, dependencies, providers)
-			Chain.new(selection, dependencies, providers)
+			chain = Chain.new(selection, dependencies, providers)
+
+			if chain.unresolved.size > 0
+				raise UnresolvedDependencyError.new(chain)
+			end
+
+			return chain
 		end
 	end
 end
