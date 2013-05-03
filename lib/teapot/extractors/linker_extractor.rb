@@ -18,38 +18,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/build/targets/library'
+require 'teapot/graph'
 
 module Teapot
-	module Build
-		module Targets
-			class Executable < Library
-				def subdirectory
-					options[:subdirectory] || "bin"
-				end
-			
-				def link(environment, objects)
-					executable_file = link_prefix!(environment) + @name
-			
-					graph = Build::dependency_graph(environment)
-					
-					if graph.regenerate?(executable_file, objects + dependent_libraries(environment))
-						Commands.run(
-							environment[:cxx],
-							environment[:cxxflags],
-							"-o", executable_file, objects,
-							environment[:ldflags]
-						)
+	module Extractors
+		module LinkerExtractor
+			# Give back a list of library paths for a specific set of ldflags.
+			def self.libraries(flags)
+				roots = []
+				libraries = []
+				paths = []
+
+				# Extract include directories:
+				flags.each do |option|
+					if option.to_s =~ /^-L(.+)/
+						roots << Pathname($1)
+					elsif option.to_s =~ /^-l(.+)/
+						libraries << Pathname($1)
 					end
+				end
+
+				libraries.each do |name|
+					archive_name = "lib#{name}.a"
 					
-					return executable_file
+					roots.each do |root|
+						archive_path = root + archive_name
+						
+						paths << archive_path
+						
+						break
+					end
 				end
-			end
-			
-			class Directory
-				def compile_executable(*args, &block)
-					self << Executable.target(self, *args, &block)
-				end
+				
+				return paths
 			end
 		end
 	end

@@ -24,6 +24,7 @@ require 'teapot/build/targets/files'
 require 'teapot/build/targets/compiler'
 
 require 'teapot/build/graph'
+require 'teapot/extractors/linker_extractor'
 
 require 'fileutils'
 
@@ -47,12 +48,16 @@ module Teapot
 					options[:subdirectory] || "lib"
 				end
 				
+				def dependent_libraries(environment)
+					Extractors::LinkerExtractor.libraries(environment[:ldflags])
+				end
+				
 				def link(environment, objects)
 					library_file = link_prefix!(environment) + "lib#{@name}.a"
 				
 					graph = Build::dependency_graph(environment)
 					
-					if graph.regenerate?(library_file, objects)
+					if graph.regenerate?(library_file, objects + dependent_libraries(environment))
 						Linker.link_static(environment, library_file, objects)
 					end
 					

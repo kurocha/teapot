@@ -57,6 +57,12 @@ For Mac OS X (requires Xcode Command Line Tools):
 
 You need to make sure any basic tools, e.g. compilers, system libraries, are installed correctly before building. Consult the platform and library documentation for any dependencies.
 
+## Dependency Graph
+
+Dependency analysis is an important part of efficiently building a source tree. A dependency graph constructed from a single output file depends on the set of input files and their associated implicit dependencies (e.g. `#include` directives), and additionally the environment and task that is being performed. Specifically, the environment can specify additional header files, libraries, or other dependent input files and needs to be considered explicitly.
+
+Teapot assumes per-environment dependency graphs and in addition, parts of the dependency graph are generated dynamically. The process of extracting implicit dependencies can be found under `teapot/extractors` and is used extensively in the build graph `teapot/build`.
+
 ## Contributing
 
 1. Fork it
