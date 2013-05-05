@@ -55,7 +55,6 @@ module Teapot
 			defined = load(root_package)
 
 			# Find the default configuration, if it exists:
-
 			@default_configuration = defined.default_configuration
 
 			if options[:configuration]
@@ -118,7 +117,8 @@ module Teapot
 
 				@generators[definition.name] = definition
 			when Configuration
-				if definition.public?
+				# We define configurations in two cases, if they are public, or if they are part of the root package of this context.
+				if definition.public? or definition.package == @root_package
 					# The root package implicitly defines the default configuration.
 					if definition.name == DEFAULT_CONFIGURATION_NAME
 						raise AlreadyDefinedError.new(definition, root_package)
