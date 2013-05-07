@@ -22,7 +22,7 @@ require 'teapot/controller'
 
 module Teapot
 	class Controller
-		def run(dependency_names)
+		def run(dependency_names = [])
 			configuration = context.configuration
 			
 			log "Running configuration #{configuration[:run].inspect}"
