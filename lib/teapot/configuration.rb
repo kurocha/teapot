@@ -33,10 +33,10 @@ module Teapot
 	class Configuration < Definition
 		Import = Struct.new(:name, :options)
 		
-		def initialize(context, package, name, packages = Set.new)
+		def initialize(context, package, name, packages = Set.new, options = {})
 			super context, package, name
 
-			@options = {}
+			@options = options
 
 			@packages = packages
 			@imports = []
@@ -140,7 +140,7 @@ module Teapot
 			@packages.each{|package| @context.load(package) rescue nil}
 			
 			# Create a new configuration which will represent the materialised version:
-			configuration = self.class.new(@context, @package, @name, @packages.dup)
+			configuration = self.class.new(@context, @package, @name, @packages.dup, @options.dup)
 			
 			# Enumerate all imports and attempt to resolve the packages:
 			@imports.each do |import|
