@@ -40,11 +40,7 @@ module Teapot
 			Build.top(@path)
 		end
 
-		def build(&block)
-			@build = Proc.new(&block)
-		end
-
-		def build_environment(configuration)
+		def environment_for_configuration(configuration)
 			# Reduce the number of keystrokes for good health:
 			context = configuration.context
 			
@@ -73,12 +69,39 @@ module Teapot
 			end
 		end
 
+		def build(&block)
+			if block_given?
+				@build = Proc.new(&block)
+			end
+			
+			return @build
+		end
+
 		def build!(configuration)
 			return unless @build
 			
-			local_environment = build_environment(configuration)
+			local_environment = environment_for_configuration(configuration)
 			
 			@build.call(local_environment)
+		end
+		
+		# Specify a default block which is used to run the configuration.
+		def run(&block)
+			if block_given?
+				@run = block
+			end
+			
+			return @run
+		end
+
+		def run!(configuration)
+			return unless @run
+			
+			local_environment = environment_for_configuration(configuration)
+			
+			if @run
+				@run.call(local_environment)
+			end
 		end
 	end
 end

@@ -27,6 +27,7 @@ require 'teapot/controller/create'
 require 'teapot/controller/fetch'
 require 'teapot/controller/generate'
 require 'teapot/controller/list'
+require 'teapot/controller/run'
 
 require 'benchmark'
 require 'trollop'
@@ -53,10 +54,12 @@ module Application
 		make_controller.fetch
 	end
 	
-	def self.build
-		targets = ARGV
-		
+	def self.build(targets = ARGV)
 		make_controller.build(targets)
+	end
+	
+	def self.run(targets = ARGV)
+		make_controller.run(targets)
 	end
 	
 	def self.list

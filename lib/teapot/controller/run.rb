@@ -22,26 +22,28 @@ require 'teapot/controller'
 
 module Teapot
 	class Controller
-		def build(dependency_names)
-			chain = context.dependency_chain(dependency_names, context.configuration)
-		
-			ordered = chain.ordered
-		
-			if @options[:only]
-				ordered = context.direct_targets(ordered)
-			end
-		
+		def run(dependency_names)
+			configuration = context.configuration
+			
+			log "Running configuration #{configuration[:run].inspect}"
+			
+			chain, ordered = build(configuration[:run] + dependency_names)
+			
 			ordered.each do |(target, dependency)|
-				if target.respond_to?(:build!) and !@options[:dry]
-					log "Building #{target.name} for dependency #{dependency}...".color(:cyan)
+				if target.respond_to?(:run!) and !@options[:dry]
+					log "Running #{target.name} for dependency #{dependency}...".color(:cyan)
 					
-					target.build!(context.configuration)
+					target.run!(configuration)
 				end
 			end
-	
-			log "Completed build successfully.".color(:green)
+		end
+		
+		def invoke(environment, command)
+			binary_path = environment[:install_prefix]
 			
-			return chain, ordered
+			Dir.chdir(binary_path.to_s) do
+				Commands.run(*command)
+			end
 		end
 	end
 end
