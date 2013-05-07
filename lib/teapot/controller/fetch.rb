@@ -114,12 +114,12 @@ module Teapot
 
 						Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
 
-						# Checkout the specific version if it was given:
-						if package_lock
-							Commands.run("git", "reset", "--hard", package_lock[:commit])
-						end
-
 						Dir.chdir(destination_path) do
+							# Checkout the specific version if it was given:
+							if package_lock
+								Commands.run("git", "reset", "--hard", package_lock[:commit])
+							end
+
 							Commands.run("git", "submodule", "update", "--init", "--recursive")
 						end
 					rescue
