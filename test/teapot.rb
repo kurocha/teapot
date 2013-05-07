@@ -3,7 +3,7 @@
 #  This file is part of the "Teapot" project, and is released under the MIT license.
 #
 
-required_version "0.7"
+teapot_version "0.8"
 
 define_configuration 'test' do |configuration|
 	configuration.public!
