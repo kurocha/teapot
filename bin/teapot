@@ -100,18 +100,27 @@ action = ARGV.shift
 # Check that the command was invoked correctly...
 unless action and valid_actions.include?(action)
 	puts "You must specify an action from: #{valid_actions.join(', ')}".color(:red)
+	
 	exit -1
 end
+
+status = 0
 
 time = Benchmark.measure do
 	begin
 		Application.send(action.to_sym)
 	rescue Teapot::NonexistantTeapotError => error
 		$stderr.puts error.message.color(:red)
+		
+		status = -2
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
+		
+		status = -3
 	rescue Teapot::Commands::CommandError => error
 		$stderr.puts error.message.color(:red)
+		
+		status = -4
 	rescue Teapot::Dependency::UnresolvedDependencyError => error
 		$stderr.puts "Unresolved dependencies:"
 
@@ -128,8 +137,13 @@ time = Benchmark.measure do
 		end
 	
 		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
+		
+		status = -5
 	end
 end
 
 $stdout.flush
 $stderr.puts time.format("Elapsed Time: %r").color(:magenta)
+
+# In the case of an error, quit using a non-zero exit code.
+exit status
