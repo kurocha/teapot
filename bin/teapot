@@ -29,7 +29,7 @@ require 'teapot/controller/generate'
 require 'teapot/controller/list'
 require 'teapot/controller/run'
 
-require 'benchmark'
+require 'time'
 require 'trollop'
 
 OPTIONS = Trollop::options do
