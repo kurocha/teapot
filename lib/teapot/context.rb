@@ -154,7 +154,8 @@ module Teapot
 			packages.collect do |package|
 				begin
 					definitions = load(package)
-				rescue NonexistantTeapotError
+				rescue NonexistantTeapotError, IncompatibleTeapotError
+					# If the package doesn't exist or the teapot version is too old, it failed:
 					failed_to_load << package
 				end
 			end

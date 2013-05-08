@@ -70,6 +70,8 @@ module Teapot
 					end
 				rescue NonexistantTeapotError => error
 					log "\t#{error.message}".color(:red)
+				rescue IncompatibleTeapotError => error
+					log "\t#{error.message}".color(:red)
 				end
 			end
 		end
