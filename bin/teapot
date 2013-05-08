@@ -35,6 +35,7 @@ require 'trollop'
 OPTIONS = Trollop::options do
 	opt :only, "Only compiled direct dependencies."
 	opt :in, "Work in the given directory.", :type => :string
+	opt :unlock, "Don't use package lockfile when fetching."
 	
 	opt :configuration, "Specify a specific build configuration.", :type => :string
 end

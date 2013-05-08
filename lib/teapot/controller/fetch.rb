@@ -86,7 +86,11 @@ module Teapot
 					destination_path.make_symlink(local_path)
 				end
 			elsif package.external?
-				package_lock = lock_store.transaction(true){|store| store[package.name]}
+				package_lock = nil
+				
+				unless @options[:unlock]
+					package_lock = lock_store.transaction(true){|store| store[package.name]}
+				end
 
 				log "Fetching #{package}...".color(:cyan)
 
