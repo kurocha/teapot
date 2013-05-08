@@ -94,6 +94,19 @@ module Application
 	end
 end
 
+def track_time
+	start_time = Time.now
+	
+	yield
+	
+ensure
+	end_time = Time.now
+	elapsed_time = end_time - start_time
+	
+	$stdout.flush
+	$stderr.puts ("Elapsed Time: %0.3fs" % elapsed_time).color(:magenta)
+end
+
 valid_actions = (Application.public_methods - Module.methods).collect(&:to_s)
 action = ARGV.shift
 
@@ -104,23 +117,22 @@ unless action and valid_actions.include?(action)
 	exit -1
 end
 
-status = 0
-
-time = Benchmark.measure do
+track_time do
 	begin
 		Application.send(action.to_sym)
 	rescue Teapot::NonexistantTeapotError => error
 		$stderr.puts error.message.color(:red)
 		
-		status = -2
+		exit -2
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
+		$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
 		
-		status = -3
+		exit -3
 	rescue Teapot::Commands::CommandError => error
 		$stderr.puts error.message.color(:red)
 		
-		status = -4
+		exit -4
 	rescue Teapot::Dependency::UnresolvedDependencyError => error
 		$stderr.puts "Unresolved dependencies:"
 
@@ -138,12 +150,6 @@ time = Benchmark.measure do
 	
 		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
 		
-		status = -5
+		exit -5
 	end
 end
-
-$stdout.flush
-$stderr.puts time.format("Elapsed Time: %r").color(:magenta)
-
-# In the case of an error, quit using a non-zero exit code.
-exit status
