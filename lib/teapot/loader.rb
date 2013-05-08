@@ -30,8 +30,8 @@ module Teapot
 	MINIMUM_LOADER_VERSION = "0.8"
 	
 	class IncompatibleTeapotError < StandardError
-		def initialize(version)
-			super "Version #{version} isn't compatible with current loader! Minimum supported version: #{MINIMUM_LOADER_VERSION}; Current version: #{LOADER_VERSION}."
+		def initialize(package, version)
+			super "Unsupported teapot_version #{version} in #{package.path}!"
 		end
 		
 		attr :version
@@ -39,7 +39,7 @@ module Teapot
 	
 	class NonexistantTeapotError < StandardError
 		def initialize(path)
-			super "Could not load #{path}!"
+			super "Could not read file at #{path}!"
 		end
 		
 		attr :path
@@ -74,7 +74,7 @@ module Teapot
 			if version >= MINIMUM_LOADER_VERSION && version <= LOADER_VERSION
 				@version = version
 			else
-				raise IncompatibleTeapotError.new(version)
+				raise IncompatibleTeapotError.new(package, version)
 			end
 		end
 
@@ -128,7 +128,7 @@ module Teapot
 			self.instance_eval(absolute_path.read, absolute_path.to_s)
 			
 			if @version == nil
-				raise IncompatibleTeapotError.new("<unspecified>")
+				raise IncompatibleTeapotError.new(@package, "<unspecified>")
 			end
 		end
 	end
