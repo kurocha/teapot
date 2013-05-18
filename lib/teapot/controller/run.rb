@@ -25,9 +25,11 @@ module Teapot
 		def run(dependency_names = [])
 			configuration = context.configuration
 			
-			log "Running configuration #{configuration[:run].inspect}"
+			dependency_names += configuration[:run] || []
 			
-			chain, ordered = build(configuration[:run] + dependency_names)
+			log "Running dependencies: #{dependency_names}"
+			
+			chain, ordered = build(dependency_names)
 			
 			ordered.each do |(target, dependency)|
 				if target.respond_to?(:run!) and !@options[:dry]
@@ -35,14 +37,6 @@ module Teapot
 					
 					target.run!(configuration)
 				end
-			end
-		end
-		
-		def invoke(environment, command)
-			binary_path = environment[:install_prefix]
-			
-			Dir.chdir(binary_path.to_s) do
-				Commands.run(*command)
 			end
 		end
 	end
