@@ -43,7 +43,7 @@ The resulting libraries will be framework dependent, but are typically located i
 
 ### Example: Compiling TaggedFormat
 
-For Linux (requires `clang` and `libc++`):
+For Linux (requires `clang-3.2` and `libstdc++-4.8`):
 
 	$ teapot create "Local Tagged Format" https://github.com/dream-framework platform-linux variants tagged-format
 	$ cd local-tagged-format
