@@ -137,7 +137,9 @@ module Teapot
 			return self if @imports.count == 0
 			
 			# Before trying to materialize, we should load all possible packages:
-			@packages.each{|package| @context.load(package) rescue nil}
+			@packages.each do |package|
+				@context.load(package) rescue nil
+			end
 			
 			# Create a new configuration which will represent the materialised version:
 			configuration = self.class.new(@context, @package, @name, @packages.dup, @options.dup)
@@ -146,7 +148,7 @@ module Teapot
 			@imports.each do |import|
 				named_configuration = @context.configurations[import.name]
 				
-				if named_configuration
+				if named_configuration && named_configuration != self
 					configuration.append(named_configuration.materialize, import.options)
 				else
 					# It couldn't be resolved...
