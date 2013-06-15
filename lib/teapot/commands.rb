@@ -43,6 +43,9 @@ module Teapot
 		def self.run(*args)
 			args = args.flatten.collect &:to_s
 			
+			# Ensure we aren't invoking the shell
+			args[0] = [args[0], args[0]]
+			
 			puts args.join(' ').color(:blue)
 			
 			if system(*args)
