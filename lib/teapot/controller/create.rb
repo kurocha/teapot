@@ -35,6 +35,10 @@ module Teapot
 			
 				output.puts "required_version #{VERSION.dump}", ''
 			
+				output.puts "\# Build Targets", ''
+			
+				output.puts "\# Configurations", ''
+			
 				output.puts "define_configuration #{name.target.dump} do |configuration|"
 			
 				output.puts "\tconfiguration[:source] = #{source.dump}", ''
@@ -43,7 +47,7 @@ module Teapot
 					output.puts "\tconfiguration.import! #{name.dump}"
 				end
 			
-				output.puts "end"
+				output.puts "end", ''
 			end
 
 			# Fetch all packages:
