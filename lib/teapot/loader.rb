@@ -111,9 +111,9 @@ module Teapot
 		def define_configuration(*args)
 			configuration = Configuration.new(@context, @package, *args)
 
-			yield configuration
-
 			configuration.top!
+
+			yield configuration
 
 			@defined << configuration
 		end
