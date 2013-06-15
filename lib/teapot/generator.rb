@@ -1,15 +1,15 @@
 # Copyright, 2013, by Samuel G. D. Williams. <http://www.codeotaku.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,14 +20,18 @@
 
 require 'teapot/definition'
 require 'teapot/substitutions'
+require 'teapot/merge'
 
 require 'tempfile'
 
 module Teapot
+	class GeneratorError < StandardError
+	end
+	
 	class Generator < Definition
 		def initialize(context, package, name)
 			super context, package, name
-			
+
 			@generate = nil
 		end
 
@@ -38,56 +42,52 @@ module Teapot
 		def generate!(*args)
 			@generate[*args]
 		end
-		
+
 		def substitute(text, substitutions)
 			return text unless substitutions
-			
+
 			if Hash === substitutions
 				pattern = Regexp.new(substitutions.keys.map{|x| Regexp.escape(x)}.join('|'))
-			
+
 				text.gsub(pattern) {|key| substitutions[key]}
 			else
 				substitutions.call(text)
 			end
 		end
-		
+
 		def write(source, destination, substitutions = nil, mode = "a")
 			source_path = Pathname(path) + source
 			destination_path = Pathname(context.root) + destination
-			
+
 			destination_path.dirname.mkpath
-			
+
 			File.open(destination_path, mode) do |file|
 				text = File.read(source_path)
-				
+
 				file.write substitute(text, substitutions)
 			end
 		end
-		
+
 		def append(source, destination, substitutions = nil)
 			write(source, destination, substitutions, "a")
 		end
-		
+
 		def merge(source, destination, substitutions = nil)
 			source_path = Pathname(path) + source
 			destination_path = Pathname(context.root) + destination
-			
+
 			if destination_path.exist?
 				temporary_file = Tempfile.new(destination_path.basename.to_s)
-				
+
 				# This functionality works, but needs improvements.
 				begin
 					# Need to ask user what to do?
 					write(source_path, temporary_file.path, substitutions, "w")
-					
-					if temporary_file.read != destination_path.read
-						if `which opendiff`.chomp != ''
-							system("opendiff", "-merge", destination_path.to_s, destination_path.to_s, temporary_file.path)
-						elsif `which sdiff`.chomp != ''
-							system("sdiff", "-o", destination_path.to_s, destination_path.to_s, temporary_file.path)
-						else
-							abort "Can't find diff/merge tools. Please install sdiff!"
-						end
+
+					result = Merge::combine(destination.readlines, temporary_file.readlines)
+
+					destination.open("w") do |file|
+						file.write result.join
 					end
 				ensure
 					temporary_file.unlink
@@ -96,13 +96,13 @@ module Teapot
 				write(source_path, destination_path, substitutions, "w")
 			end
 		end
-		
+
 		def copy(source, destination, substitutions = nil)
 			source_path = Pathname(path) + source
-			
+
 			if source_path.directory?
 				destination_path = Pathname(context.root) + destination
-				
+
 				source_path.children(false).each do |child_path|
 					copy(source_path + child_path, destination_path + substitute(child_path.to_s, substitutions), substitutions)
 				end

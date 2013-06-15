@@ -38,6 +38,16 @@ module Teapot
 						end if definition.description
 				
 						case definition
+						when Project
+							log "\t\t- Summary: #{definition.summary}" if definition.summary
+							log "\t\t- License: #{definition.license}" if definition.license
+							log "\t\t- Website: #{definition.website}" if definition.website
+							log "\t\t- Version: #{definition.version}" if definition.version
+							
+							definition.authors.each do |author|
+								contact_text = [author.email, author.website].compact.collect{|text|" <#{text}>"}.join
+								log "\t\t- Author: #{author.name}" + contact_text
+							end
 						when Target
 							definition.dependencies.each do |name|
 								log "\t\t- depends on #{name.inspect}".color(:red)

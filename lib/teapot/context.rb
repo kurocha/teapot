@@ -45,6 +45,7 @@ module Teapot
 			@targets = {}
 			@generators = {}
 			@configurations = {}
+			@projects = {}
 
 			@dependencies = []
 			@selection = Set.new
@@ -72,12 +73,16 @@ module Teapot
 
 		attr :targets
 		attr :generators
+		attr :projects
 
 		# All public configurations.
 		attr :configurations
 
 		# The context's primary configuration.
 		attr :configuration
+
+		# The context's primary project.
+		attr :project
 
 		attr :dependencies
 		attr :selection
@@ -128,6 +133,12 @@ module Teapot
 
 					@configurations[definition.name] = definition
 				end
+			when Project
+				AlreadyDefinedError.check(definition, @projects)
+
+				@project ||= definition
+
+				@projects[definition.name] = definition
 			end
 		end
 

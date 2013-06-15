@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'teapot/project'
 require 'teapot/target'
 require 'teapot/generator'
 require 'teapot/configuration'
@@ -26,7 +27,7 @@ require 'teapot/name'
 require 'teapot/build'
 
 module Teapot
-	LOADER_VERSION = "0.8"
+	LOADER_VERSION = "0.9"
 	MINIMUM_LOADER_VERSION = "0.8"
 	
 	class IncompatibleTeapotError < StandardError
@@ -82,6 +83,14 @@ module Teapot
 		end
 
 		alias required_version teapot_version
+
+		def define_project(*args)
+			project = Project.new(@context, @package, *args)
+			
+			yield project
+			
+			@defined << project
+		end
 
 		def define_target(*args)
 			target = Target.new(@context, @package, *args)
