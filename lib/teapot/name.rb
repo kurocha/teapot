@@ -34,8 +34,8 @@ module Teapot
 			@target ||= @text.gsub(/\s+/, '-').downcase
 		end
 		
-		def macro
-			@guard ||= @text.upcase.gsub(/\s+/, '_')
+		def macro(prefix = [])
+			(Array(prefix) + [@text]).collect{|name| name.upcase.gsub(/\s+/, '_')}.join('_')
 		end
 	end
 end
