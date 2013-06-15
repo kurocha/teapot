@@ -25,6 +25,16 @@ require 'facter'
 
 module Teapot
 	module Commands
+		module Helpers
+			def run_executable(path, environment)
+				environment = environment.flatten
+		
+				executable = environment[:install_prefix] + path
+		
+				Commands.run(executable)
+			end
+		end
+		
 		def self.processor_count
 			# Get the number of virtual/physical processors
 			count = Facter.processorcount.to_i rescue 1

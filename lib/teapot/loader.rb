@@ -55,6 +55,9 @@ module Teapot
 		# Provides build_directory and build_external methods
 		include Build::Helpers
 		
+		# Provides run_executable and other related methods.
+		include Commands::Helpers
+		
 		def initialize(context, package)
 			@context = context
 			@package = package
