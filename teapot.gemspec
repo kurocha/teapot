@@ -14,7 +14,7 @@ Gem::Specification.new do |gem|
 	the infusions ecosystem of packages and platform tooling.
 	EOF
 	gem.summary       = %q{Teapot is a tool for managing complex cross-platform builds.}
-	gem.homepage      = ""
+	gem.homepage      = "http://www.kyusu.org"
 
 	gem.files         = `git ls-files`.split($/)
 	gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
