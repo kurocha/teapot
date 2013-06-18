@@ -8,6 +8,7 @@ Teapot is a decentralised build tool for managing complex cross-platform project
 - The build subsystem provides a simple set of canonical operations for building libraries and executables to minimise configuration overhead.
 
 [![Build Status](https://secure.travis-ci.org/ioquatix/teapot.png)](http://travis-ci.org/ioquatix/teapot)
+[![Code Climate](https://codeclimate.com/github/ioquatix/teapot.png)](https://codeclimate.com/github/ioquatix/teapot)
 
 ## Installation
 
