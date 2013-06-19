@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 require 'teapot/controller'
+require 'teapot/repository'
 
 module Teapot
 	class Controller
@@ -108,51 +109,25 @@ module Teapot
 					branch = package_lock[:branch]
 				end
 
+				commit = package_lock ? package_lock[:commit] : nil
+
 				unless destination_path.exist?
 					log "Cloning package at path #{destination_path} ...".color(:cyan)
 			
 					begin
-						destination_path.mkpath
-
 						external_url = package.external_url(context.root)
 
-						Commands.run("git", "clone", external_url, destination_path, "--branch", branch)
-
-						Dir.chdir(destination_path) do
-							# Checkout the specific version if it was given:
-							if package_lock
-								Commands.run("git", "reset", "--hard", package_lock[:commit])
-							end
-
-							Commands.run("git", "submodule", "update", "--init", "--recursive")
-						end
+						Repository.new(destination_path).clone!(external_url, branch, commit)
 					rescue
-						log "Removing incomplete package at path #{destination_path}...".color(:red)
-				
-						# Clean up if the git checkout process is interrupted:
-						destination_path.rmtree
-				
+						log "Failed to clone #{external_url}...".color(:red)
+
 						raise
 					end
 				else
 					log "Updating package at path #{destination_path} ...".color(:cyan)
 
-					Dir.chdir(destination_path) do
-						Commands.run("git", "fetch", "origin")
-		
-						Commands.run("git", "checkout", branch)
-		
-						# Pull any changes, if you might get the error from above:
-						# Your branch is behind 'origin/0.1' by 1 commit, and can be fast-forwarded.
-						Commands.run("git", "pull")
-
-						# Checkout the specific version if it was given:
-						if package_lock
-							Commands.run("git", "reset", "--hard", package_lock[:commit])
-						end
-
-						Commands.run("git", "submodule", "update", "--init", "--recursive")
-					end
+					commit = package_lock ? package_lock[:commit] : nil
+					Repository.new(destination_path).update(branch, commit)
 				end
 				
 				# Lock the package, unless it was already locked:

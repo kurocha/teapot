@@ -28,6 +28,7 @@ require 'teapot/controller/fetch'
 require 'teapot/controller/generate'
 require 'teapot/controller/list'
 require 'teapot/controller/run'
+require 'teapot/repository'
 
 require 'time'
 require 'trollop'
@@ -82,9 +83,7 @@ module Application
 		# Make the path:
 		root.mkpath
 		
-		Dir.chdir(root) do
-			Teapot::Commands.run("git", "init")
-		end
+		Teapot::Repository.new(root).init!
 		
 		make_controller(root).create(project_name, source, packages)
 	end

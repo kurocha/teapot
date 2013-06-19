@@ -22,6 +22,7 @@ require 'set'
 require 'rainbow'
 require 'shellwords'
 require 'facter'
+require 'rexec/task'
 
 module Teapot
 	module Commands
@@ -51,14 +52,16 @@ module Teapot
 		end
 		
 		def self.run(*args)
+			options = Hash === args.last ? args.pop : {}
+			options[:passthrough] ||= :all
+			
 			args = args.flatten.collect &:to_s
 			
-			# Ensure we aren't invoking the shell
-			args[0] = [args[0], args[0]]
+			puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
 			
-			puts args.join(' ').color(:blue)
+			task = RExec::Task.open(args, options)
 			
-			if system(*args)
+			if task.wait == 0
 				true
 			else
 				raise CommandError.new("Non-zero exit status: #{args.join(' ')}!")
