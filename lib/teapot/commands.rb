@@ -51,7 +51,7 @@ module Teapot
 			Shellwords.split(arg || "")
 		end
 		
-		def self.run(*args)
+		def self.run(*args, &block)
 			options = Hash === args.last ? args.pop : {}
 			options[:passthrough] ||= :all
 			
@@ -59,7 +59,7 @@ module Teapot
 			
 			puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
 			
-			task = RExec::Task.open(args, options)
+			task = RExec::Task.open(args, options, &block)
 			
 			if task.wait == 0
 				true
@@ -68,8 +68,8 @@ module Teapot
 			end
 		end
 		
-		def self.run!(*args)
-			run(*args)
+		def self.run!(*args, &block)
+			run(*args, &block)
 		rescue CommandError
 			false
 		end

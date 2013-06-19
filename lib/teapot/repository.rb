@@ -74,6 +74,18 @@ module Teapot
 				end
 			end
 
+			def commit(message)
+				run("commit", "-m", message)
+			end
+
+			def status
+				Commands.run("git", "status", "--porcelain", :passthrough => [:in, :err]) do |task|
+					if task.wait == 0
+						return task.output.readlines.collect{|line| line.chomp.split(/\s+/, 2)}
+					end
+				end
+			end
+
 			private
 
 			def run(*args)
