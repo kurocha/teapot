@@ -61,7 +61,7 @@ module Teapot
 		
 		def generate_project(project_name)
 			if context.generators.key? 'project'
-				generate('project', [project_name])
+				generate('project', [project_name], true)
 			end
 		end
 	end

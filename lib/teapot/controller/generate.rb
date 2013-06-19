@@ -22,8 +22,15 @@ require 'teapot/controller'
 
 module Teapot
 	class Controller
-		def generate(name, arguments)
+		def generate(name, arguments, force = false)
 			context.configuration.load_all
+
+			unless force
+				# Check dirty status of local repository:
+				if Repository.new(@root).status.size != 0
+					abort "You have unstaged changes/unadded files. Please stash/commit them before running the generator.".color(:red)
+				end
+			end
 
 			generator = context.generators[name]
 

@@ -38,6 +38,8 @@ OPTIONS = Trollop::options do
 	opt :in, "Work in the given directory.", :type => :string
 	opt :unlock, "Don't use package lockfile when fetching."
 	
+	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
+	
 	opt :configuration, "Specify a specific build configuration.", :type => :string
 end
 
@@ -90,7 +92,7 @@ module Application
 	
 	def self.generate(arguments = ARGV)
 		generator_name = arguments.shift
-		make_controller.generate(generator_name, arguments)
+		make_controller.generate(generator_name, arguments, OPTIONS[:force])
 	end
 end
 
