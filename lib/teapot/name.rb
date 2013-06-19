@@ -37,5 +37,9 @@ module Teapot
 		def macro(prefix = [])
 			(Array(prefix) + [@text]).collect{|name| name.upcase.gsub(/\s+/, '_')}.join('_')
 		end
+		
+		def header_guard(path)
+			macro(path) + '_H'
+		end
 	end
 end
