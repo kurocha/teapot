@@ -97,17 +97,34 @@ module Teapot
 			end
 		end
 
+		def is_binary(path)
+			if path.exist?
+				return path.read(1024).bytes.find{|byte| byte >= 0 and byte <= 6}
+			else
+				return false
+			end
+		end
+
+		def copy_binary(source_path, destination_path)
+			destination_path.dirname.mkpath
+			FileUtils.cp source_path, destination_path
+		end
+
 		def copy(source, destination, substitutions = nil)
 			source_path = Pathname(path) + source
+			destination_path = Pathname(context.root) + destination
 
 			if source_path.directory?
-				destination_path = Pathname(context.root) + destination
-
 				source_path.children(false).each do |child_path|
 					copy(source_path + child_path, destination_path + substitute(child_path.to_s, substitutions), substitutions)
 				end
 			else
-				merge(source_path, destination, substitutions)
+				if is_binary(source_path) or is_binary(destination)
+					destination_path = Pathname(context.root) + destination
+					copy_binary(source_path, destination_path)
+				else
+					merge(source_path, destination, substitutions)
+				end
 			end
 		end
 	end
