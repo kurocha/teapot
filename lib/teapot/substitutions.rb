@@ -52,8 +52,8 @@ module Teapot
 	end
 	
 	class Substitutions
-		def initialize
-			@ordered = []
+		def initialize(ordered = [])
+			@ordered = ordered
 		end
 		
 		def []= keyword, value
@@ -67,6 +67,10 @@ module Teapot
 
 		def << substitution
 			@ordered << substition
+		end
+
+		def + other
+			Substitutions.new(@ordered + other.ordered)
 		end
 
 		attr :ordered
@@ -197,6 +201,23 @@ module Teapot
 				
 				return text
 			end
+		end
+		
+		# Create a set of substitutions from the given context which includes a set of useful defaults.
+		def self.for_context(context)
+			substitutions = self.new
+
+			# The user's current name:
+			substitutions['AUTHOR_NAME'] = `git config --global user.name`.chomp
+
+			substitutions['PROJECT_NAME'] = context.project.name
+			substitutions['LICENSE'] = context.project.license
+
+			current_date = Time.new
+			substitutions['DATE'] = current_date.strftime("%-d/%-m/%Y")
+			substitutions['YEAR'] = current_date.strftime("%Y")
+
+			return substitutions
 		end
 	end
 end
