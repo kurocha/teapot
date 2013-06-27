@@ -160,28 +160,39 @@ module Teapot
 				# We will now satisfy this dependency by satisfying any dependent dependencies, but we no longer need to revisit this one.
 				@resolved << dependency
 
+				# If the provision was an Alias, make sure to resolve the alias first:
 				if Alias === provision
 					# puts "** Resolving alias #{provision}".color(:magenta)
 
 					provision.dependencies.each do |dependency|
 						expand(dependency, provider)
 					end
-				elsif provision != nil
-					# puts "** Appending #{dependency} -> provisions".color(:magenta)
-					@provisions << provision
 				end
 
 				unless @resolved.include?(provider)
 					# We are now satisfying the provider by expanding all its own dependencies:
 					@resolved << provider
 
+					# Make sure we satisfy the provider's dependencies first:
 					provider.dependencies.each do |dependency|
 						expand(dependency, provider)
 					end
 
 					# puts "** Appending #{dependency} -> ordered".color(:magenta)
+					
+					# Add the provider to the ordered list.
 					@ordered << [provider, dependency]
 				end
+				
+				# This goes here because we want to ensure 1/ that if 
+				unless provision == nil or Alias === provision
+					# puts "** Appending #{dependency} -> provisions".color(:magenta)
+					
+					# Add the provision to the set of required provisions.
+					@provisions << provision
+				end
+				
+				# For both @ordered and @provisions, we ensure that for [...xs..., x, ...], x is satisfied by ...xs....
 			end
 		end
 		
