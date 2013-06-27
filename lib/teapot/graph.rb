@@ -67,7 +67,7 @@ module Teapot
 			@nodes.fetch(path) do
 				node = @nodes[path] = Node.new(self, path)
 				node.extract_dependencies!
-				
+
 				node
 			end
 		end
@@ -87,6 +87,8 @@ module Teapot
 			attr :dependencies
 
 			def changed_since?(modified_time)
+				return true unless @path.exist?
+
 				if @changed == nil
 					# If the file was modified in the future relative to old modified_time:
 					if @path.mtime > modified_time
