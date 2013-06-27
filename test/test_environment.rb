@@ -31,8 +31,9 @@ class TestEnvironment < Test::Unit::TestCase
 		
 		b = Teapot::Environment.new(a, {})
 		b[:cflags] = ["-stdlib=libc++"]
+		b[:rcflags] = lambda {cflags.reverse}
 		
-		expected = {:cflags => ["-std=c++11", "-stdlib=libc++"]}
+		expected = {:cflags => ["-std=c++11", "-stdlib=libc++"], :rcflags => ["-stdlib=libc++", "-std=c++11"]}
 		
 		assert_equal expected, b.flatten.to_hash
 	end
