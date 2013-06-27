@@ -25,7 +25,7 @@ module Teapot
 		module Linker
 			class UnsupportedPlatform < StandardError
 			end
-			
+
 			def self.link_static(environment, library_file, objects)
 				if RUBY_PLATFORM =~ /darwin/
 					Commands.run(
@@ -33,6 +33,8 @@ module Teapot
 						"-static", "-o", library_file, objects,
 					)
 				elsif RUBY_PLATFORM =~ /linux/
+					FileUtils.rm_rf library_file
+
 					Commands.run(
 						environment[:ar] || 'ar',
 						environment[:arflags] || "-cru",
