@@ -58,5 +58,13 @@ module Teapot
 		def to_s
 			"<#{self.class} #{self.values}>"
 		end
+		
+		def inspect(output = $stdout, indent = "")
+			@values.each do |(key, value)|
+				output.puts "#{indent}#{key}: #{value}"
+			end
+			
+			@parent.inspect(output, indent + "\t") if @parent
+		end
 	end
 end
