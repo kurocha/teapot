@@ -34,6 +34,8 @@ require 'time'
 require 'trollop'
 
 OPTIONS = Trollop::options do
+	version "teapot v#{Teapot::VERSION}"
+	
 	opt :only, "Only compiled direct dependencies."
 	opt :in, "Work in the given directory.", :type => :string
 	opt :unlock, "Don't use package lockfile when fetching."
