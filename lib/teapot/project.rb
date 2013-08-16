@@ -38,7 +38,7 @@ module Teapot
 		
 		attr :authors
 		
-		def add_author name, options
+		def add_author(name, options = {})
 			@authors << Author.new(name, options[:email], options[:website])
 		end
 	end
