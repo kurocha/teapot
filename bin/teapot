@@ -147,7 +147,7 @@ track_time do
 		
 			if conflicts
 				conflicts.each do |conflict|
-					$stderr.puts " - provided by #{conflict.inspect}".color(:red)
+					$stderr.puts " - provided by #{conflict.name}".color(:red)
 				end
 			end
 		end
