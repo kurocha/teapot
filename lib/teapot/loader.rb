@@ -22,12 +22,13 @@ require 'teapot/project'
 require 'teapot/target'
 require 'teapot/generator'
 require 'teapot/configuration'
+require 'teapot/rule'
 
 require 'teapot/name'
 require 'teapot/build'
 
 module Teapot
-	LOADER_VERSION = "0.9"
+	LOADER_VERSION = "0.9.6"
 	MINIMUM_LOADER_VERSION = "0.8"
 	
 	class IncompatibleTeapotError < StandardError
@@ -116,6 +117,14 @@ module Teapot
 			yield configuration
 
 			@defined << configuration
+		end
+
+		def define_rule(*args)
+			rule = Rule.new(@context, @package, *args)
+
+			yield rule
+
+			@defined << rule
 		end
 
 		# Checks the host patterns and executes the block if they match.

@@ -25,7 +25,7 @@ module Teapot
 	class Graph
 		def initialize
 			@nodes = {}
-			
+
 			@extractors = []
 		end
 
@@ -63,9 +63,14 @@ module Teapot
 			nodes = dependencies.map{|path| fetch(path)}
 		end
 
+		def Node(path)
+			Node.new(self, path)
+		end
+
 		def fetch(path)
 			@nodes.fetch(path) do
-				node = @nodes[path] = Node.new(self, path)
+				node = @nodes[path] = Node(path)
+
 				node.extract_dependencies!
 
 				node
@@ -86,6 +91,10 @@ module Teapot
 			attr :path
 			attr :dependencies
 
+			def all_dependencies
+				@dependencies || []
+			end
+
 			def changed_since?(modified_time)
 				return true unless @path.exist?
 
@@ -99,7 +108,7 @@ module Teapot
 					end
 
 					# If any of the file's dependencies have changed relative to the old modified_time:
-					@dependencies.each do |dependency|
+					all_dependencies.each do |dependency|
 						if dependency.changed_since?(modified_time)
 							return @changed = true
 						end

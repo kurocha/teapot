@@ -46,6 +46,7 @@ module Teapot
 			@generators = {}
 			@configurations = {}
 			@projects = {}
+			@rules = Rulebook.new
 
 			@dependencies = []
 			@selection = Set.new
@@ -77,6 +78,8 @@ module Teapot
 
 		# All public configurations.
 		attr :configurations
+
+		attr :rules
 
 		# The context's primary configuration.
 		attr :configuration
@@ -111,6 +114,7 @@ module Teapot
 			end.compact
 		end
 
+		# Add a definition to the current context.
 		def << definition
 			case definition
 			when Target
@@ -139,6 +143,10 @@ module Teapot
 				@project ||= definition
 
 				@projects[definition.name] = definition
+			when Rule
+				AlreadyDefinedError.check(definition, @rules)
+
+				@rules << definition
 			end
 		end
 
