@@ -26,6 +26,13 @@ require 'tempfile'
 
 module Teapot
 	class GeneratorError < StandardError
+		def initialize(message, generator = nil)
+			super(message)
+			
+			@generator = generator
+		end
+		
+		attr :generator
 	end
 	
 	class Generator < Definition

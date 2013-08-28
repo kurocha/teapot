@@ -43,6 +43,8 @@ OPTIONS = Trollop::options do
 	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
 	
 	opt :configuration, "Specify a specific build configuration.", :type => :string
+	
+	opt :verbose, "Verbose output and error backtraces."
 end
 
 def make_controller(root = nil)
@@ -124,19 +126,11 @@ end
 track_time do
 	begin
 		Application.send(action.to_sym)
-	rescue Teapot::NonexistantTeapotError => error
-		$stderr.puts error.message.color(:red)
-		
-		exit -2
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
 		$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
 		
 		exit -3
-	rescue Teapot::Commands::CommandError => error
-		$stderr.puts error.message.color(:red)
-		
-		exit -4
 	rescue Teapot::Dependency::UnresolvedDependencyError => error
 		$stderr.puts "Unresolved dependencies:"
 
@@ -155,5 +149,16 @@ track_time do
 		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
 		
 		exit -5
+	rescue StandardError => error
+		$stderr.puts error.message.color(:red)
+		
+		# Could be nice to have some improved error reporting.
+		if OPTIONS[:verbose]
+			$stderr.puts error.backtrace
+		else
+			$stderr.puts "Run with --verbose for more details."
+		end
+		
+		exit -10
 	end
 end
