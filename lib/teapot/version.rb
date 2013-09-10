@@ -19,5 +19,5 @@
 # THE SOFTWARE.
 
 module Teapot
-	VERSION = "0.9.10"
+	VERSION = "1.0.0"
 end
