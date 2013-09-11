@@ -30,16 +30,76 @@ require 'teapot/commands'
 require 'teapot/definition'
 
 module Teapot
-	class Configuration < Definition
-		Import = Struct.new(:name, :options)
+	# Very similar to a set but uses a specific callback for object identity.
+	class IdentitySet
+		include Enumerable
 		
-		def initialize(context, package, name, packages = Set.new, options = {})
+		def initialize(contents = [], &block)
+			@table = {}
+			@identity = block
+			
+			contents.each do |object|
+				add(object)
+			end
+		end
+	
+		def initialize_dup(other)
+			@table = other.table.dup
+		end
+	
+		attr :table
+	
+		def add(object)
+			@table[@identity[object]] = object
+		end
+	
+		alias << add
+	
+		def remove(object)
+			@table.delete(@identity[object])
+		end
+	
+		def include?(object)
+			@table.include?(@identity[object])
+		end
+		
+		def each(&block)
+			@table.each_value(&block)
+		end
+	
+		def size
+			@table.size
+		end
+		
+		def clear
+			@table.clear
+		end
+		
+		alias count size
+	
+		def to_s
+			@table.to_s
+		end
+	end
+	
+	class Configuration < Definition
+		Import = Struct.new(:name, :explicit, :options)
+		
+		DEFAULT_OPTIONS = {
+			:import => true
+		}
+		
+		def initialize(context, package, name, packages = [], options = nil)
 			super context, package, name
 
-			@options = options
+			if options
+				@options = options
+			else
+				@options = DEFAULT_OPTIONS.dup
+			end
 
-			@packages = packages
-			@imports = []
+			@packages = IdentitySet.new(packages, &:name)
+			@imports = IdentitySet.new(&:name)
 
 			@visibility = :private
 		end
@@ -69,17 +129,17 @@ module Teapot
 			options = options ? @options.merge(options) : @options.dup
 			
 			@packages << Package.new(packages_path + name.to_s, name, options)
+			
+			if options[:import] == true
+				import(name, false)
+			elsif String === options[:import]
+				import(options[:import])
+			end
 		end
 
 		# Specifies that this package will import additional configuration records from another definition.
-		def import(name)
-			@imports << Import.new(name, @options.dup)
-		end
-
-		# Require and import the named package.
-		def import!(name, options = nil)
-			require(name, options)
-			import(name)
+		def import(name, explicit = true)
+			@imports << Import.new(name, explicit, @options.dup)
 		end
 
 		# Create a group for configuration options which will be only be active within the group block.
@@ -134,39 +194,61 @@ module Teapot
 		# Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.
 		def materialize
 			# Potentially no materialization is required:
-			return self if @imports.count == 0
-			
-			# Before trying to materialize, we should load all possible packages:
-			@packages.each do |package|
-				@context.load(package) rescue nil
-			end
-			
-			# Create a new configuration which will represent the materialised version:
-			configuration = self.class.new(@context, @package, @name, @packages.dup, @options.dup)
+			return false if @imports.count == 0
 			
 			# Enumerate all imports and attempt to resolve the packages:
-			@imports.each do |import|
-				named_configuration = @context.configurations[import.name]
+			begin
+				updated = false
 				
-				if named_configuration && named_configuration != self
-					configuration.append(named_configuration.materialize, import.options)
-				else
-					# It couldn't be resolved...
-					configuration.imports << import
+				# Before trying to materialize, we should load all possible packages:
+				@packages.each do |package|
+					@context.load(package) rescue nil
+				end
+				
+				imports = @imports
+				@imports = IdentitySet.new(&:name)
+				
+				imports.each do |import|
+					named_configuration = @context.configurations[import.name]
+				
+					if named_configuration && named_configuration != self
+						updated = self.merge(named_configuration, import.options) || updated
+					else
+						# It couldn't be resolved...
+						@imports << import
+					end
+				end
+			end while updated
+			
+			return true
+		end
+		
+		# Merge an external configuration into this configuration. We won't override already defined packages.
+		def merge(configuration, options)
+			updated = false
+			
+			configuration.packages.each do |external_package|
+				# The top level configuration will override packages that are defined by imported configurations. This is desirable behaviour, as it allows us to flatten the configuration but provide overrides if required.
+				unless @packages.include? external_package
+					options = options.merge(external_package.options)
+					
+					@packages << Package.new(packages_path + external_package.name, external_package.name, options)
+					
+					updated = true
 				end
 			end
 			
-			return configuration
-		end
-		
-		def append(configuration, options)
-			@packages += configuration.packages.collect do |package|
-				package.dup.tap{|package| package.options = options.merge(package.options)}
+			configuration.imports.each do |external_import|
+				unless @imports.include? external_import
+					options = options.merge(external_import.options)
+					
+					@imports << Import.new(external_import.name, external_import.explicit, options)
+					
+					updated = true
+				end
 			end
 			
-			@imports += configuration.imports.collect do |import|
-				import.dup.tap{|import| import.options = options.merge(import.options)}
-			end
+			return updated
 		end
 		
 		def to_s

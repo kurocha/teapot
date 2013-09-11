@@ -61,7 +61,7 @@ module Teapot
 								end
 							end
 						when Configuration
-							definition = definition.materialize
+							definition.materialize
 						
 							definition.packages.each do |package|
 								if package.local?
@@ -73,7 +73,7 @@ module Teapot
 								end
 							end
 						
-							definition.imports.each do |import|
+							definition.imports.select(&:explicit).each do |import|
 								log "\t\t- unmaterialised import #{import.name}".color(:red)
 							end
 						end

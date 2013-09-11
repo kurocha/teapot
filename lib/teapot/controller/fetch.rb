@@ -40,7 +40,7 @@ module Teapot
 				end
 			
 				# Resolve any/all imports:
-				configuration = configuration.materialize
+				configuration.materialize
 			
 				previously_unresolved = unresolved
 				unresolved = context.unresolved(configuration.packages)
