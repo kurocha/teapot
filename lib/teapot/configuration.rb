@@ -80,6 +80,10 @@ module Teapot
 		def to_s
 			@table.to_s
 		end
+		
+		def self.by_name(contents = [])
+			self.new(contents, &:name)
+		end
 	end
 	
 	class Configuration < Definition
@@ -98,8 +102,8 @@ module Teapot
 				@options = DEFAULT_OPTIONS.dup
 			end
 
-			@packages = IdentitySet.new(packages, &:name)
-			@imports = IdentitySet.new(&:name)
+			@packages = IdentitySet.by_name(packages)
+			@imports = IdentitySet.by_name
 
 			@visibility = :private
 		end
@@ -196,6 +200,9 @@ module Teapot
 			# Potentially no materialization is required:
 			return false if @imports.count == 0
 			
+			# Avoid loops in the dependency chain:
+			imported = IdentitySet.new(&:name)
+			
 			# Enumerate all imports and attempt to resolve the packages:
 			begin
 				updated = false
@@ -210,11 +217,19 @@ module Teapot
 				
 				imports.each do |import|
 					named_configuration = @context.configurations[import.name]
-				
+
+					# So we don't get into some crazy cycle:
+					next if imported.include? import
+					
+					# It would be nice if we could detect cycles and issue an error to the user. However, sometimes the case above is not hit at the point where the cycle begins - it isn't clear at what point the user explicitly created a cycle, and what configuration actually ends up being imported a second time.
+					
 					if named_configuration && named_configuration != self
+						# Mark this as resolved
+						imported << import
+						
 						updated = self.merge(named_configuration, import.options) || updated
 					else
-						# It couldn't be resolved...
+						# It couldn't be resolved and hasn't already been resolved...
 						@imports << import
 					end
 				end
