@@ -44,7 +44,7 @@ module Teapot
 				output.puts "\tconfiguration[:source] = #{source.dump}", ''
 			
 				packages.each do |name|
-					output.puts "\tconfiguration.import! #{name.dump}"
+					output.puts "\tconfiguration.require #{name.dump}"
 				end
 			
 				output.puts "end", ''
