@@ -29,6 +29,8 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "trollop"
 	spec.add_dependency "facter"
 
+	spec.add_dependency "graphviz"
+
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
 end

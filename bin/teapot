@@ -28,6 +28,8 @@ require 'teapot/controller/fetch'
 require 'teapot/controller/generate'
 require 'teapot/controller/list'
 require 'teapot/controller/run'
+require 'teapot/controller/visualize'
+
 require 'teapot/repository'
 
 require 'time'
@@ -72,6 +74,10 @@ module Application
 	
 	def self.list
 		make_controller.list
+	end
+	
+	def self.visualize(targets = ARGV)
+		make_controller.visualize(targets)
 	end
 	
 	def self.create
