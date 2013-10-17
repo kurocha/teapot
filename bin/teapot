@@ -72,8 +72,12 @@ module Application
 		make_controller.run(targets)
 	end
 	
-	def self.list
-		make_controller.list
+	def self.list(only = ARGV)
+		if only.size > 0
+			make_controller.list(Set.new(only))
+		else
+			make_controller.list
+		end
 	end
 	
 	def self.visualize(targets = ARGV)

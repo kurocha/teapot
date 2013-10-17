@@ -22,9 +22,12 @@ require 'teapot/controller'
 
 module Teapot
 	class Controller
-		def list
+		def list(only = nil)
 			# Should this somehow consider context.root_package?
 			context.configuration.packages.each do |package|
+				# The root package is the local package for this context:
+				next unless only == nil or only.include?(package.name)
+				
 				log "Package #{package.name} (from #{package.path}):".bright
 			
 				begin
