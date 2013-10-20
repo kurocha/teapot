@@ -55,7 +55,7 @@ module Teapot
 			options = Hash === args.last ? args.pop : {}
 			options[:passthrough] ||= :all
 			
-			args = args.flatten.collect &:to_s
+			args = args.flatten.compact.collect &:to_s
 			
 			puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
 			
@@ -95,7 +95,7 @@ module Teapot
 			end
 			
 			def run(*args)
-				args = args.flatten.collect &:to_s
+				args = args.flatten.compact.collect &:to_s
 				
 				@commands << args
 				
