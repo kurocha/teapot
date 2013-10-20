@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "rainbow"
 	spec.add_dependency "rexec", "~> 1.6.0"
 	spec.add_dependency "trollop"
-	spec.add_dependency "facter"
+	spec.add_dependency "system", "~> 0.1.3"
 
 	spec.add_dependency "graphviz"
 

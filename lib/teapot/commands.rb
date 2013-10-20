@@ -21,7 +21,8 @@
 require 'set'
 require 'rainbow'
 require 'shellwords'
-require 'facter'
+
+require 'system'
 require 'rexec/task'
 
 module Teapot
@@ -34,14 +35,6 @@ module Teapot
 		
 				Commands.run(executable)
 			end
-		end
-		
-		def self.processor_count
-			# Get the number of virtual/physical processors
-			count = Facter.processorcount.to_i rescue 1
-			
-			# Make sure we always return at least 1:
-			count < 1 ? 1 : count
 		end
 		
 		class CommandError < StandardError
@@ -79,7 +72,7 @@ module Teapot
 		end
 		
 		def self.make(*args)
-			run("make", *args, "-j", processor_count)
+			run("make", args, "-j", processor_count)
 		end
 		
 		def self.make_install
@@ -87,9 +80,14 @@ module Teapot
 		end
 		
 		class Pool
+			def self.concurrent_process_count
+				System::CPU.count * 2
+			end
+			
 			def initialize(options = {})
 				@commands = []
-				@limit = options[:limit] || Commands.processor_count
+				
+				@limit = options[:limit] || Pool.concurrent_process_count
 				
 				@running = Set.new
 			end
