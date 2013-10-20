@@ -10,8 +10,10 @@ Gem::Specification.new do |spec|
 	spec.email         = ["samuel.williams@oriontransfer.co.nz"]
 	spec.description   = <<-EOF
 	Teapot is a tool for managing complex cross-platform builds. It provides
-	advanced dependency management via the Teapot file and is supported by
-	the infusions ecosystem of packages and platform tooling.
+	advanced package-based dependency management with a single configuration file
+	per project. It can fetch, list, build, visualise and create projects, and
+	has been designed from the ground up to support collaborative decentralised
+	development.
 	EOF
 	spec.summary       = %q{Teapot is a tool for managing complex cross-platform builds.}
 	spec.homepage      = "http://www.kyusu.org"
