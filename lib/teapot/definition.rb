@@ -37,7 +37,7 @@ module Teapot
 		
 		# The name of the definition:
 		attr :name
-
+		
 		# A textual description of the definition, possibly in markdown format:
 		attr :description, true
 		

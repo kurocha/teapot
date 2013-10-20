@@ -21,6 +21,8 @@
 require 'set'
 require 'pathname'
 
+# We assert, that in large projects, the cost of checking the entire build tree is more expensive than being notified of individual changes. By running teapot as a daemon, changes to individual directories can trigger the rebuild of individual components as required.
+
 module Teapot
 	class Graph
 		def initialize
@@ -37,10 +39,17 @@ module Teapot
 			@nodes[node.path] = node
 		end
 
-		def regenerate?(output_path, input_paths)
-			return true unless output_path.exist?
+		def fresh?(input_paths, output_paths)
+			input_paths = input_paths.collect{|path| Pathname(path)}
+			output_paths = output_paths.collect{|path| Pathname(path)}
 
-			output_modified_time = output_path.mtime
+			return !regenerate?(output_paths, input_paths)
+		end
+
+		def regenerate?(output_paths, input_paths)
+			return true unless output_paths.all?{|path| path.exist?}
+
+			output_modified_time = output_paths.collect{|path| path.mtime}.min
 
 			Array(input_paths).each do |path|
 				node = fetch(path)
@@ -98,24 +107,20 @@ module Teapot
 			def changed_since?(modified_time)
 				return true unless @path.exist?
 
-				if @changed == nil
-					# If the file was modified in the future relative to old modified_time:
-					if @path.mtime > modified_time
-						puts "Changed: #{path.to_s.inspect}"
-						return @changed = true
-					else
-						@changed = false
-					end
-
-					# If any of the file's dependencies have changed relative to the old modified_time:
-					all_dependencies.each do |dependency|
-						if dependency.changed_since?(modified_time)
-							return @changed = true
-						end
-					end
+				# If the file was modified in the future relative to old modified_time:
+				if @path.mtime > modified_time
+					puts "Changed: #{path.to_s.inspect}"
+					return true
 				end
 
-				return @changed
+				# If any of the file's dependencies have changed relative to the old modified_time:
+				all_dependencies.each do |dependency|
+					if dependency.changed_since?(modified_time)
+						return true
+					end
+				end
+				
+				return false
 			end
 
 			def extract_dependencies!

@@ -53,20 +53,9 @@ module Teapot
 
 			@loaded = {}
 
-			# Load the root package:
-			defined = load(root_package)
-
-			# Find the default configuration, if it exists:
-			@default_configuration = defined.default_configuration
-
-			if options[:configuration]
-				@configuration = @configurations[options[:configuration]]
-			else
-				@configuration = @default_configuration
+			unless options[:fake]
+				load_root_package(options)
 			end
-
-			# Materialize the configuration:
-			@configuration.materialize if @configuration
 		end
 
 		attr :root
@@ -181,12 +170,29 @@ module Teapot
 			
 			return failed_to_load
 		end
-
-		private
-
+		
 		# The root package is a special package which is used to load definitions from a given root path.
 		def root_package
 			@root_package ||= Package.new(@root, "root")
+		end
+		
+		private
+		
+		def load_root_package(options)
+			# Load the root package:
+			defined = load(root_package)
+
+			# Find the default configuration, if it exists:
+			@default_configuration = defined.default_configuration
+
+			if options[:configuration]
+				@configuration = @configurations[options[:configuration]]
+			else
+				@configuration = @default_configuration
+			end
+
+			# Materialize the configuration:
+			@configuration = @configuration.materialize if @configuration
 		end
 	end
 end
