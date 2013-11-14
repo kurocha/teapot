@@ -59,7 +59,7 @@ module Teapot
 					case value
 					when Array
 						return false unless @options[:multiple]
-					
+						
 						return value.all? {|item| pattern.match(item)}
 					else
 						return pattern.match(value)
@@ -136,8 +136,8 @@ module Teapot
 			if @fresh
 				builder.instance_exec(arguments, &@fresh)
 			else
-				input_files = []
-				output_files = []
+				input_files = FSO::Files::Composite.new
+				output_files = FSO::Files::Composite.new
 				
 				@parameters.each do |parameter|
 					# This could probably be improved a bit:
@@ -147,13 +147,13 @@ module Teapot
 					
 					case parameter.direction
 					when :input
-						input_files += Array(files)
+						input_files.merge(files)
 					when :output
-						output_files += Array(files)
+						output_files.merge(files)
 					end
 				end
 				
-				builder.graph.fresh?(input_files, output_files)
+				builder.fresh?(input_files, output_files)
 			end
 		end
 		
