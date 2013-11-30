@@ -21,6 +21,7 @@
 require 'teapot/rule'
 
 require 'fso/monitor'
+require 'fso/build/graph'
 
 module Teapot
 	class Rulebook
@@ -41,37 +42,20 @@ module Teapot
 			@rules[name]
 		end
 		
-		class Task
-			include Enumerable
-			
-			def initialize(builder, rule, arguments)
-				@builder = builder
-				
-				@parents = Set.new
+		CommandFailure = FSO::Build::CommandFailure
+		
+		class Node < FSO::Build::Node
+			def initialize(graph, rule, arguments)
+				@arguments = arguments
 				@rule = rule
 				
-				@arguments = @rule.normalize(arguments)
+				inputs, outputs = rule.files(arguments)
 				
-				@dirty = true
-				@result = nil
-				
-				@inputs = FSO::Files::Composite.new
-				@outputs = FSO::Files::Composite.new
-				
-				@tasks = {}
-				
-				@inputs_handle = nil
-				@outputs_handle = nil
+				super(graph, inputs, outputs)
 			end
 			
-			attr :rule
 			attr :arguments
-			
-			attr :tasks
-			attr :parents
-			
-			attr :inputs
-			attr :outputs
+			attr :rule
 			
 			def hash
 				[@rule.name, @arguments].hash
@@ -81,101 +65,60 @@ module Teapot
 				other.kind_of?(self.class) and @rule.eql?(other.rule) and @arguments.eql?(other.arguments)
 			end
 			
-			# Mark this task as dirty, and all tasks which depend on this task.
-			def mark!
-				unless @dirty
-					@dirty = true
-					@parents.each &:mark!
-				end
-			end
-			
-			def purge!
-				@parents.each do |parent|
-					parent.tasks.delete(self)
-				end
-			end
-			
-			# Returns true if all inputs and outputs exist, and all outputs are up-to-date.
-			def clean?
-				return false unless @inputs.all?{|path| File.exist?(path)}
-				return false unless @outputs.all?{|path| File.exist?(path)}
-				
-				input_mtime = @inputs.collect{|path| File.mtime(path)}.max
-				output_mtime = @outputs.collect{|path| File.mtime(path)}.min
-				
-				return output_mtime >= input_mtime
-			end
-			
-			def dirty?
-				@dirty
-			end
-			
-			# Run the associated rule which would then make this task clean.
-			def update
-				if @dirty
-					@result = @rule.apply!(@builder, @arguments)
-					
-					puts "Cleaning #{self}"
-					@dirty = false
-					
-					@outputs_handle.commit! if @outputs_handle
-				end
-				
-				return @result
-			end
-			
-			# Call self.mark! if any input files changed.
-			def track_changes(monitor)
-				return if @inputs_handle
-				
-				# If your inputs change, you are dirty:
-				@inputs_handle = monitor.track_changes(@inputs) do |state|
-					puts "State #{state.inspect} for #{@rule.name}"
-					# Sometimes the filesystem events come in due to own changes, but in this case we don't want to rebuild.
-					self.mark!
-				end
-				
-				# If your output changes after you've committed your update, you are now old. Being old means someone else has taken over the responsibility for your outputs, and thus you will be removed, as you are no longer relevant.
-				@outputs_handle = monitor.track_changes(@outputs) do |state|
-					self.mark!
-				end
-			end
-			
-			def dump_tree(indent = 0)
-				@tasks.each do |_, task|
-					puts "#{"\t" * indent}#{task}"
-					task.dump_tree(indent+1)
-				end
-			end
-			
-			def to_s
-				"<#{@dirty ? '*' : ''}#{@rule.name}(#{@arguments})>"
+			def apply!(scope)
+				@rule.apply!(scope, @arguments)
 			end
 		end
 		
-		class Builder
-			def initialize(state = {}, graph, &block)
-				@state = state
+		class Top < FSO::Build::Node
+			def initialize(graph, &update)
+				@update = update
 				
-				@monitor = FSO::Monitor.new
-				
-				@stack = [self]
-				@tasks = {}
-				
-				@build = block
+				super(graph, paths(), paths())
 			end
 			
-			def dump_tree
-				@tasks.each do |_, task|
-					puts "#{task}"
-					task.dump_tree(1)
+			def apply!(scope)
+				scope.instance_eval(&@update)
+			end
+		end
+		
+		class Task < FSO::Build::Task
+			def initialize(graph, walker, node, state, pool = nil)
+				@state = state
+				@pool = pool
+				
+				super(graph, walker, node)
+			end
+			
+			def update(rule, arguments, &block)
+				arguments = rule.normalize(arguments)
+				
+				child_node = @graph.nodes.fetch([rule.name, arguments]) do |key|
+					@graph.nodes[key] = Node.new(@graph, rule, arguments, &block)
+				end
+				
+				@children << child_node
+				
+				child_node.update!(@walker)
+				
+				return child_node.rule.result(arguments)
+			end
+			
+			def run(*arguments)
+				if @pool and @node.dirty?
+					status = @pool.run(*arguments)
+				
+					if status != 0
+						raise CommandFailure.new(arguments, status)
+					end
 				end
 			end
 			
-			attr :graph
-			attr :tasks
-			
-			attr :monitor
+			def visit
+				super do
+					@node.apply!(self)
+				end
+			end
 			
 			def with(state)
 				old_state = @state
@@ -184,51 +127,6 @@ module Teapot
 				yield
 			ensure
 				@state = old_state
-			end
-			
-			def mark!
-			end
-			
-			def update(rule, arguments, &block)
-				top = @stack.last
-				
-				task = Task.new(self, rule, arguments)
-				
-				# Get the current task:
-				task = (@tasks[task] ||= task)
-				task.parents << top
-				
-				@stack.push(task)
-				begin
-					# Ensure dependent tasks are run first:
-					yield task if block_given?
-					
-					# Then run current task:
-					result = task.update
-					
-					task.track_changes(@monitor)
-				ensure
-					@stack.pop
-				end
-				
-				top.tasks[task] = task
-				
-				return result
-			end
-			
-			def fresh?(input_paths, output_paths)
-				top = @stack.last
-				
-				top.inputs.merge(input_paths)
-				top.outputs.merge(output_paths)
-				
-				return false
-			end
-			
-			def prune!
-				@tasks.delete_if do |_, task|
-					task.dirty? and (task.purge! || true)
-				end
 			end
 			
 			def method_missing(name)
@@ -246,45 +144,62 @@ module Teapot
 					super
 				end
 			end
-			
-			def build!
-				start_time = Time.now
-
-				self.instance_eval(&@build)
+		end
+		
+		class Builder < FSO::Build::Graph
+			def initialize(initial_state, task_class, &block)
+				@initial_state = initial_state
+				@task_class = task_class
 				
-				self.prune!
-			ensure
-				end_time = Time.now
-				elapsed_time = end_time - start_time
-
-				$stdout.flush
-				$stderr.puts ("Build Graph Time: %0.3fs" % elapsed_time).color(:magenta)
+				@update = block
+				
+				super()
+			end
+			
+			def top
+				Top.new(self, &@update)
+			end
+			
+			def build_graph!
+				super do |walker, node|
+					@task_class.new(self, walker, node, @initial_state)
+				end
+			end
+			
+			def update!
+				pool = FSO::Pool.new
+				
+				super do |walker, node|
+					@task_class.new(self, walker, node, @initial_state, pool)
+				end
+				
+				pool.wait
 			end
 		end
 		
-		def with(state = {}, graph = Graph.new, &block)
-			rulebook = self
-			builder = Builder.new(state, graph, &block)
-			metaclass = class << builder; self; end
+		def with(state = {}, &block)
+			task_class = Class.new(Task)
 			
 			@processes.each do |key, rules|
 				# Define general rules, which use rule applicability for disambiguation:
-				metaclass.send(:define_method, key) do |arguments, &block|
+				task_class.send(:define_method, key) do |arguments, &block|
 					rule = rules.find{|rule| rule.applicable? arguments }
 					
 					if rule
-						builder.update(rule, arguments, &block)
+						update(rule, arguments, &block)
 					else
 						raise NoApplicableRule.new(arguments)
 					end
 				end
 				
 				rules.each do |rule|
-					metaclass.send(:define_method, rule.full_name) do |arguments, &block|
-						builder.update(rule, arguments, &block)
+					task_class.send(:define_method, rule.full_name) do |arguments, &block|
+						update(rule, arguments, &block)
 					end
 				end
 			end
+			
+			builder = Builder.new(state, task_class, &block)
 			
 			return builder
 		end

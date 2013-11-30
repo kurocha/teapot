@@ -29,6 +29,8 @@ module Teapot
 			@nodes = {}
 
 			@extractors = []
+			
+			@tracking = {}
 		end
 
 		attr :root

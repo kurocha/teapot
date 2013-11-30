@@ -112,7 +112,7 @@ module Teapot
 		end
 		
 		# Check if this rule can process these parameters
-		def applicable? arguments
+		def applicable?(arguments)
 			@parameters.each do |parameter|
 				return false unless parameter.applicable?(arguments)
 			end
@@ -128,45 +128,37 @@ module Teapot
 			]
 		end
 		
-		def fresh(&block)
-			@fresh = Proc.new(&block)
-		end
-		
-		def fresh?(builder, arguments)
-			if @fresh
-				builder.instance_exec(arguments, &@fresh)
-			else
-				input_files = FSO::Files::Composite.new
-				output_files = FSO::Files::Composite.new
+		def files(arguments)
+			input_files = FSO::Files::Composite.new
+			output_files = FSO::Files::Composite.new
+			
+			@parameters.each do |parameter|
+				# This could probably be improved a bit, we are assuming all parameters are file based:
+				files = arguments[parameter.name]
 				
-				@parameters.each do |parameter|
-					# This could probably be improved a bit:
-					files = arguments[parameter.name]
-					
-					next unless files
-					
-					case parameter.direction
-					when :input
-						input_files.merge(files)
-					when :output
-						output_files.merge(files)
-					end
+				next unless files
+				
+				case parameter.direction
+				when :input
+					input_files.merge(files)
+				when :output
+					output_files.merge(files)
 				end
-				
-				builder.fresh?(input_files, output_files)
 			end
+			
+			return input_files, output_files
 		end
 		
 		def apply(&block)
 			@apply = Proc.new(&block)
 		end
 		
-		def apply!(builder, arguments)
-			unless fresh?(builder, arguments)
-				builder.instance_exec(arguments, &@apply)
-			end
-			
-			return arguments[@primary_output.name]
+		def apply!(scope, arguments)
+			scope.instance_exec(arguments, &@apply)
+		end
+		
+		def result(arguments)
+			arguments[@primary_output.name]
 		end
 		
 		def to_s

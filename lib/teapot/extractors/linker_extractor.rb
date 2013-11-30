@@ -28,7 +28,7 @@ module Teapot
 				roots = []
 				libraries = []
 				paths = []
-
+				
 				# Extract include directories:
 				flags.each do |option|
 					if option.to_s =~ /^-L(.+)/
@@ -37,7 +37,7 @@ module Teapot
 						libraries << Pathname($1)
 					end
 				end
-
+				
 				libraries.each do |name|
 					archive_name = "lib#{name}.a"
 					

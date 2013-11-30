@@ -2,7 +2,7 @@
 module FSO
 	module Build
 		class Node
-			def initialize(graph, inputs, outputs, &block)
+			def initialize(graph, inputs, outputs)
 				@graph = graph
 				
 				@state = IOState.new(inputs, outputs)
@@ -13,8 +13,6 @@ module FSO
 				# These are immutable - rather than change them, create a new node:
 				@inputs = inputs
 				@outputs = outputs
-				
-				@update = block
 				
 				@graph.add(self)
 			end
@@ -116,7 +114,7 @@ module FSO
 					@fiber = Fiber.new do
 						task = walker.task(self)
 						
-						task.visit(@update)
+						task.visit
 						
 						# Commit changes:
 						# puts "Committing: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"

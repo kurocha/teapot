@@ -1,8 +1,11 @@
 
 require 'set'
 
+require 'fso/build/error'
+
 module FSO
 	module Build
+		# A walker walks over a graph and applies a task to each node.
 		class Walker
 			def initialize(graph, &task)
 				@graph = graph
@@ -99,71 +102,43 @@ module FSO
 			end
 		end
 		
+		# A task is a specific process and scope applied to a graph node.
 		class Task
-			def initialize(graph, node, walker, pool = nil)
+			def initialize(graph, walker, node)
 				@graph = graph
 				@node = node
 				@walker = walker
-				@pool = pool
 				
 				# If the execution of the node fails, this is where we save the error:
 				@error = nil
 				
 				@children = []
 			end
-		
-			def process(inputs, outputs, &block)
-				child_node = @graph.nodes.fetch([inputs, outputs]) do |key|
-					@graph.nodes[key] = Node.new(@graph, inputs, outputs, &block)
-				end
 			
-				@children << child_node
-			
-				# State saved in update!
-				child_node.update!(@walker)
-			end
-		
-			def run(*arguments)
-				if @pool and @node.dirty?
-					status = @pool.run(*arguments)
-					
-					if status != 0
-						raise CommandFailure.new(arguments, status)
-					end
-				end
-			end
-		
 			def inputs
 				@node.inputs
 			end
-		
+			
 			def outputs
 				@node.outputs
 			end
 			
-			def visit(update)
-				# Wait on any inputs, returns whether any inputs failed:
-				@inputs_failed = @walker.wait_on_paths(@node.inputs)
+			# Derived task should override this function to provide appropriate behaviour.
+			def visit
+				wait_for_inputs
 				
 				# If all inputs were good, we can update the node.
-				unless @inputs_failed
+				unless any_inputs_failed?
 					begin
-						self.instance_eval(&update)
+						#self.instance_eval(&update)
+						yield
 					rescue TransientError => error
 						$stderr.puts "Error: #{error.inspect}".color(:red)
 						@error = error
 					end
 				end
 				
-				@walker.wait_for_nodes(@children)
-			end
-			
-			def any_child_failed?
-				@children.any?{|child| child.failed?}
-			end
-			
-			def any_inputs_failed?
-				@inputs_failed
+				wait_for_children
 			end
 			
 			def exit
@@ -176,6 +151,53 @@ module FSO
 				@walker.exit(@node)
 				
 				@walker.count += 1
+			end
+			
+		protected
+			def wait_for_inputs
+				# Wait on any inputs, returns whether any inputs failed:
+				@inputs_failed = @walker.wait_on_paths(@node.inputs)
+			end
+			
+			def wait_for_children
+				@walker.wait_for_nodes(@children)
+			end
+			
+			def any_child_failed?
+				@children.any?{|child| child.failed?}
+			end
+			
+			def any_inputs_failed?
+				@inputs_failed
+			end
+		end
+		
+		class ProcessTask < Task
+			def initialize(graph, walker, node, pool = nil)
+				super(graph, walker, node)
+				
+				@pool = pool
+			end
+			
+			def process(inputs, outputs, &block)
+				child_node = @graph.nodes.fetch([inputs, outputs]) do |key|
+					@graph.nodes[key] = Node.new(@graph, inputs, outputs, &block)
+				end
+			
+				@children << child_node
+			
+				# State saved in update!
+				child_node.update!(@walker)
+			end
+			
+			def run(*arguments)
+				if @pool and @node.dirty?
+					status = @pool.run(*arguments)
+					
+					if status != 0
+						raise CommandFailure.new(arguments, status)
+					end
+				end
 			end
 		end
 	end
