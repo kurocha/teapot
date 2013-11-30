@@ -21,6 +21,8 @@
 require 'teapot/loader'
 require 'teapot/package'
 
+require 'teapot/rulebook'
+
 module Teapot
 	TEAPOT_FILE = "teapot.rb"
 	DEFAULT_CONFIGURATION_NAME = 'default'
