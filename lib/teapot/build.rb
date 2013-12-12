@@ -18,34 +18,138 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/build/targets/directory'
-require 'teapot/build/targets/files'
-require 'teapot/build/targets/library'
-require 'teapot/build/targets/executable'
-require 'teapot/build/targets/application'
-require 'teapot/build/targets/external'
+require 'teapot/rule'
+
+require 'fso/monitor'
+require 'fso/build/graph'
 
 module Teapot
 	module Build
-		def self.top(path)
-			Targets::Directory.target(nil, path)
+		CommandFailure = FSO::Build::CommandFailure
+		
+		class Node < FSO::Build::Node
+			def initialize(graph, rule, arguments)
+				@arguments = arguments
+				@rule = rule
+		
+				inputs, outputs = rule.files(arguments)
+		
+				super(graph, inputs, outputs)
+			end
+	
+			attr :arguments
+			attr :rule
+	
+			def hash
+				[@rule.name, @arguments].hash
+			end
+	
+			def eql?(other)
+				other.kind_of?(self.class) and @rule.eql?(other.rule) and @arguments.eql?(other.arguments)
+			end
+	
+			def apply!(scope)
+				@rule.apply!(scope, @arguments)
+			end
 		end
 		
-		module Helpers
-			def build_directory(root, directory, *args)
-				target = Build.top(root)
+		class Top < FSO::Build::Node
+			def initialize(graph, task_class, &update)
+				@update = update
+				@task_class = task_class
 		
-				target.add_directory(directory)
-		
-				target.execute(:build, *args)
+				super(graph, paths(), paths())
 			end
+	
+			attr :task_class
+	
+			def apply!(scope)
+				scope.instance_eval(&@update)
+			end
+		end
+
+		class Task < FSO::Build::Task
+			def initialize(graph, walker, node, pool = nil)
+				@pool = pool
+				
+				super(graph, walker, node)
+			end
+	
+			def update(rule, arguments, &block)
+				arguments = rule.normalize(arguments)
 		
-			def build_external(root, directory, *args, &block)
-				target = Build.top(root)
+				child_node = @graph.nodes.fetch([rule.name, arguments]) do |key|
+					@graph.nodes[key] = Node.new(@graph, rule, arguments, &block)
+				end
+		
+				@children << child_node
+		
+				child_node.update!(@walker)
+		
+				return child_node.rule.result(arguments)
+			end
+	
+			def run!(*arguments)
+				if @pool and @node.dirty?
+					status = @pool.run(*arguments)
 			
-				target << Targets::External.new(target, directory, &block)
+					if status != 0
+						raise CommandFailure.new(arguments, status)
+					end
+				end
+			end
+	
+			def visit
+				super do
+					@node.apply!(self)
+				end
+			end
+		end
+	
+		class Graph < FSO::Build::Graph
+			def initialize
+				@top = []
+				
+				yield self
+				
+				@top.freeze
+				
+				@task_class = nil
+				
+				super()
+			end
 			
-				target.execute(:build, *args)
+			attr :top
+			
+			def traverse!(walker)
+				@top.each do |node|
+					# Capture the task class for each top level node:
+					@task_class = node.task_class
+					
+					node.update!(walker)
+				end
+			end
+			
+			def add(environment, &block)
+				task_class = Rulebook.for(environment, Task).with(environment: environment)
+				
+				@top << Top.new(self, task_class, &block)
+			end
+			
+			def build_graph!
+				super do |walker, node|
+					@task_class.new(self, walker, node)
+				end
+			end
+			
+			def update!
+				pool = FSO::Pool.new
+				
+				super do |walker, node|
+					@task_class.new(self, walker, node, pool)
+				end
+				
+				pool.wait
 			end
 		end
 	end

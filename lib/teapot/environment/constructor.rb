@@ -23,6 +23,16 @@ module Teapot
 		Default = Struct.new(:value)
 		Replace = Struct.new(:value)
 		
+		class Define
+			def initialize(klass, block)
+				@klass = klass
+				@block = block
+			end
+			
+			attr :klass
+			attr :block
+		end
+		
 		class Constructor
 			def initialize(environment)
 				@environment = environment
@@ -44,14 +54,26 @@ module Teapot
 	
 			def default(name)
 				@environment[name] = Default.new(@environment[name])
+				
+				return name
 			end
 			
 			def replace(name)
 				@environment[name] = Replace.new(@environment[name])
+				
+				return name
 			end
 			
 			def append(name)
 				@environment[name] = Array(@environment[name])
+				
+				return name
+			end
+			
+			def define(name, klass, &block)
+				@environment[name] = Define.new(klass, &block)
+				
+				return name
 			end
 		end
 		

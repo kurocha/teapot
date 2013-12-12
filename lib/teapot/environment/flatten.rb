@@ -20,7 +20,7 @@
 
 module Teapot
 	class Environment
-		def flatten
+		def to_hash
 			hash = {}
 			
 			# Flatten this chain of environments:
@@ -31,6 +31,14 @@ module Teapot
 			
 			# Evaluate all the individual environment values so that they are flat:
 			Hash[hash.map{|key, value| [key, evaluator.object_value(value)]}]
+		end
+		
+		def flatten
+			Environment.new(nil, self.to_hash)
+		end
+		
+		def defined
+			@values.select{|name,value| Defined === value}
 		end
 		
 		protected

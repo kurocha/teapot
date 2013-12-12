@@ -18,17 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-
-require 'teapot/context'
-require 'teapot/environment'
-require 'teapot/commands'
-
-require 'teapot/definition'
-
 module Teapot
 	# A rule is a function with a specific set of input and output parameters, which can match against a given set of specific inputs and outputs. For example, there might be several rules for compiling, but the specific rules depend on the language being compiled.
-	class Rule < Definition
+	class Rule
 		class Parameter
 			def initialize(direction, name, options = {}, &block)
 				@direction = direction
@@ -82,16 +74,14 @@ module Teapot
 			end
 		end
 		
-		def initialize(context, package, name)
-			super context, package, name
+		def initialize(process_name, type)
+			@name = process_name + "." + type
+			@full_name = @name.gsub(/[^\w]/, '_')
 			
-			@full_name = name.gsub(/[^\w]/, '_')
-			
-			process_name, @type = name.split('.', 2)
 			@process_name = process_name.gsub('-', '_').to_sym
+			@type = type
 			
 			@apply = nil
-			@fresh = nil
 			
 			@parameters = []
 		end

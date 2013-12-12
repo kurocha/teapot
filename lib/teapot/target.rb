@@ -19,9 +19,10 @@
 # THE SOFTWARE.
 
 require 'pathname'
-require 'teapot/build'
 require 'teapot/dependency'
 require 'teapot/definition'
+
+require 'teapot/rulebook'
 
 module Teapot
 	class BuildError < StandardError
@@ -32,19 +33,23 @@ module Teapot
 		
 		def initialize(context, package, name)
 			super context, package, name
-
+			
 			@build = nil
+			
+			@rulebook = Rulebook.new
 		end
-
-		def builder
-			Build.top(@path)
-		end
-
-		def environment_for_configuration(configuration)
+		
+		attr :rulebook
+		
+		def provision_chain(configuration)
 			# Reduce the number of keystrokes for good health:
 			context = configuration.context
 			
 			chain = Dependency::chain(context.selection, dependencies, context.targets.values)
+		end
+		
+		def environment_for_configuration(configuration)
+			chain = provision_chain(configuration)
 			
 			environments = []
 			
@@ -68,40 +73,26 @@ module Teapot
 				append linkflags {"-L#{install_prefix + "lib"}"}
 			end
 		end
-
+		
+		def rulebook_for_configuration(configuration)
+			chain = provision_chain(configuration)
+			
+			rulebook = Rulebook.new
+			loader = Rulebook::Loader.new(rulebook)
+			
+			chain.provisions.collect do |provision|
+				loader.instance_eval(&provision.value)
+			end
+			
+			return rulebook
+		end
+		
 		def build(&block)
 			if block_given?
-				@build = Proc.new(&block)
+				@build = block
 			end
 			
 			return @build
-		end
-
-		def build!(configuration)
-			return unless @build
-			
-			local_environment = environment_for_configuration(configuration)
-			
-			@build.call(local_environment)
-		end
-		
-		# Specify a default block which is used to run the configuration.
-		def run(&block)
-			if block_given?
-				@run = block
-			end
-			
-			return @run
-		end
-
-		def run!(configuration)
-			return unless @run
-			
-			local_environment = environment_for_configuration(configuration)
-			
-			if @run
-				@run.call(local_environment)
-			end
 		end
 	end
 end

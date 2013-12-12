@@ -28,7 +28,7 @@ module Teapot
 			configuration = context.configuration
 			unresolved = context.unresolved(configuration.packages)
 			tries = 0
-
+			
 			while tries < @options[:maximum_fetch_depth]
 				configuration.packages.each do |package|
 					next if resolved.include? package

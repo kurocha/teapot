@@ -20,8 +20,11 @@ module FSO
 			
 			attr :nodes
 			
-			def top
-				raise NotImplementedError
+			# You need to override this to traverse the top nodes as required:
+			def traverse!(walker)
+				#Array(top).each do |node|
+				#	node.update!(walker)
+				#end
 			end
 			
 			def walk(&block)
@@ -38,7 +41,7 @@ module FSO
 					yield walker, node
 				end
 				
-				top.update!(walker)
+				traverse! walker
 				
 				# We should update the status of all nodes in the graph once we've traversed the graph.
 				nodes.each do |node|
@@ -68,7 +71,7 @@ module FSO
 					yield walker, node
 				end
 				
-				top.update!(walker)
+				traverse! walker
 				
 				return walker
 			end

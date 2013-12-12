@@ -22,7 +22,6 @@ require 'pathname'
 
 require 'teapot/context'
 require 'teapot/environment'
-require 'teapot/commands'
 
 require 'teapot/definition'
 

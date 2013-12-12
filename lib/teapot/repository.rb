@@ -18,10 +18,38 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/commands'
+require 'rexec'
 
 module Teapot
 	module Git
+		module Commands
+			class CommandError < StandardError
+			end
+			
+			def self.run(*args, &block)
+				options = Hash === args.last ? args.pop : {}
+				options[:passthrough] ||= :all
+			
+				args = args.flatten.collect &:to_s
+			
+				puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
+			
+				task = RExec::Task.open(args, options, &block)
+			
+				if task.wait == 0
+					true
+				else
+					raise CommandError.new("Non-zero exit status: #{args.join(' ')}!")
+				end
+			end
+		
+			def self.run!(*args, &block)
+				run(*args, &block)
+			rescue CommandError
+				false
+			end
+		end
+		
 		class Repository
 			def initialize(root, options = {})
 				@root = root

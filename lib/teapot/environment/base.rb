@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 module Teapot
-	# This is the basic environment data structure which is essentially a linked list of hashes. It is primarily used for organising build configurations across a wide range of different sub-systems, e.g. platform configuration, target configuration, local project configuration, etc. The majority of the actual functionality is exposed in the `environment/*.rb` files.
+	# This is the basic environment data structure which is essentially a linked list of hashes. It is primarily used for organising build configurations across a wide range of different sub-systems, e.g. platform configuration, target configuration, local project configuration, etc.
 	class Environment
 		def initialize(parent = nil, values = {}, &block)
 			@values = (values || {}).to_hash

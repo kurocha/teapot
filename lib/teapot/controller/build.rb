@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 require 'teapot/controller'
+require 'teapot/build'
 
 module Teapot
 	class Controller
@@ -30,16 +31,28 @@ module Teapot
 			if @options[:only]
 				ordered = context.direct_targets(ordered)
 			end
-		
-			ordered.each do |(target, dependency)|
-				if target.respond_to?(:build!) and !@options[:dry]
-					log "Building #{target.name} for dependency #{dependency}...".color(:cyan)
+			
+			build_graph = Teapot::Build::Graph.new do |graph|
+				ordered.each do |(target, dependency)|
+					environment = target.environment_for_configuration(context.configuration)
 					
-					target.build!(context.configuration)
+					puts "Adding target #{target.name} to graph".color(:blue)
+					graph.add(environment, target.build)
 				end
 			end
-	
-			log "Completed build successfully.".color(:green)
+			
+			FSO::run(build_graph) do
+				# This block is called when changes are detected in the graph, so we tell the graph to update:
+				build_graph.update!
+				
+				if @options[:once]
+					break
+				end
+				
+				build_graph.nodes.each do |key, node|
+					puts "#{node.status} #{node.inspect}"
+				end
+			end
 			
 			return chain, ordered
 		end

@@ -25,7 +25,6 @@ require 'yaml/store'
 
 require 'teapot/context'
 require 'teapot/environment'
-require 'teapot/commands'
 
 require 'teapot/definition'
 

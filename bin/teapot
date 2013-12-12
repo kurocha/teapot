@@ -27,7 +27,6 @@ require 'teapot/controller/create'
 require 'teapot/controller/fetch'
 require 'teapot/controller/generate'
 require 'teapot/controller/list'
-require 'teapot/controller/run'
 require 'teapot/controller/visualize'
 
 require 'teapot/repository'
@@ -67,11 +66,7 @@ module Application
 	def self.build(targets = ARGV)
 		make_controller.build(targets)
 	end
-	
-	def self.run(targets = ARGV)
-		make_controller.run(targets)
-	end
-	
+		
 	def self.list(only = ARGV)
 		if only.size > 0
 			make_controller.list(Set.new(only))
