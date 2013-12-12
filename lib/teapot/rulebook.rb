@@ -41,9 +41,10 @@ module Teapot
 			@rules[name]
 		end
 		
-		def with(state = {}, superclass)
+		def with(superclass, state = {})
 			task_class = Class.new(superclass)
 			
+			# Define methods for all processes, e.g. task_class#compile
 			@processes.each do |key, rules|
 				# Define general rules, which use rule applicability for disambiguation:
 				task_class.send(:define_method, key) do |arguments, &block|
@@ -55,11 +56,12 @@ module Teapot
 						raise NoApplicableRule.new(arguments)
 					end
 				end
-				
-				rules.each do |rule|
-					task_class.send(:define_method, rule.full_name) do |arguments, &block|
-						update(rule, arguments, &block)
-					end
+			end
+			
+			# Define methods for all rules, e.g. task_class#compile_cpp
+			@rules.each do |key, rule|
+				task_class.send(:define_method, rule.full_name) do |arguments, &block|
+					update(rule, arguments, &block)
 				end
 			end
 			
@@ -75,7 +77,7 @@ module Teapot
 		def self.for(environment)
 			rulebook = self.new
 			
-			environment.defined do |name, define|
+			environment.defined.each do |name, define|
 				object = define.klass.new(*name.split('.', 2))
 				
 				object.instance_eval(&define.block)

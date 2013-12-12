@@ -50,7 +50,7 @@ module FSO
 			end
 		end
 		
-		def glob(pattern, root = "./")
+		def self.glob(pattern, root = "./")
 			Files::Glob.new(File.realpath(root), pattern)
 		end
 		
@@ -86,7 +86,7 @@ module FSO
 			end
 		end
 		
-		def paths(*paths)
+		def self.paths(*paths)
 			Files::Paths.new(paths)
 		end
 		

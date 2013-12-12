@@ -74,19 +74,6 @@ module Teapot
 			end
 		end
 		
-		def rulebook_for_configuration(configuration)
-			chain = provision_chain(configuration)
-			
-			rulebook = Rulebook.new
-			loader = Rulebook::Loader.new(rulebook)
-			
-			chain.provisions.collect do |provision|
-				loader.instance_eval(&provision.value)
-			end
-			
-			return rulebook
-		end
-		
 		def build(&block)
 			if block_given?
 				@build = block

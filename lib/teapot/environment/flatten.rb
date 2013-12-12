@@ -38,7 +38,7 @@ module Teapot
 		end
 		
 		def defined
-			@values.select{|name,value| Defined === value}
+			@values.select{|name,value| Define === value}
 		end
 		
 		protected

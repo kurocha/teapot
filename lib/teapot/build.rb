@@ -21,10 +21,13 @@
 require 'teapot/rule'
 
 require 'fso/monitor'
+require 'fso/files'
+
 require 'fso/build/graph'
 
 module Teapot
 	module Build
+		Files = FSO::Files
 		CommandFailure = FSO::Build::CommandFailure
 		
 		class Node < FSO::Build::Node
@@ -49,6 +52,7 @@ module Teapot
 			end
 	
 			def apply!(scope)
+				puts "Invoking rule #{rule.name} with arguments #{@arguments.inspect}"
 				@rule.apply!(scope, @arguments)
 			end
 		end
@@ -57,14 +61,19 @@ module Teapot
 			def initialize(graph, task_class, &update)
 				@update = update
 				@task_class = task_class
-		
-				super(graph, paths(), paths())
+				
+				super(graph, Files::paths, Files::paths)
 			end
-	
+			
 			attr :task_class
-	
+			
 			def apply!(scope)
 				scope.instance_eval(&@update)
+			end
+			
+			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty.
+			def requires_update?
+				true
 			end
 		end
 
@@ -130,10 +139,10 @@ module Teapot
 				end
 			end
 			
-			def add(environment, &block)
-				task_class = Rulebook.for(environment, Task).with(environment: environment)
+			def add_target(target, environment, &block)
+				task_class = Rulebook.for(environment).with(Task, environment: environment, target: target)
 				
-				@top << Top.new(self, task_class, &block)
+				@top << Top.new(self, task_class, &target.build)
 			end
 			
 			def build_graph!

@@ -48,27 +48,25 @@ module FSO
 					@graph.update(directories, @outputs)
 				end
 			end
-		
+			
 			attr :inputs
 			attr :outputs
-		
-			attr :children
-		
+			
 			attr :state
 			attr :status
-		
+			
 			def unknown?
 				@status == :unknown
 			end
-		
+			
 			def dirty?
 				@status == :dirty
 			end
-		
+			
 			def clean?
 				@status == :clean
 			end
-		
+			
 			def clean!
 				@status = :clean
 			end
@@ -103,12 +101,16 @@ module FSO
 				"<#{dirty? ? '*' : ''}inputs=#{inputs.inspect} outputs=#{outputs.inspect} fiber=#{@fiber.inspect}>"
 			end
 			
+			def requires_update?
+				not clean?
+			end
+			
 			# Perform some actions to update this node, returns when completed, and the node is no longer dirty.
 			def update!(walker)
 				# puts "Walking #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect} (dirty=#{dirty?} @fiber=#{@fiber.inspect})"
 				
 				# If a fiber already exists, this node is in the process of updating.
-				if not clean? and @fiber == nil
+				if requires_update? and @fiber == nil
 					# puts "Beginning: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
 					
 					@fiber = Fiber.new do

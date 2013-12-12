@@ -86,7 +86,13 @@ module Teapot
 			@parameters = []
 		end
 		
+		# compile.cpp
+		attr :name
+		
+		# compile
 		attr :process_name
+		
+		# compile_cpp
 		attr :full_name
 		
 		attr :primary_output
@@ -148,7 +154,9 @@ module Teapot
 		end
 		
 		def result(arguments)
-			arguments[@primary_output.name]
+			if @primary_output
+				arguments[@primary_output.name]
+			end
 		end
 		
 		def to_s

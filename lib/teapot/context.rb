@@ -194,7 +194,7 @@ module Teapot
 			end
 
 			# Materialize the configuration:
-			@configuration = @configuration.materialize if @configuration
+			@configuration.materialize if @configuration
 		end
 	end
 end

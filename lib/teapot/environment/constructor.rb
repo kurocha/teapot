@@ -24,7 +24,7 @@ module Teapot
 		Replace = Struct.new(:value)
 		
 		class Define
-			def initialize(klass, block)
+			def initialize(klass, &block)
 				@klass = klass
 				@block = block
 			end

@@ -36,14 +36,15 @@ module Teapot
 				ordered.each do |(target, dependency)|
 					environment = target.environment_for_configuration(context.configuration)
 					
-					puts "Adding target #{target.name} to graph".color(:blue)
-					graph.add(environment, target.build)
+					if target.build
+						graph.add_target(target, environment.flatten)
+					end
 				end
 			end
 			
 			FSO::run(build_graph) do
 				# This block is called when changes are detected in the graph, so we tell the graph to update:
-				build_graph.update!
+				build_graph.update_with_log
 				
 				if @options[:once]
 					break
