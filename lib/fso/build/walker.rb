@@ -115,6 +115,8 @@ module FSO
 				@children = []
 			end
 			
+			attr :children
+			
 			def inputs
 				@node.inputs
 			end

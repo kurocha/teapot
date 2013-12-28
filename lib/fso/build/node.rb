@@ -39,7 +39,7 @@ module FSO
 				return if dirty?
 			
 				if @state.intersects?(outputs) || @state.update!
-					#puts "changed: inputs=#{inputs} #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
+					# puts "changed: inputs=#{inputs} #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
 				
 					# Could possibly use unknown status here.
 					@status = :dirty
@@ -85,7 +85,7 @@ module FSO
 			
 			# If we are in the initial state, we need to check if the outputs are fresh.
 			def update_status!
-				# puts "Update status: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect} (dirty=#{dirty?} @fiber=#{@fiber.inspect}) @status=#{@status}"
+				# puts "Update status: #{@inputs.inspect} -> #{@outputs.inspect} (status=#{@status} @fiber=#{@fiber.inspect}) @status=#{@status} @state.fresh?=#{@state.fresh?}"
 				
 				if @status == :unknown
 					# This could be improved - only stale files should be reported, instead we report all.
@@ -98,7 +98,7 @@ module FSO
 			end
 			
 			def inspect
-				"<#{dirty? ? '*' : ''}inputs=#{inputs.inspect} outputs=#{outputs.inspect} fiber=#{@fiber.inspect}>"
+				"<#{dirty? ? '*' : ''}inputs=#{inputs.inspect} outputs=#{outputs.inspect} fiber=#{@fiber.inspect} fresh=#{@state.fresh?}>"
 			end
 			
 			def requires_update?
@@ -111,7 +111,7 @@ module FSO
 				
 				# If a fiber already exists, this node is in the process of updating.
 				if requires_update? and @fiber == nil
-					# puts "Beginning: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
+					#puts "Beginning: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
 					
 					@fiber = Fiber.new do
 						task = walker.task(self)
@@ -119,7 +119,7 @@ module FSO
 						task.visit
 						
 						# Commit changes:
-						# puts "Committing: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
+						#puts "Committing: #{@inputs.to_a.inspect} -> #{@outputs.to_a.inspect}"
 						@state.update!
 						@fiber = nil
 						

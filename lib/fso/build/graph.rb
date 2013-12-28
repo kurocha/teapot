@@ -55,15 +55,12 @@ module FSO
 				start_time = Time.now
 				
 				walker = update!
-				
 			ensure
 				end_time = Time.now
 				elapsed_time = end_time - start_time
 				
-				if walker.count > 0
-					$stdout.flush
-					$stderr.puts ("Graph Update Time: %0.3fs" % elapsed_time).color(:magenta)
-				end
+				$stdout.flush
+				$stderr.puts ("Graph Update Time: %0.3fs" % elapsed_time).color(:magenta)
 			end
 			
 			def update!

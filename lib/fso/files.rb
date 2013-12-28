@@ -1,5 +1,6 @@
 
 require 'set'
+require 'pathname'
 
 module FSO
 	module Files
@@ -11,13 +12,21 @@ module FSO
 			def intersects? other
 				other.any?{|path| include?(path)}
 			end
+			
+			def rebase(root)
+				raise NotImplementedError
+			end
+			
+			def to_paths
+				raise NotImplementedError
+			end
 		end
 		
 		class Glob < List
 			include Enumerable
 		
 			def initialize(root, pattern)
-				@root = root
+				@root = root.to_s
 				@pattern = pattern
 			end
 		
@@ -30,7 +39,9 @@ module FSO
 			
 			# Enumerate all paths matching the pattern.
 			def each(&block)
-				Dir.glob(full_pattern).each &block
+				Dir.glob(full_pattern).each do |path|
+					yield path, @root
+				end
 			end
 		
 			def roots
@@ -48,29 +59,41 @@ module FSO
 			def include?(path)
 				File.fnmatch(full_pattern, path)
 			end
-		end
-		
-		def self.glob(pattern, root = "./")
-			Files::Glob.new(File.realpath(root), pattern)
+			
+			def rebase(root)
+				self.class.new(root, @pattern)
+			end
+			
+			def to_paths
+				relative_paths = []
+				root_pathname = Pathname(root)
+				
+				Dir.glob(full_pattern).each do |path|
+					relative_paths << Pathname(path).relative_path_from(root_pathname).to_s
+				end
+				
+				return Paths.new(@root, relative_paths)
+			end
 		end
 		
 		class Paths < List
 			include Enumerable
 		
-			def initialize(paths)
+			def initialize(root, paths)
+				@root = root.to_s
 				@paths = paths
 			end
 		
 			attr :paths
 		
 			def each(&block)
-				@paths.each &block
+				@paths.each do |path|
+					yield File.join(@root, path), @root
+				end
 			end
 		
 			def roots
-				@paths.collect do |path|
-					File.realpath(File.directory?(path) ? path : File.dirname(path))
-				end.uniq
+				[@root]
 			end
 			
 			def eql? other
@@ -82,12 +105,21 @@ module FSO
 			end
 			
 			def include?(path)
-				@paths.include?(path)
+				# Perhaps implement this locally:
+				relative_path = Pathname(path).relative_path_from(Pathname(@root)).to_s
+				
+				@paths.include?(relative_path)
+			rescue
+				return false
 			end
-		end
-		
-		def self.paths(*paths)
-			Files::Paths.new(paths)
+			
+			def rebase(root)
+				self.class.new(root, @paths)
+			end
+			
+			def to_paths
+				return self
+			end
 		end
 		
 		class Composite < List
@@ -123,7 +155,7 @@ module FSO
 				elsif list.kind_of? List
 					@files << list
 				else
-					@files << Paths.new(Array(list))
+					raise ArgumentError.new("Cannot merge non-list of file paths.")
 				end
 			end
 			
@@ -138,6 +170,16 @@ module FSO
 			def include?(path)
 				@files.any? {|list| list.include?(path)}
 			end
+			
+			def rebase(root)
+				self.class.new(@files.collect{|list| list.rebase(root)})
+			end
+			
+			def to_paths
+				Composite.new(@files.collect(&:to_paths))
+			end
 		end
+		
+		None = Composite.new
 	end
 end

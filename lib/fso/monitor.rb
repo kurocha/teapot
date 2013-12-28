@@ -17,7 +17,8 @@ module FSO
 		# Notify the monitor that files in these directories have changed.
 		def update(directories, *args)
 			directories.each do |directory|
-				directory = File.realpath(directory)
+				# directory = File.realpath(directory)
+				
 				@directories[directory].each do |handle|
 					handle.changed!(*args)
 				end

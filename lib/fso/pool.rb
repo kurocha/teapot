@@ -11,19 +11,24 @@ module FSO
 		end
 	
 		class Command
-			def initialize(arguments, fiber = Fiber.current)
+			def initialize(arguments, options, fiber = Fiber.current)
 				@arguments = arguments
+				@options = options
+				
 				@fiber = fiber
 			end
 			
 			attr :arguments
+			attr :options
 			
 			def run(options = {})
-				Process.spawn(*@arguments, options)
+				puts "Running #{@arguments.inspect} options: #{@options.merge(options).inspect}".color(:blue)
+				
+				Process.spawn(*@arguments, @options.merge(options))
 			end
 			
-			def resume(*args)
-				@fiber.resume(*args)
+			def resume(*arguments)
+				@fiber.resume(*arguments)
 			end
 		end
 	
@@ -39,10 +44,11 @@ module FSO
 		
 		attr :running
 		
-		def run(*args)
-			args = args.flatten.collect &:to_s
+		def run(*arguments)
+			options = Hash === arguments.last ? arguments.pop : {}
+			arguments = arguments.flatten.collect &:to_s
 			
-			@commands << Command.new(args)
+			@commands << Command.new(arguments, options)
 			
 			schedule!
 			
@@ -52,8 +58,6 @@ module FSO
 		def schedule!
 			while @running.size < @limit and @commands.size > 0
 				command = @commands.shift
-				
-				puts command.arguments.join(' ').color(:blue)
 				
 				if @running.size == 0
 					pid = command.run(:pgroup => true)
@@ -84,7 +88,7 @@ module FSO
 		def self.wait
 		end
 		
-		def self.run(*args)
+		def self.run(*arguments)
 			0
 		end
 	end

@@ -1,11 +1,27 @@
 
 module FSO
+	class FileTime
+		include Comparable
+		
+		def initialize(path, time)
+			@path = path
+			@time = time
+		end
+		
+		attr :path
+		attr :time
+		
+		def <=> other
+			@time <=> other.time
+		end
+	end
+	
 	class State
 		def initialize(files)
 			@files = files
 		
 			@times = {}
-		
+			
 			update!
 		end
 	
@@ -14,55 +30,69 @@ module FSO
 		attr :added
 		attr :removed
 		attr :changed
+		attr :missing
 		
 		attr :times
 		
 		def update!
 			last_times = @times
 			@times = {}
-		
+			
 			@added = []
 			@removed = []
 			@changed = []
-		
-			@files.each do |path|
-				next unless File.exist?(path)
+			@missing = []
+			
+			file_times = []
+			
+			@files.each do |path, root|
+				if File.exist?(path)
+					modified_time = File.mtime(path)
 					
-				modified_time = File.mtime(path)
-				
-				if last_time = last_times.delete(path)
-					# Path was valid last update:
-					if modified_time != last_time
-						@changed << path
+					if last_time = last_times.delete(path)
+						# Path was valid last update:
+						if modified_time != last_time
+							@changed << path
+						end
+					else
+						# Path didn't exist before:
+						@added << path
+					end
+					
+					@times[path] = modified_time
+					
+					unless File.directory?(path)
+						file_times << FileTime.new(path, modified_time)
 					end
 				else
-					# Path didn't exist before:
-					@added << path
+					@missing << path
 				end
-			
-				@times[path] = modified_time
 			end
-		
+			
 			@removed = last_times.keys
-		
+			
+			@oldest_time = file_times.min
+			@newest_time = file_times.max
+			
 			return @added.size > 0 || @changed.size > 0 || @removed.size > 0
 		end
 		
-		def oldest_time
-			@times.values.min
-		end
+		attr :oldest_time
+		attr :newest_time
 		
-		def newest_time
-			@times.values.max
-		end
+		attr :missing
 		
 		def missing?
-			@times.values.include?(nil)
+			!@missing.empty?
 		end
 		
-		# Outputs must not include any patterns/globs.
+		# Outputs is a list of full paths and must not include any patterns/globs.
 		def intersects?(outputs)
 			@files.intersects?(outputs)
+		end
+		
+		def empty?
+			@files.to_a.empty?
 		end
 	end
 	
@@ -75,18 +105,36 @@ module FSO
 		attr :input_state
 		attr :output_state
 		
-		def fresh?
-			return false if @output_state.missing?
+		# Output is dirty if files are missing or if latest input is older than any output.
+		def dirty?
+			if @output_state.missing?
+				puts "Output file missing: #{output_state.missing.inspect}"
+				
+				return true
+			end
+			
+			# If there are no inputs, we are always clean as long as outputs exist:
+			# if @input_state.empty?
+			#	return false
+			# end
 			
 			oldest_output_time = @output_state.oldest_time
 			newest_input_time = @input_state.newest_time
 			
-			if oldest_output_time and newest_input_time
-				# We are fresh if the oldest output time is in the future compared to the newest input time.
-				return oldest_output_time > newest_input_time
-			else
-				return false
+			if newest_input_time and oldest_output_time
+				if newest_input_time > oldest_output_time
+					puts "Out of date file: #{newest_input_time.inspect} > #{oldest_output_time.inspect}"
+				end
+				
+				return newest_input_time > oldest_output_time
 			end
+			
+			puts "Missing file dates: #{newest_input_time.inspect} < #{oldest_output_time.inspect}"
+			return true
+		end
+		
+		def fresh?
+			not dirty?
 		end
 		
 		def files

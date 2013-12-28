@@ -26,34 +26,41 @@ require 'fso/files'
 require 'fso/build/graph'
 
 module Teapot
+	Files = FSO::Files
+	
 	module Build
-		Files = FSO::Files
 		CommandFailure = FSO::Build::CommandFailure
 		
 		class Node < FSO::Build::Node
-			def initialize(graph, rule, arguments)
+			def initialize(graph, rule, arguments, &block)
 				@arguments = arguments
 				@rule = rule
-		
+				
+				@callback = block
+				
 				inputs, outputs = rule.files(arguments)
-		
+				
 				super(graph, inputs, outputs)
 			end
-	
+			
 			attr :arguments
 			attr :rule
-	
+			attr :callback
+			
 			def hash
 				[@rule.name, @arguments].hash
 			end
-	
+			
 			def eql?(other)
 				other.kind_of?(self.class) and @rule.eql?(other.rule) and @arguments.eql?(other.arguments)
 			end
-	
-			def apply!(scope)
-				puts "Invoking rule #{rule.name} with arguments #{@arguments.inspect}"
-				@rule.apply!(scope, @arguments)
+			
+			def apply!(task)
+				@rule.apply!(task, @arguments)
+				
+				if @callback
+					task.instance_exec(@arguments, &@callback)
+				end
 			end
 		end
 		
@@ -62,7 +69,7 @@ module Teapot
 				@update = update
 				@task_class = task_class
 				
-				super(graph, Files::paths, Files::paths)
+				super(graph, Files::None, Files::None)
 			end
 			
 			attr :task_class
@@ -71,7 +78,7 @@ module Teapot
 				scope.instance_eval(&@update)
 			end
 			
-			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty.
+			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty and thus wouldn't be run.
 			def requires_update?
 				true
 			end
@@ -82,32 +89,49 @@ module Teapot
 				@pool = pool
 				
 				super(graph, walker, node)
+				
+				if wet?
+					@file_system = FileUtils
+					#@file_system = FileUtils::Verbose
+				else
+					@file_system = FileUtils::NoWrite
+				end
 			end
-	
+			
+			attr :file_system
+			
+			alias fs file_system
+			
 			def update(rule, arguments, &block)
 				arguments = rule.normalize(arguments)
-		
+				
 				child_node = @graph.nodes.fetch([rule.name, arguments]) do |key|
 					@graph.nodes[key] = Node.new(@graph, rule, arguments, &block)
 				end
-		
+				
 				@children << child_node
-		
+				
 				child_node.update!(@walker)
-		
+				
 				return child_node.rule.result(arguments)
 			end
-	
-			def run!(*arguments)
-				if @pool and @node.dirty?
-					status = @pool.run(*arguments)
 			
+			def wet?
+				@pool and @node.dirty?
+			end
+			
+			def run!(*arguments)
+				if wet?
+					# puts "Scheduling #{arguments.inspect}".color(:blue)
+					status = @pool.run(*arguments)
+					# puts "Finished #{arguments.inspect} with status #{status}".color(:blue)
+					
 					if status != 0
 						raise CommandFailure.new(arguments, status)
 					end
 				end
 			end
-	
+			
 			def visit
 				super do
 					@node.apply!(self)

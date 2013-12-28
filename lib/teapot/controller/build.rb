@@ -51,7 +51,7 @@ module Teapot
 				end
 				
 				build_graph.nodes.each do |key, node|
-					puts "#{node.status} #{node.inspect}"
+					puts "#{node.status} #{node.inspect}"# unless node.clean?
 				end
 			end
 			
