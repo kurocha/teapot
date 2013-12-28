@@ -40,6 +40,14 @@ module Teapot
 				@dynamic != nil
 			end
 			
+			def implicit?
+				dynamic? and @options[:implicit]
+			end
+			
+			def multiple?
+				@options[:multiple]
+			end
+			
 			def applicable? arguments
 				return false unless @options[:optional] or arguments.include?(@name)
 				
@@ -49,7 +57,7 @@ module Teapot
 				
 				if pattern = @options[:pattern]
 					case value
-					when Array
+					when Enumerable
 						return false unless @options[:multiple]
 						
 						return value.all? {|item| pattern.match(item)}
@@ -62,7 +70,9 @@ module Teapot
 			end
 			
 			def compute(arguments)
-				if @dynamic
+				if implicit?
+					@dynamic.call(arguments)
+				elsif dynamic?
 					@dynamic.call(arguments[@name], arguments)
 				else
 					arguments[@name]
@@ -101,6 +111,10 @@ module Teapot
 			@parameters << Parameter.new(:input, name, options, &block)
 		end
 		
+		def parameter(name, options = {}, &block)
+			@parameters << Parameter.new(:argument, name, options, &block)
+		end
+		
 		def output(name, options = {}, &block)
 			@parameters << Parameter.new(:output, name, options, &block)
 			
@@ -110,6 +124,8 @@ module Teapot
 		# Check if this rule can process these parameters
 		def applicable?(arguments)
 			@parameters.each do |parameter|
+				next if parameter.implicit?
+				
 				return false unless parameter.applicable?(arguments)
 			end
 			
@@ -130,9 +146,16 @@ module Teapot
 			
 			@parameters.each do |parameter|
 				# This could probably be improved a bit, we are assuming all parameters are file based:
-				files = arguments[parameter.name]
+				value = arguments[parameter.name]
 				
-				next unless files
+				next unless value
+				
+				if parameter.multiple?
+					files = value
+				else
+					path = Pathname(value)
+					files = Files::Paths.new(path.dirname.to_s, [path.basename.to_s])
+				end
 				
 				case parameter.direction
 				when :input
