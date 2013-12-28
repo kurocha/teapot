@@ -53,7 +53,7 @@ module Teapot
 					if rule
 						update(rule, arguments, &block)
 					else
-						raise NoApplicableRule.new(arguments)
+						raise NoApplicableRule.new(key, arguments)
 					end
 				end
 			end

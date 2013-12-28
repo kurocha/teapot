@@ -165,9 +165,10 @@ module Teapot
 	end
 	
 	class NoApplicableRule < StandardError
-		def initialize(arguments)
-			super "No applicable rule for parameters: #{arguments.inspect}"
+		def initialize(name, arguments)
+			super "No applicable rule with name #{name}.* for parameters: #{arguments.inspect}"
 			
+			@name = name
 			@arguments = arguments
 		end
 	end
