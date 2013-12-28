@@ -31,6 +31,10 @@ module Teapot
 			
 			attr :klass
 			attr :block
+			
+			def to_s
+				"<#{@klass.name} #{@block.source_location.join(':')}>"
+			end
 		end
 		
 		class Constructor

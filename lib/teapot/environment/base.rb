@@ -21,8 +21,8 @@
 module Teapot
 	# This is the basic environment data structure which is essentially a linked list of hashes. It is primarily used for organising build configurations across a wide range of different sub-systems, e.g. platform configuration, target configuration, local project configuration, etc.
 	class Environment
-		def initialize(parent = nil, values = {}, &block)
-			@values = (values || {}).to_hash
+		def initialize(parent = nil, values = nil, &block)
+			@values = (values || {}).to_h
 			@parent = parent
 			
 			if block_given?
@@ -51,20 +51,8 @@ module Teapot
 			@values[key] = value
 		end
 		
-		def to_hash
-			@values
-		end
-		
 		def to_s
 			"<#{self.class} #{self.values}>"
-		end
-		
-		def inspect(output = $stdout, indent = "")
-			@values.each do |(key, value)|
-				output.puts "#{indent}#{key}: #{value}"
-			end
-			
-			@parent.inspect(output, indent + "\t") if @parent
 		end
 	end
 end

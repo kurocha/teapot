@@ -18,8 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'digest/md5'
+
 module Teapot
 	class Environment
+		def to_h
+			@values
+		end
+		
 		def to_hash
 			hash = {}
 			
@@ -34,15 +40,42 @@ module Teapot
 		end
 		
 		def flatten
-			Environment.new(nil, self.to_hash)
+			self.class.new(nil, self.to_hash)
 		end
 		
 		def defined
 			@values.select{|name,value| Define === value}
 		end
 		
+		def inspect(output = $stdout, indent = "")
+			@values.each do |(key, value)|
+				output.puts "#{indent}#{key}: #{value}"
+			end
+			
+			@parent.inspect(output, indent + "\t") if @parent
+		end
+		
+		# This should be stable within environments that produce the same results.
+		def checksum
+			digester = Digest::MD5.new
+			
+			checksum_recursively(digester)
+			
+			return digester.hexdigest
+		end
+		
 		protected
 		
+		def checksum_recursively(digester)
+			@values.each do |(key, value)|
+				digester.update(key.to_s)
+				digester.update(value.to_s)
+			end
+			
+			@parent.checksum_recursively(digester) if @parent
+		end
+		
+		# We fold in the ancestors one at a time from oldest to youngest.
 		def flatten_to_hash(hash)
 			if @parent
 				@parent.flatten_to_hash(hash)

@@ -44,7 +44,7 @@ module Teapot
 			end
 			
 			def self.dump(environment, io = STDOUT)
-				environment.to_hash.each do |key, value|
+				environment.values.each do |key, value|
 					io.puts "#{key}:".rjust(20).color(:magenta) + " #{value.inspect}"
 				end
 			end
