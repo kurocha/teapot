@@ -105,7 +105,8 @@ module Teapot
 			def update(rule, arguments, &block)
 				arguments = rule.normalize(arguments)
 				
-				child_node = @graph.nodes.fetch([rule.name, arguments]) do |key|
+				# A sub-graph for a particular build is isolated based on the task class used to instantiate it, so we use this as part of the key.
+				child_node = @graph.nodes.fetch([self.class, rule.name, arguments]) do |key|
 					@graph.nodes[key] = Node.new(@graph, rule, arguments, &block)
 				end
 				
@@ -154,6 +155,7 @@ module Teapot
 			
 			attr :top
 			
+			# Because we do a depth first traversal, we can capture global state per branch, such as `@task_class`.
 			def traverse!(walker)
 				@top.each do |node|
 					# Capture the task class for each top level node:

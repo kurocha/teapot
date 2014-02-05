@@ -5,6 +5,8 @@ require 'pathname'
 module FSO
 	module Files
 		class List
+			include Enumerable
+			
 			def +(list)
 				Composite.new([self, list])
 			end
@@ -18,13 +20,77 @@ module FSO
 			end
 			
 			def to_paths
-				raise NotImplementedError
+				relative_paths = self.each do |path|
+					path.relative_path
+				end
+				
+				return Paths.new(@root, relative_paths)
+			end
+			
+			def match(pattern)
+				all? {|path| path.match(pattern)}
+			end
+		end
+		
+		class RelativePath < String
+			# Both paths must be full absolute paths, and path must have root as an prefix.
+			def initialize(path, root)
+				raise ArgumentError.new("#{root} is not a prefix of #{path}") unless path.start_with?(root)
+				
+				super path
+				
+				@root = root
+			end
+			
+			attr :root
+			
+			def relative_path
+				self.slice(@root.length..-1)
+			end
+		end
+		
+		class Directory < List
+			def initialize(root, path = "")
+				@root = root.to_s
+				@path = path
+			end
+			
+			attr :root
+			attr :path
+			
+			def full_path
+				File.join(@root, @path)
+			end
+			
+			def each(&block)
+				Dir.glob(full_path + "**/*").each do |path|
+					yield RelativePath.new(path, @root)
+				end
+			end
+			
+			def roots
+				[full_path]
+			end
+			
+			def eql?(other)
+				other.kind_of?(self.class) and @root.eql?(other.root) and @path.eql?(other.path)
+			end
+			
+			def hash
+				[@root, @path].hash
+			end
+			
+			def include?(path)
+				# Would be true if path is a descendant of full_path.
+				path.start_with?(full_path)
+			end
+			
+			def rebase(root)
+				self.class.new(root, @path)
 			end
 		end
 		
 		class Glob < List
-			include Enumerable
-		
 			def initialize(root, pattern)
 				@root = root.to_s
 				@pattern = pattern
@@ -40,7 +106,7 @@ module FSO
 			# Enumerate all paths matching the pattern.
 			def each(&block)
 				Dir.glob(full_pattern).each do |path|
-					yield path, @root
+					yield RelativePath.new(path, @root)
 				end
 			end
 		
@@ -63,32 +129,20 @@ module FSO
 			def rebase(root)
 				self.class.new(root, @pattern)
 			end
-			
-			def to_paths
-				relative_paths = []
-				root_pathname = Pathname(root)
-				
-				Dir.glob(full_pattern).each do |path|
-					relative_paths << Pathname(path).relative_path_from(root_pathname).to_s
-				end
-				
-				return Paths.new(@root, relative_paths)
-			end
 		end
 		
 		class Paths < List
-			include Enumerable
-		
 			def initialize(root, paths)
 				@root = root.to_s
-				@paths = paths
+				@paths = Array(paths)
 			end
 		
 			attr :paths
 		
 			def each(&block)
 				@paths.each do |path|
-					yield File.join(@root, path), @root
+					full_path = File.join(@root, path)
+					yield RelativePath.new(full_path, @root)
 				end
 			end
 		
@@ -123,8 +177,6 @@ module FSO
 		end
 		
 		class Composite < List
-			include Enumerable
-			
 			def initialize(files = Set.new)
 				@files = files
 			end
@@ -177,6 +229,16 @@ module FSO
 			
 			def to_paths
 				Composite.new(@files.collect(&:to_paths))
+			end
+			
+			def self.[](files)
+				if files.size == 0
+					return None
+				elsif files.size == 1
+					files.first
+				else
+					self.class.new(files)
+				end
 			end
 		end
 		

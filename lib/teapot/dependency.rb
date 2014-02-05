@@ -45,16 +45,12 @@ module Teapot
 			if String === name_or_aliases || Symbol === name_or_aliases
 				name = name_or_aliases
 				
-				if block_given?
-					provisions[name] = Provision.new(block)
-				else
-					provisions[name] = Provision.new(nil)
-				end
+				provisions[name] = Provision.new(block)
 			else
 				aliases = name_or_aliases
 				
 				aliases.each do |name, dependencies|
-					provisions[name] = Alias.new(Array dependencies)
+					provisions[name] = Alias.new(Array(dependencies))
 				end
 			end
 		end

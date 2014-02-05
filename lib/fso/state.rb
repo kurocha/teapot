@@ -18,6 +18,8 @@ module FSO
 	
 	class State
 		def initialize(files)
+			raise ArgumentError.new("Invalid files list: #{files}") unless Files::List === files
+			
 			@files = files
 		
 			@times = {}
@@ -45,7 +47,7 @@ module FSO
 			
 			file_times = []
 			
-			@files.each do |path, root|
+			@files.each do |path|
 				if File.exist?(path)
 					modified_time = File.mtime(path)
 					
@@ -108,7 +110,7 @@ module FSO
 		# Output is dirty if files are missing or if latest input is older than any output.
 		def dirty?
 			if @output_state.missing?
-				puts "Output file missing: #{output_state.missing.inspect}"
+				# puts "Output file missing: #{output_state.missing.inspect}"
 				
 				return true
 			end
@@ -122,14 +124,15 @@ module FSO
 			newest_input_time = @input_state.newest_time
 			
 			if newest_input_time and oldest_output_time
-				if newest_input_time > oldest_output_time
-					puts "Out of date file: #{newest_input_time.inspect} > #{oldest_output_time.inspect}"
-				end
+				# if newest_input_time > oldest_output_time
+				#	puts "Out of date file: #{newest_input_time.inspect} > #{oldest_output_time.inspect}"
+				# end
 				
 				return newest_input_time > oldest_output_time
 			end
 			
-			puts "Missing file dates: #{newest_input_time.inspect} < #{oldest_output_time.inspect}"
+			# puts "Missing file dates: #{newest_input_time.inspect} < #{oldest_output_time.inspect}"
+			
 			return true
 		end
 		

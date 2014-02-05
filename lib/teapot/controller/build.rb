@@ -50,9 +50,9 @@ module Teapot
 					break
 				end
 				
-				build_graph.nodes.each do |key, node|
-					puts "#{node.status} #{node.inspect}"# unless node.clean?
-				end
+				# build_graph.nodes.each do |key, node|
+				# 	puts "#{node.status} #{node.inspect}"# unless node.clean?
+				# end
 			end
 			
 			return chain, ordered

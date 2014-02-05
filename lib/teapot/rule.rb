@@ -44,26 +44,31 @@ module Teapot
 				dynamic? and @options[:implicit]
 			end
 			
-			def multiple?
-				@options[:multiple]
+			def typed?
+				@options[:typed]
 			end
 			
 			def applicable? arguments
-				return false unless @options[:optional] or arguments.include?(@name)
+				# The parameter is either optional, or is included in the argument list, otherwise we fail.
+				unless @options[:optional] or arguments.include?(@name)
+					return false
+				end
 				
 				value = arguments[@name]
 				
-				return true if value == nil and @options[:optional]
+				# If the parameter is optional, and wasn't provided, we are okay.
+				if @options[:optional]
+					return true if value == nil
+				end
 				
+				# If the parameter is typed, and we don't match the expected type, we fail.
+				if type = @options[:typed]
+					return false unless type === value
+				end
+				
+				# If a pattern is provided, we must match it.
 				if pattern = @options[:pattern]
-					case value
-					when Enumerable
-						return false unless @options[:multiple]
-						
-						return value.all? {|item| pattern.match(item)}
-					else
-						return pattern.match(value)
-					end
+					return item.match(pattern)
 				end
 				
 				return true
@@ -141,8 +146,8 @@ module Teapot
 		end
 		
 		def files(arguments)
-			input_files = FSO::Files::Composite.new
-			output_files = FSO::Files::Composite.new
+			input_files = []
+			output_files = []
 			
 			@parameters.each do |parameter|
 				# This could probably be improved a bit, we are assuming all parameters are file based:
@@ -150,22 +155,15 @@ module Teapot
 				
 				next unless value
 				
-				if parameter.multiple?
-					files = value
-				else
-					path = Pathname(value)
-					files = Files::Paths.new(path.dirname.to_s, [path.basename.to_s])
-				end
-				
 				case parameter.direction
 				when :input
-					input_files.merge(files)
+					input_files << value
 				when :output
-					output_files.merge(files)
+					output_files << value
 				end
 			end
 			
-			return input_files, output_files
+			return FSO::Files::Composite[input_files], FSO::Files::Composite[output_files]
 		end
 		
 		def apply(&block)
@@ -173,7 +171,7 @@ module Teapot
 		end
 		
 		def apply!(scope, arguments)
-			scope.instance_exec(arguments, &@apply)
+			scope.instance_exec(arguments, &@apply) if @apply
 		end
 		
 		def result(arguments)
