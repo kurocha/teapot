@@ -20,19 +20,17 @@
 
 require 'teapot/rule'
 
-require 'fso/monitor'
-require 'fso/files'
-
-require 'fso/build/graph'
+require 'build/files'
+require 'build/graph'
 
 module Teapot
-	Files = FSO::Files
+	Files = Build::Files
 	
 	module Build
 		CommandFailure = FSO::Build::CommandFailure
 		
-		class Node < FSO::Build::Node
-			def initialize(graph, rule, arguments, &block)
+		class Node < Build::Graph::Node
+			def initialize(controller, rule, arguments, &block)
 				@arguments = arguments
 				@rule = rule
 				
@@ -40,7 +38,7 @@ module Teapot
 				
 				inputs, outputs = rule.files(arguments)
 				
-				super(graph, inputs, outputs)
+				super(controller, inputs, outputs)
 			end
 			
 			attr :arguments
@@ -55,21 +53,21 @@ module Teapot
 				other.kind_of?(self.class) and @rule.eql?(other.rule) and @arguments.eql?(other.arguments)
 			end
 			
-			def apply!(task)
+			def apply!(scope)
 				@rule.apply!(task, @arguments)
 				
 				if @callback
-					task.instance_exec(@arguments, &@callback)
+					scope.instance_exec(@arguments, &@callback)
 				end
 			end
 		end
 		
-		class Top < FSO::Build::Node
-			def initialize(graph, task_class, &update)
+		class Top < Build::Graph::Node
+			def initialize(controller, task_class, &update)
 				@update = update
 				@task_class = task_class
 				
-				super(graph, Files::None, Files::None)
+				controller(graph, Files::None, Files::None)
 			end
 			
 			attr :task_class
@@ -85,10 +83,10 @@ module Teapot
 		end
 
 		class Task < FSO::Build::Task
-			def initialize(graph, walker, node, pool = nil)
-				@pool = pool
+			def initialize(controller, walker, node, group = nil)
+				super(controller, walker, node)
 				
-				super(graph, walker, node)
+				@group = group
 				
 				if wet?
 					@file_system = FileUtils
@@ -99,8 +97,11 @@ module Teapot
 			end
 			
 			attr :file_system
-			
 			alias fs file_system
+			
+			def wet?
+				@group and @node.dirty?
+			end
 			
 			def update(rule, arguments, &block)
 				arguments = rule.normalize(arguments)
@@ -124,7 +125,7 @@ module Teapot
 			def run!(*arguments)
 				if wet?
 					# puts "Scheduling #{arguments.inspect}".color(:blue)
-					status = @pool.run(*arguments)
+					status = @pool.spawn(*arguments)
 					# puts "Finished #{arguments.inspect} with status #{status}".color(:blue)
 					
 					if status != 0
@@ -139,8 +140,8 @@ module Teapot
 				end
 			end
 		end
-	
-		class Graph < FSO::Build::Graph
+		
+		class Controller < Build::Graph::Controller
 			def initialize
 				@top = []
 				
@@ -178,13 +179,13 @@ module Teapot
 			end
 			
 			def update!
-				pool = FSO::Pool.new
+				group = Process::Group.new
 				
 				super do |walker, node|
 					@task_class.new(self, walker, node, pool)
 				end
 				
-				pool.wait
+				group.wait
 			end
 		end
 	end

@@ -36,8 +36,8 @@ module Teapot
 				end
 			end
 			
-			def self.convert_to_shell(values)
-				Hash[values.map{|key, value| [
+			def self.convert_to_shell(environment)
+				Hash[environment.values.map{|key, value| [
 					key.to_s.upcase,
 					shell_escape(value)
 				]}]
