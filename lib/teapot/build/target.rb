@@ -22,7 +22,6 @@ require 'teapot/commands'
 require 'teapot/environment'
 
 require 'pathname'
-require 'rainbow'
 require 'fileutils'
 
 require 'teapot/build/linker'
