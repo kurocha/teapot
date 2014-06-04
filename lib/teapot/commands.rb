@@ -20,6 +20,7 @@
 
 require 'set'
 require 'rainbow'
+require 'rainbow/ext/string'
 require 'shellwords'
 
 require 'system'

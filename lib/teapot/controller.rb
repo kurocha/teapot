@@ -23,6 +23,7 @@ require 'teapot/version'
 
 require 'uri'
 require 'rainbow'
+require 'rainbow/ext/string'
 require 'fileutils'
 
 module Teapot

@@ -19,7 +19,9 @@
 # THE SOFTWARE.
 
 require 'rexec/environment'
+
 require 'rainbow'
+require 'rainbow/ext/string'
 
 module Teapot
 	class Environment
