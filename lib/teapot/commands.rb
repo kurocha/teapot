@@ -72,7 +72,7 @@ module Teapot
 		end
 		
 		def self.make(*args)
-			run("make", args, "-j", processor_count)
+			run("make", args, "-j", System::CPU.count)
 		end
 		
 		def self.make_install

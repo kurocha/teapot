@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
 	spec.required_ruby_version = '>= 1.9.3'
 
-	spec.add_dependency "rainbow"
+	spec.add_dependency "rainbow", "~> 2.0.0"
 	spec.add_dependency "rexec", "~> 1.6.0"
 	spec.add_dependency "trollop"
 	spec.add_dependency "system", "~> 0.1.3"
@@ -35,4 +35,8 @@ Gem::Specification.new do |spec|
 
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
+	
+	spec.add_development_dependency "bundler", "~> 1.3"
+	spec.add_development_dependency "minitest"
+	spec.add_development_dependency "rake"
 end

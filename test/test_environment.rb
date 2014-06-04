@@ -18,13 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'test/unit'
-require 'stringio'
+require "minitest/autorun"
 
 require 'teapot/environment'
 
-class TestEnvironment < Test::Unit::TestCase
+class TestEnvironment < MiniTest::Test
 	def test_environment_chaining
 		a = Teapot::Environment.new
 		a[:cflags] = ["-std=c++11"]

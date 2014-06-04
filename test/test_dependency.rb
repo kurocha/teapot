@@ -18,13 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'test/unit'
-require 'stringio'
+require "minitest/autorun"
 
 require 'teapot/dependency'
 
-class TestDependency < Test::Unit::TestCase
+class TestDependency < MiniTest::Test
 	class BasicDependency
 		include Teapot::Dependency
 		

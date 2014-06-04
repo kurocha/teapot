@@ -18,13 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'test/unit'
-require 'stringio'
+require "minitest/autorun"
 
 require 'teapot/substitutions'
 
-class TestSubstitutions < Test::Unit::TestCase
+class TestSubstitutions < MiniTest::Test
 	def test_symobolic_substitutions
 		input = <<-EOF
 		$FOO $BAR

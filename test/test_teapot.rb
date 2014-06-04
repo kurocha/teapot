@@ -18,13 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
-require 'test/unit'
-require 'stringio'
+require "minitest/autorun"
 
 require 'teapot/context'
 
-class TestConfig < Test::Unit::TestCase
+class TestConfig < MiniTest::Test
 	ROOT = Pathname.new(__FILE__).dirname
 	
 	def test_context
