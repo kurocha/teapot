@@ -1,4 +1,4 @@
-# Copyright, 2013, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,32 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-module Teapot
-	class Name
-		def initialize(text)
-			@text = text
+require 'teapot/name'
+
+module Teapot::NameSpec
+	describe Teapot::Name do
+		let(:name) {Teapot::Name.new('Foo Bar')}
+		it "retains the original text" do
+			expect(name.text).to be == 'Foo Bar'
 		end
 		
-		def self.from_target(string)
-			self.new(string.gsub(/(^|[ \-_])(.)/){" " + $2.upcase}.strip)
+		it "should generate useful identifiers" do
+			expect(name.identifier).to be == 'FooBar'
 		end
 		
-		attr :text
-		
-		def identifier
-			@identifier ||= @text.gsub(/\s+/, '')
+		it "should generate useful target names" do
+			expect(name.target).to be == 'foo-bar'
 		end
 		
-		def target
-			@target ||= @text.gsub(/\s+/, '-').downcase
+		it "should generate useful macro names" do
+			expect(name.macro).to be == 'FOO_BAR'
 		end
 		
-		def macro(prefix = [])
-			(Array(prefix) + [@text]).collect{|name| name.upcase.gsub(/\s+/, '_')}.join('_')
+		it "should generate useful macro names" do
+			expect(name.macro).to be == 'FOO_BAR'
 		end
 		
-		def header_guard(path)
-			macro(path) + '_H'
+		it "can be constructed from target name" do
+			expect(Teapot::Name.from_target(name.target).text).to be == name.text
 		end
 	end
 end
