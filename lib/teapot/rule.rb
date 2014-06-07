@@ -163,7 +163,7 @@ module Teapot
 				end
 			end
 			
-			return FSO::Files::Composite[input_files], FSO::Files::Composite[output_files]
+			return Build::Files::Composite.new(input_files), Build::Files::Composite.new(output_files)
 		end
 		
 		def apply(&block)

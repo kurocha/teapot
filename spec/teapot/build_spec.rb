@@ -1,4 +1,4 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2014, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,43 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/controller'
 require 'teapot/build'
+require 'teapot/environment'
 
-module Teapot
-	class Controller
-		def build(dependency_names)
-			chain = context.dependency_chain(dependency_names, context.configuration)
+module Teapot::BuildSpec
+	class DummyTarget
+		def name
+			"dummy-target"
+		end
 		
-			ordered = chain.ordered
-		
-			if @options[:only]
-				ordered = context.direct_targets(ordered)
+		def build
+			lambda do
+				fs.touch "bob"
 			end
-			
+		end
+	end
+	
+	describe Teapot::Build do
+		let(:environment) {Teapot::Environment.hash(foo: 'bar')}
+		
+		it "should create a simple build graph" do
 			controller = Teapot::Build::Controller.new do |controller|
-				ordered.each do |(target, dependency)|
-					environment = target.environment_for_configuration(context.configuration)
-					
-					if target.build
-						controller.add_target(target, environment.flatten)
-					end
-				end
+				controller.add_target(DummyTarget.new, environment)
 			end
 			
-			controller.run do
-				build_graph.update_with_log
-				
-				if @options[:once]
-					break
-				end
-				
-				# build_graph.nodes.each do |key, node|
-				# 	puts "#{node.status} #{node.inspect}"# unless node.clean?
-				# end
-			end
+			controller.update!
 			
-			return chain, ordered
+			expect(controller).to_not be nil
 		end
 	end
 end

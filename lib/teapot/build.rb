@@ -18,18 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/rule'
+require 'teapot/rulebook'
 
 require 'build/files'
 require 'build/graph'
 
+require 'teapot/name'
+
+require 'process/group'
+
 module Teapot
-	Files = Build::Files
-	
 	module Build
-		CommandFailure = FSO::Build::CommandFailure
+		Graph = ::Build::Graph
+		Paths = ::Build::Files::Paths
 		
-		class Node < Build::Graph::Node
+		class CommandFailure < StandardError
+		end
+		
+		class Node < Graph::Node
 			def initialize(controller, rule, arguments, &block)
 				@arguments = arguments
 				@rule = rule
@@ -62,18 +68,18 @@ module Teapot
 			end
 		end
 		
-		class Top < Build::Graph::Node
+		class Top < Graph::Node
 			def initialize(controller, task_class, &update)
 				@update = update
 				@task_class = task_class
 				
-				controller(graph, Files::None, Files::None)
+				super(controller, Paths::NONE, Paths::NONE)
 			end
 			
 			attr :task_class
 			
 			def apply!(scope)
-				scope.instance_eval(&@update)
+				scope.instance_exec(&@update)
 			end
 			
 			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty and thus wouldn't be run.
@@ -81,16 +87,16 @@ module Teapot
 				true
 			end
 		end
-
-		class Task < FSO::Build::Task
+		
+		class Task < Graph::Task
 			def initialize(controller, walker, node, group = nil)
 				super(controller, walker, node)
 				
 				@group = group
 				
 				if wet?
-					@file_system = FileUtils
-					#@file_system = FileUtils::Verbose
+					#@file_system = FileUtils
+					@file_system = FileUtils::Verbose
 				else
 					@file_system = FileUtils::NoWrite
 				end
@@ -119,13 +125,13 @@ module Teapot
 			end
 			
 			def wet?
-				@pool and @node.dirty?
+				@group and @node.dirty?
 			end
 			
 			def run!(*arguments)
 				if wet?
 					# puts "Scheduling #{arguments.inspect}".color(:blue)
-					status = @pool.spawn(*arguments)
+					status = @group.spawn(*arguments)
 					# puts "Finished #{arguments.inspect} with status #{status}".color(:blue)
 					
 					if status != 0
@@ -141,8 +147,10 @@ module Teapot
 			end
 		end
 		
-		class Controller < Build::Graph::Controller
+		class Controller < Graph::Controller
 			def initialize
+				@module = Module.new
+				
 				@top = []
 				
 				yield self
@@ -169,6 +177,9 @@ module Teapot
 			def add_target(target, environment, &block)
 				task_class = Rulebook.for(environment).with(Task, environment: environment, target: target)
 				
+				# Not sure if this is a good idea - makes debugging slightly easier.
+				Object.const_set("TaskClassFor#{Name.from_target(target.name).identifier}_#{self.object_id}", task_class)
+				
 				@top << Top.new(self, task_class, &target.build)
 			end
 			
@@ -182,7 +193,7 @@ module Teapot
 				group = Process::Group.new
 				
 				super do |walker, node|
-					@task_class.new(self, walker, node, pool)
+					@task_class.new(self, walker, node, group)
 				end
 				
 				group.wait

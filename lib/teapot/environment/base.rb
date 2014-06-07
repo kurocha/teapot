@@ -30,6 +30,10 @@ module Teapot
 			end
 		end
 		
+		def self.hash(**values)
+			self.new(nil, values)
+		end
+		
 		attr :values
 		attr :parent
 		
