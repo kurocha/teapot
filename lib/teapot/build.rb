@@ -106,7 +106,7 @@ module Teapot
 			alias fs file_system
 			
 			def wet?
-				@group and @node.dirty?
+				@group && @node.requires_update?
 			end
 			
 			def update(rule, arguments, &block)
@@ -122,10 +122,6 @@ module Teapot
 				child_node.update!(@walker)
 				
 				return child_node.rule.result(arguments)
-			end
-			
-			def wet?
-				@group and @node.dirty?
 			end
 			
 			def run!(*arguments)

@@ -29,6 +29,7 @@ module Teapot::BuildSpec
 		
 		def build
 			lambda do
+				# This is technically incorrect, because this Top graph node specifies no outputs. But, for testing, it's fine.
 				fs.touch "bob"
 			end
 		end
@@ -38,13 +39,14 @@ module Teapot::BuildSpec
 		let(:environment) {Teapot::Environment.hash(foo: 'bar')}
 		
 		it "should create a simple build graph" do
+			expect(FileUtils::NoWrite).to receive(:touch).with("bob").once
+			expect(FileUtils::Verbose).to receive(:touch).with("bob").once
+			
 			controller = Teapot::Build::Controller.new do |controller|
 				controller.add_target(DummyTarget.new, environment)
 			end
 			
 			controller.update!
-			
-			expect(controller).to_not be nil
 		end
 	end
 end
