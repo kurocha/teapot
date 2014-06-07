@@ -34,36 +34,36 @@ module Teapot::DependencySpec
 	describe Teapot::Dependency do
 		it "Should resolve dependency chain" do
 			a = BasicDependency.new
-		
+			
 			a.provides 'apple' do
 				fruit ['apple']
 			end
-		
+			
 			b = BasicDependency.new
-		
+			
 			b.provides 'orange' do
 				fruit ['orange']
 			end
-		
+			
 			c = BasicDependency.new
-		
+			
 			c.provides 'fruit-juice' do
 				juice ['ice', 'cold']
 			end
-		
+			
 			c.depends 'apple'
 			c.depends 'orange'
-		
+			
 			chain = Teapot::Dependency::chain([], ['fruit-juice'], [a, b, c])
 			expect(chain.ordered.collect(&:first)).to be == [a, b, c]
-		
+			
 			d = BasicDependency.new
-		
+			
 			d.provides 'pie' do
 			end
-		
+			
 			d.depends 'apple'
-		
+			
 			chain = Teapot::Dependency::chain([], ['pie'], [a, b, c, d])
 			
 			expect(chain.unresolved).to be == []
