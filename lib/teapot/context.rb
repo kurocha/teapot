@@ -24,8 +24,8 @@ require 'teapot/package'
 require 'teapot/rulebook'
 
 module Teapot
-	TEAPOT_FILE = "teapot.rb"
-	DEFAULT_CONFIGURATION_NAME = 'default'
+	TEAPOT_FILE = 'teapot.rb'.freeze
+	DEFAULT_CONFIGURATION_NAME = 'default'.freeze
 
 	class AlreadyDefinedError < StandardError
 		def initialize(definition, previous)
