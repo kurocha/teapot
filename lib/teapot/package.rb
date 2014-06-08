@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'pathname'
+require 'build/files'
 
 require 'teapot/context'
 require 'teapot/environment'
@@ -26,10 +26,12 @@ require 'teapot/environment'
 require 'teapot/definition'
 
 module Teapot
+	Path = Build::Files::Path
+	
 	class Package
 		def initialize(path, name, options = {})
 			# The path where the package is (or will be) located:
-			@path = path
+			@path = Path[path]
 
 			# Get the name of the package from the options, if provided:
 			if options[:name]
@@ -48,7 +50,7 @@ module Teapot
 			
 			# Copy the options provided:
 			@options = options
- 		end
+		end
 
 		attr :name
 		attr :path

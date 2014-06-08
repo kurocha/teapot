@@ -21,7 +21,7 @@
 require 'teapot/context'
 
 module Teapot::ContextSpec
-	ROOT = Pathname.new(__FILE__).dirname
+	ROOT = Build::Files::Path.new(__dir__)
 	
 	describe Teapot::Context do
 		it "should load teapot.rb file" do

@@ -74,7 +74,9 @@ module Teapot
 				return name
 			end
 			
-			def define(name, klass, &block)
+			def define(klass, name, &block)
+				abort "#{name} isn't a string when defining #{klass}" unless String === name
+				
 				@environment[name] = Define.new(klass, &block)
 				
 				return name

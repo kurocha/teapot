@@ -41,7 +41,7 @@ module Teapot
 
 	class Context
 		def initialize(root, options = {})
-			@root = Pathname(root)
+			@root = Path[root]
 			@options = options
 
 			@targets = {}

@@ -26,6 +26,8 @@ require 'teapot/rule'
 
 require 'teapot/name'
 
+require 'build/files'
+
 module Teapot
 	LOADER_VERSION = "1.0.0"
 	MINIMUM_LOADER_VERSION = "1.0"
@@ -47,6 +49,8 @@ module Teapot
 	end
 	
 	class Loader
+		Files = ::Build::Files
+		
 		class Definitions < Array
 			def default_configuration
 				find{|definition| Configuration === definition}

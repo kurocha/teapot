@@ -26,10 +26,12 @@ require 'build/graph'
 require 'teapot/name'
 
 require 'process/group'
+require 'system'
 
 module Teapot
 	module Build
 		Graph = ::Build::Graph
+		Files = ::Build::Files
 		Paths = ::Build::Files::Paths
 		
 		class CommandFailure < StandardError
@@ -60,7 +62,7 @@ module Teapot
 			end
 			
 			def apply!(scope)
-				@rule.apply!(task, @arguments)
+				@rule.apply!(scope, @arguments)
 				
 				if @callback
 					scope.instance_exec(@arguments, &@callback)
@@ -113,8 +115,8 @@ module Teapot
 				arguments = rule.normalize(arguments)
 				
 				# A sub-graph for a particular build is isolated based on the task class used to instantiate it, so we use this as part of the key.
-				child_node = @graph.nodes.fetch([self.class, rule.name, arguments]) do |key|
-					@graph.nodes[key] = Node.new(@graph, rule, arguments, &block)
+				child_node = @controller.nodes.fetch([self.class, rule.name, arguments]) do |key|
+					@controller.nodes[key] = Node.new(@controller, rule, arguments, &block)
 				end
 				
 				@children << child_node

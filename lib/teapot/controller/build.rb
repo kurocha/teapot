@@ -43,15 +43,19 @@ module Teapot
 			end
 			
 			controller.run do
-				build_graph.update_with_log
+				# The graph has been dirtied because files have changed, traverse and update it:
+				controller.update_with_log
 				
+				# Only run once is asked:
 				if @options[:once]
 					break
 				end
 				
-				# build_graph.nodes.each do |key, node|
-				# 	puts "#{node.status} #{node.inspect}"# unless node.clean?
-				# end
+				if $TEAPOT_DEBUG_GRAPH
+					controller.nodes.each do |key, node|
+						puts "#{node.status} #{node.inspect}"# unless node.clean?
+					end
+				end
 			end
 			
 			return chain, ordered
