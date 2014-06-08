@@ -132,9 +132,9 @@ module Teapot
 		# Load a teapot.rb file relative to the root of the @package.
 		def load(path)
 			absolute_path = @package.path + path
-
+			
 			raise NonexistantTeapotError.new(absolute_path) unless File.exist?(absolute_path)
-
+			
 			self.instance_eval(absolute_path.read, absolute_path.to_s)
 			
 			if @version == nil

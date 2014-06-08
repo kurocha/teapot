@@ -145,9 +145,9 @@ module Teapot
 			# In certain cases, a package record might be loaded twice. This typically occurs when multiple configurations are loaded in the same context, or if a package has already been loaded (as is typical with the root package).
 			@loaded.fetch(package) do
 				loader = Loader.new(self, package)
-
+				
 				loader.load(TEAPOT_FILE)
-
+				
 				# Load the definitions into the current context:
 				loader.defined.each do |definition|
 					self << definition
