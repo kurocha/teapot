@@ -68,7 +68,7 @@ module Teapot
 				
 				# If a pattern is provided, we must match it.
 				if pattern = @options[:pattern]
-					return item.match(pattern)
+					return Array(value).all? {|item| pattern.match(item)}
 				end
 				
 				return true
