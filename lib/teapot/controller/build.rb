@@ -47,7 +47,7 @@ module Teapot
 				controller.update_with_log
 				
 				# Only run once is asked:
-				if @options[:once]
+				unless @options[:continuous]
 					break
 				end
 				
