@@ -60,9 +60,8 @@ You need to make sure any basic tools, e.g. compilers, system libraries, are ins
 
 ## Dependency Graph
 
-Dependency analysis is an important part of efficiently building a source tree. A dependency graph constructed from a single output file depends on the set of input files and their associated implicit dependencies (e.g. `#include` directives), and additionally the environment and task that is being performed. Specifically, the environment can specify additional header files, libraries, or other dependent input files and needs to be considered explicitly.
-
-Teapot assumes per-environment dependency graphs and in addition, parts of the dependency graph are generated dynamically. The process of extracting implicit dependencies can be found under `teapot/extractors` and is used extensively in the build graph `teapot/build`.
+- Should packages be built into a shared prefix or should they be built into unique prefixes and joined together either via install or `-L` and `-I`?
+- Should packages expose the tools required to build themselves as dependencies? e.g. should `build-cmake` as required by, say, `OpenCV`, be exposed to all who depend on `OpenCV`? Should there be a mechanism for non-public dependencies, i.e. dependencies which are not exposed to dependants?
 
 ## Contributing
 
