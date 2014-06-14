@@ -22,6 +22,7 @@ require 'teapot/rulebook'
 
 require 'build/files'
 require 'build/graph'
+require 'build/makefile'
 
 require 'teapot/name'
 
@@ -33,9 +34,7 @@ module Teapot
 		Graph = ::Build::Graph
 		Files = ::Build::Files
 		Paths = ::Build::Files::Paths
-		
-		class CommandFailure < StandardError
-		end
+		Makefile = ::Build::Makefile
 		
 		class Node < Graph::Node
 			def initialize(controller, rule, arguments, &block)
@@ -128,12 +127,12 @@ module Teapot
 			
 			def run!(*arguments)
 				if wet?
-					# puts "Scheduling #{arguments.inspect}".color(:blue)
+					# puts Rainbow("Scheduling #{arguments.inspect}").blue
 					status = @group.spawn(*arguments)
-					# puts "Finished #{arguments.inspect} with status #{status}".color(:blue)
+					# puts Rainbow("Finished #{arguments.inspect} with status #{status}").blue
 					
 					if status != 0
-						raise CommandFailure.new(arguments, status)
+						raise Graph::CommandFailure.new(arguments, status)
 					end
 				end
 			end
