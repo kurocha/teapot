@@ -68,9 +68,6 @@ module Teapot
 				default platforms_path configuration.platforms_path
 				default build_prefix {platforms_path + "cache/#{platform_name}-#{variant}"}
 				default install_prefix {platforms_path + "#{platform_name}-#{variant}"}
-			
-				append buildflags {"-I#{install_prefix + "include"}"}
-				append linkflags {"-L#{install_prefix + "lib"}"}
 			end
 		end
 		
