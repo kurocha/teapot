@@ -127,7 +127,7 @@ module Teapot
 			
 			def run!(*arguments)
 				if wet?
-					# puts Rainbow("Scheduling #{arguments.inspect}").blue
+					puts Rainbow(arguments.join(' ')).blue
 					status = @group.spawn(*arguments)
 					# puts Rainbow("Finished #{arguments.inspect} with status #{status}").blue
 					
