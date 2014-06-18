@@ -189,11 +189,13 @@ module Teapot
 			def update!
 				group = Process::Group.new
 				
-				super do |walker, node|
+				walker = super do |walker, node|
 					@task_class.new(self, walker, node, group)
 				end
 				
 				group.wait
+				
+				return walker
 			end
 		end
 	end

@@ -23,6 +23,9 @@ require 'teapot/build'
 
 module Teapot
 	class Controller
+		class BuildFailedError < StandardError
+		end
+		
 		def build(dependency_names)
 			chain = context.dependency_chain(dependency_names, context.configuration)
 		
@@ -44,10 +47,14 @@ module Teapot
 			
 			controller.run do
 				# The graph has been dirtied because files have changed, traverse and update it:
-				controller.update_with_log
+				walker = controller.update_with_log
 				
 				# Only run once is asked:
 				unless @options[:continuous]
+					if walker.failed?
+						raise BuildFailedError.new("Failed to build all nodes successfully!")
+					end
+					
 					break
 				end
 				
