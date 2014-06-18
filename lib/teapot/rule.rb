@@ -74,11 +74,11 @@ module Teapot
 				return true
 			end
 			
-			def compute(arguments)
+			def compute(arguments, scope)
 				if implicit?
-					@dynamic.call(arguments)
+					scope.instance_exec(arguments, &@dynamic)
 				elsif dynamic?
-					@dynamic.call(arguments[@name], arguments)
+					scope.instance_exec(arguments[@name], arguments, &@dynamic)
 				else
 					arguments[@name]
 				end
@@ -137,10 +137,11 @@ module Teapot
 			return true
 		end
 		
-		def normalize(arguments)
+		# The scope is the context in which the dynamic rule computation is done, usually an instance of Task.
+		def normalize(arguments, scope)
 			Hash[
 				@parameters.collect do |parameter|
-					[parameter.name, parameter.compute(arguments)]
+					[parameter.name, parameter.compute(arguments, scope)]
 				end
 			]
 		end

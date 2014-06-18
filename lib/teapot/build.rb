@@ -111,7 +111,7 @@ module Teapot
 			end
 			
 			def update(rule, arguments, &block)
-				arguments = rule.normalize(arguments)
+				arguments = rule.normalize(arguments, self)
 				
 				# A sub-graph for a particular build is isolated based on the task class used to instantiate it, so we use this as part of the key.
 				child_node = @controller.nodes.fetch([self.class, rule.name, arguments]) do |key|
