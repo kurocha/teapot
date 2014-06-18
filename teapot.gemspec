@@ -33,8 +33,8 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "graphviz", "~> 0.0.2"
 	
-	spec.add_dependency "build-files", "~> 0.2.6"
-	spec.add_dependency "build-graph", "~> 0.3.3"
+	spec.add_dependency "build-files", "~> 0.2.7"
+	spec.add_dependency "build-graph", "~> 0.3.5"
 	spec.add_dependency "build-makefile", "~> 0.2.0"
 	
 	spec.add_dependency "process-daemon", "~> 0.5.5"
