@@ -18,28 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rexec'
-
 module Teapot
 	module Git
+		# This module needs to be refactored. Perhaps use Process::Group.
 		module Commands
 			class CommandError < StandardError
 			end
 			
 			def self.run(*args, &block)
 				options = Hash === args.last ? args.pop : {}
-				options[:passthrough] ||= :all
-			
+				
 				args = args.flatten.collect &:to_s
-			
+				
 				puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
-			
-				task = RExec::Task.open(args, options, &block)
-			
-				if task.wait == 0
+				
+				pid = Process.spawn(*args, options, &block)
+				_, result = Process.wait2(pid)
+				
+				if result.exitstatus == 0
 					true
 				else
-					raise CommandError.new("Non-zero exit status: #{args.join(' ')}!")
+					raise CommandError.new("Non-zero exit status: #{result} while running #{args.join(' ')}!")
 				end
 			end
 		
@@ -107,11 +106,13 @@ module Teapot
 			end
 
 			def status
-				Commands.run("git", "status", "--porcelain", :passthrough => [:in, :err]) do |task|
-					if task.wait == 0
-						return task.output.readlines.collect{|line| line.chomp.split(/\s+/, 2)}
-					end
-				end
+				input, output = IO.pipe
+				
+				Commands.run("git", "status", "--porcelain", :out => output)
+				
+				output.close
+				
+				return input.readlines.collect{|line| line.chomp.split(/\s+/, 2)}
 			end
 
 			private
