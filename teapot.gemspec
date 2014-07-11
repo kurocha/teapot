@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "system", "~> 0.1.3"
 	
-	spec.add_dependency "graphviz", "~> 0.0.2"
+	spec.add_dependency "graphviz", "~> 0.1.0"
 	
 	spec.add_dependency "build-files", "~> 0.2.8"
 	spec.add_dependency "build-graph", "~> 0.3.5"
