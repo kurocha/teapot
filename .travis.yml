@@ -1,8 +1,4 @@
 language: ruby
 rvm:
-  - "1.9"
   - "2.0"
   - "2.1"
-matrix:
-  allow_failures:
-    - rvm: "1.9"
