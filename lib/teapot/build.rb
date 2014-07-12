@@ -26,6 +26,7 @@ require 'build/makefile'
 
 require 'teapot/name'
 
+require 'graphviz'
 require 'process/group'
 require 'system'
 
@@ -67,6 +68,10 @@ module Teapot
 					scope.instance_exec(@arguments, &@callback)
 				end
 			end
+			
+			def inspect
+				@rule.name.inspect
+			end
 		end
 		
 		class Top < Graph::Node
@@ -86,6 +91,10 @@ module Teapot
 			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty and thus wouldn't be run.
 			def requires_update?
 				true
+			end
+			
+			def inspect
+				@task_class.name.inspect
 			end
 		end
 		
@@ -139,7 +148,9 @@ module Teapot
 			
 			def visit
 				super do
+					@controller.enter(self, @node)
 					@node.apply!(self)
+					@controller.exit(self, @node)
 				end
 			end
 		end
@@ -160,6 +171,8 @@ module Teapot
 			end
 			
 			attr :top
+			
+			attr :visualisation
 			
 			# Because we do a depth first traversal, we can capture global state per branch, such as `@task_class`.
 			def traverse!(walker)
@@ -186,14 +199,53 @@ module Teapot
 				end
 			end
 			
+			def enter(task, node)
+				return unless @g
+				
+				parent_node = @hierarchy.last
+				
+				task_node = @g.nodes[node] || @g.add_node(node, shape: 'box')
+				
+				if parent_node
+					parent_node.connect(task_node)
+				end
+				
+				node.inputs.map{|path| path.shortest_path(Dir.pwd)}.each do |path|
+					input_node = @g.nodes[path.to_s] || @g.add_node(path.to_s, shape: 'box')
+					input_node.connect(task_node)
+				end
+				
+				@hierarchy << task_node
+			end
+			
+			def exit(task, node)
+				return unless @g
+				
+				@hierarchy.pop
+				
+				task_node = @g.nodes[node] || @g.add_node(node, shape: 'box')
+				
+				node.outputs.map{|path| path.shortest_path(Dir.pwd)}.each do |path|
+					output_node = @g.nodes[path.to_s] || @g.add_node(path.to_s, shape: 'box')
+					output_node.connect(task_node)
+				end
+			end
+			
 			def update!
 				group = Process::Group.new
+				
+				@g = Graphviz::Graph.new('G', rankdir: "LR")
+				@hierarchy = []
 				
 				walker = super do |walker, node|
 					@task_class.new(self, walker, node, group)
 				end
 				
 				group.wait
+				
+				File.open("build-graph.dot", "w") do |file|
+					file.puts @g.to_dot
+				end
 				
 				return walker
 			end
