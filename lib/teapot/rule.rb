@@ -44,26 +44,15 @@ module Teapot
 				dynamic? and @options[:implicit]
 			end
 			
-			def typed?
-				@options[:typed]
+			# Optional parameters are those that are either defined as optional or implicit.
+			def optional?
+				@options[:optional] || implicit?
 			end
 			
 			def applicable? arguments
-				# The parameter is either optional, or is included in the argument list, otherwise we fail.
-				unless @options[:optional] or arguments.include?(@name)
-					return false
-				end
-				
-				value = arguments[@name]
-				
-				# If the parameter is optional, and wasn't provided, we are okay.
-				if @options[:optional]
-					return true if value == nil
-				end
-				
-				# If the parameter is typed, and we don't match the expected type, we fail.
-				if type = @options[:typed]
-					return false unless type === value
+				value = arguments.fetch(@name) do
+					# Value couldn't be found, if it wasn't optional, this parameter didn't apply:
+					return optional?
 				end
 				
 				# If a pattern is provided, we must match it.
@@ -76,8 +65,10 @@ module Teapot
 			
 			def compute(arguments, scope)
 				if implicit?
-					scope.instance_exec(arguments, &@dynamic)
+					# Can be replaced if supplied:
+					arguments[@name] || scope.instance_exec(arguments, &@dynamic)
 				elsif dynamic?
+					# Argument is optional:
 					scope.instance_exec(arguments[@name], arguments, &@dynamic)
 				else
 					arguments[@name]
