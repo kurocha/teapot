@@ -67,6 +67,10 @@ module Teapot
 					scope.instance_exec(@arguments, &@callback)
 				end
 			end
+			
+			def inspect
+				@rule.name.inspect
+			end
 		end
 		
 		class Top < Graph::Node
@@ -86,6 +90,10 @@ module Teapot
 			# Top level nodes are always considered dirty. This ensures that enclosed nodes are run if they are dirty. The top level node has no inputs or outputs by default, so children who become dirty wouldn't mark it as dirty and thus wouldn't be run.
 			def requires_update?
 				true
+			end
+			
+			def inspect
+				@task_class.name.inspect
 			end
 		end
 		
