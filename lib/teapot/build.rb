@@ -243,7 +243,7 @@ module Teapot
 				
 				group.wait
 				
-				Graphviz::output(@g, path: 'build-graph.pdf')
+				Graphviz::output(@g, path: 'build-graph.pdf') rescue nil
 				
 				return walker
 			end
