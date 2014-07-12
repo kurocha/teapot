@@ -21,6 +21,8 @@
 require 'teapot/controller'
 require 'teapot/build'
 
+$TEAPOT_DEBUG_GRAPH = false
+
 module Teapot
 	class Controller
 		class BuildFailedError < StandardError
@@ -45,23 +47,32 @@ module Teapot
 				end
 			end
 			
-			controller.run do
-				# The graph has been dirtied because files have changed, traverse and update it:
-				walker = controller.update_with_log
-				
-				# Only run once is asked:
-				unless @options[:continuous]
-					if walker.failed?
-						raise BuildFailedError.new("Failed to build all nodes successfully!")
+			walker = nil
+			
+			# We need to catch interrupt here, and exit with the correct exit code:
+			begin
+				controller.run do
+					# The graph has been dirtied because files have changed, traverse and update it:
+					walker = controller.update_with_log
+					
+					if $TEAPOT_DEBUG_GRAPH
+						controller.nodes.each do |key, node|
+							puts "#{node.status} #{node.inspect}" unless node.clean?
+						end
 					end
 					
-					break
-				end
-				
-				if $TEAPOT_DEBUG_GRAPH
-					controller.nodes.each do |key, node|
-						puts "#{node.status} #{node.inspect}"# unless node.clean?
+					# Only run once is asked:
+					unless @options[:continuous]
+						if walker.failed?
+							raise BuildFailedError.new("Failed to build all nodes successfully!")
+						end
+					
+						break
 					end
+				end
+			rescue Interrupt
+				if walker && walker.failed?
+					raise BuildFailedError.new("Failed to build all nodes successfully!")
 				end
 			end
 			
