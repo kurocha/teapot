@@ -14,7 +14,7 @@ Teapot is a decentralised build tool for managing complex cross-platform project
 
 Ensure that you already have a working install of Ruby 1.9.3+
 
-    $ gem install teapot
+	$ gem install teapot
 
 ## Usage
 
@@ -58,10 +58,13 @@ For Mac OS X (requires Xcode Command Line Tools):
 
 You need to make sure any basic tools, e.g. compilers, system libraries, are installed correctly before building. Consult the platform and library documentation for any dependencies.
 
-## Dependency Graph
+## Open Issues
 
 - Should packages be built into a shared prefix or should they be built into unique prefixes and joined together either via install or `-L` and `-I`?
+	- Relative include paths might fail to work correctly if headers are not installed into same directory.
 - Should packages expose the tools required to build themselves as dependencies? e.g. should `build-cmake` as required by, say, `OpenCV`, be exposed to all who depend on `OpenCV`? Should there be a mechanism for non-public dependencies, i.e. dependencies which are not exposed to dependants?
+- Should packages have a priority, so that less dependencies have to be explicitly resolved?
+- How should per-platform dependencies which aren't globally applicable be handled? e.g. Kai depends on `dlsym` which requires `-ldl` on Linux only. Should this be a dependency in the Kai package or somewhere further back?
 
 ## Contributing
 
