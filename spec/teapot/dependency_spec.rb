@@ -109,5 +109,23 @@ module Teapot::DependencySpec
 			expect(chain.conflicts).to be == {}
 			expect(chain.ordered).to be == [[apple, "apple"], [salad, "salad"]]
 		end
+		
+		it "should select dependencies with high priority" do
+			bad_apple = BasicDependency.new('bad_apple')
+			bad_apple.provides 'apple'
+			bad_apple.priority = 20
+			
+			good_apple = BasicDependency.new('good_apple')
+			good_apple.provides 'apple'
+			good_apple.priority = 40
+			
+			chain = Teapot::Dependency::chain([], ['apple'], [bad_apple, good_apple])
+			
+			expect(chain.unresolved).to be == []
+			expect(chain.conflicts).to be == {}
+			
+			# Should select higher priority package by default:
+			expect(chain.ordered).to be == [[good_apple, 'apple']]
+		end
 	end
 end

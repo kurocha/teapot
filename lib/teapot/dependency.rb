@@ -37,6 +37,14 @@ module Teapot
 		Provision = Struct.new(:value)
 		Alias = Struct.new(:dependencies)
 		
+		def priority= value
+			@priority = value
+		end
+		
+		def priority
+			@priority || 0
+		end
+		
 		def provides?(name)
 			provisions.key? name
 		end
@@ -72,7 +80,7 @@ module Teapot
 		end
 		
 		class Chain
-			def initialize(selection, dependencies, providers)
+			def initialize(selection, dependencies, providers, options = {})
 				# Explicitly selected targets which will be used when resolving ambiguity:
 				@selection = Set.new(selection)
 				
@@ -87,6 +95,8 @@ module Teapot
 				@provisions = []
 				@unresolved = []
 				@conflicts = {}
+				
+				@options = options
 				
 				@dependencies.each do |dependency|
 					expand(dependency, "<top>")
@@ -105,6 +115,21 @@ module Teapot
 			
 			private
 			
+			def ignore_priority?
+				@options[:ignore_priority]
+			end
+			
+			def filter_by_priority(viable_providers)
+				# Sort from highest priority to lowest priority:
+				viable_providers = viable_providers.sort{|a,b| b.priority <=> a.priority}
+				
+				# The first item has the highest priority:
+				highest_priority = viable_providers.first.priority
+				
+				# We compute all providers with the same highest priority (may be zero):
+				return viable_providers.take_while{|provider| provider.priority == highest_priority}
+			end
+			
 			def find_provider(dependency, parent)
 				# Mostly, only one package will satisfy the dependency...
 				viable_providers = @providers.select{|provider| provider.provides? dependency}
@@ -116,6 +141,14 @@ module Teapot
 					explicit_providers = viable_providers.select{|provider| @selection.include? provider.name}
 
 					# puts "** Filtering to #{explicit_providers.collect(&:name).join(', ')} explicit providers.".color(:magenta)
+					
+					if explicit_providers.size != 1 and !ignore_priority?
+						# If we were unable to select a single package, we may use the priority to limit the number of possible options:
+						explicit_providers = viable_providers if explicit_providers.empty?
+						
+						explicit_providers = filter_by_priority(explicit_providers)
+					end
+					
 
 					if explicit_providers.size == 0
 						# No provider was explicitly specified, thus we require explicit conflict resolution:
