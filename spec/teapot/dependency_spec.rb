@@ -29,6 +29,10 @@ module Teapot::DependencySpec
 		end
 		
 		attr :name
+		
+		def inspect
+			"<BasicDependency:#{@name}>"
+		end
 	end
 	
 	describe Teapot::Dependency do
@@ -126,6 +130,34 @@ module Teapot::DependencySpec
 			
 			# Should select higher priority package by default:
 			expect(chain.ordered).to be == [[good_apple, 'apple']]
+		end
+		
+		it "should expose direct dependencies" do
+			system = BasicDependency.new('linux')
+			system.provides 'linux'
+			system.provides 'clang'
+			system.provides system: 'linux'
+			system.provides compiler: 'clang'
+			
+			library = BasicDependency.new('library')
+			library.provides 'library'
+			library.depends :system
+			library.depends :compiler
+			
+			application = BasicDependency.new('application')
+			application.provides 'application'
+			application.depends :compiler
+			application.depends 'library'
+			
+			chain = Teapot::Dependency::chain([], ['application'], [system, library, application])
+			
+			expect(chain.unresolved).to be == []
+			expect(chain.conflicts).to be == {}
+			expect(chain.ordered).to be == [
+				[system, 'clang'],
+				[library, 'library'],
+				[application, 'application']
+			]
 		end
 	end
 end
