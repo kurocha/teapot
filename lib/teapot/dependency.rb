@@ -130,6 +130,10 @@ module Teapot
 				return viable_providers.take_while{|provider| provider.priority == highest_priority}
 			end
 			
+			def filter_by_selection(viable_providers)
+				return viable_providers.select{|provider| @selection.include? provider.name}
+			end
+			
 			def find_provider(dependency, parent)
 				# Mostly, only one package will satisfy the dependency...
 				viable_providers = @providers.select{|provider| provider.provides? dependency}
@@ -138,8 +142,8 @@ module Teapot
 
 				if viable_providers.size > 1
 					# ... however in some cases (typically where aliases are being used) an explicit selection must be made for the build to work correctly.
-					explicit_providers = viable_providers.select{|provider| @selection.include? provider.name}
-
+					explicit_providers = filter_by_selection(viable_providers)
+					
 					# puts "** Filtering to #{explicit_providers.collect(&:name).join(', ')} explicit providers.".color(:magenta)
 					
 					if explicit_providers.size != 1 and !ignore_priority?
