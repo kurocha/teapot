@@ -21,6 +21,7 @@
 require 'teapot/loader'
 require 'teapot/package'
 
+require 'teapot/metadata'
 require 'teapot/rulebook'
 
 module Teapot
@@ -44,6 +45,8 @@ module Teapot
 			@root = Path[root]
 			@options = options
 
+			@metadata = Metadata.new(self)
+
 			@targets = {}
 			@generators = {}
 			@configurations = {}
@@ -66,6 +69,9 @@ module Teapot
 		attr :targets
 		attr :generators
 		attr :projects
+
+		# Context metadata
+		attr :metadata
 
 		# All public configurations.
 		attr :configurations

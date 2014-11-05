@@ -1,4 +1,4 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2014, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,5 +19,23 @@
 # THE SOFTWARE.
 
 module Teapot
-	VERSION = "1.0.0-rc10"
+	class Metadata
+		class Section
+			def initialize(name)
+				@name = name
+			end
+			
+			def method_missing(parameter_name)
+				`git config #{@name}.#{parameter_name}`.chomp!
+			end
+		end
+		
+		def initialize(context)
+			@context = context
+		end
+		
+		def method_missing(name)
+			Section.new(name)
+		end
+	end
 end

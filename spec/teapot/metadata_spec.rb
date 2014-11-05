@@ -18,6 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-module Teapot
-	VERSION = "1.0.0-rc10"
+require 'teapot/metadata'
+
+module Teapot::MetadataSpec
+	describe Teapot::Metadata do
+		let(:metadata) {Teapot::Metadata.new(nil)}
+		it "can provide user name" do
+			expect(metadata.user.name).to_not be nil
+			expect(metadata.user.name.length).to be > 0
+		end
+	end
 end
