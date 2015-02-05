@@ -33,7 +33,7 @@ In the resulting project directory that has been created, you can see the list o
 
 To build your project:
 
-	$ teapot build Application/MyProject variant-debug
+	$ teapot build Application/MyProject
 
 When you build, you need to specify dependencies. If you haven't specified all dependencies, they will be suggested to you.
 
@@ -63,6 +63,7 @@ You need to make sure any basic tools, e.g. compilers, system libraries, are ins
 - Should packages be built into a shared prefix or should they be built into unique prefixes and joined together either via install or `-L` and `-I`?
 	- Relative include paths might fail to work correctly if headers are not installed into same directory.
 - Should packages expose the tools required to build themselves as dependencies? e.g. should `build-cmake` as required by, say, `OpenCV`, be exposed to all who depend on `OpenCV`? Should there be a mechanism for non-public dependencies, i.e. dependencies which are not exposed to dependants?
+- Should packages have some way to expose system requirements, e.g. installed compiler, libraries, etc. Perhaps some kind of `Package#valid?` which allows custom logic?
 
 ## Contributing
 

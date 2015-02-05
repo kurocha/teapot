@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 module Teapot
+	# This is a very basic class for accessing metadata from a repository. In the future I expect this will be fleshed out a bit more.
 	class Metadata
 		class Section
 			def initialize(name)
