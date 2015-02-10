@@ -5,3 +5,4 @@ before_install:
 rvm:
   - "2.0"
   - "2.1"
+env: COVERAGE=true
