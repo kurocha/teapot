@@ -48,7 +48,8 @@ module Teapot
 	end
 	
 	class Loader
-		Files = ::Build::Files
+		Files = Build::Files
+		Rule = Build::Rule
 		
 		class Definitions < Array
 			def default_configuration
