@@ -62,7 +62,7 @@ module Teapot
 			def clone!(remote_url, branch = nil, commit = nil)
 				branch_args = branch ? ["--branch", branch] : []
 
-				@root.mkpath
+				@root.create
 
 				run!("clone", remote_url, @root, *branch_args)
 

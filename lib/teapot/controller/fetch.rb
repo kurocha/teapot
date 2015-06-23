@@ -81,7 +81,7 @@ module Teapot
 				local_path = context.root + package.options[:local]
 	
 				# Make the top level directory if required:
-				destination_path.dirname.mkpath
+				destination_path.dirname.create
 	
 				unless destination_path.exist?
 					destination_path.make_symlink(local_path)

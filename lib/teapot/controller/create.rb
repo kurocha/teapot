@@ -21,12 +21,12 @@
 require 'teapot/controller'
 require 'teapot/controller/fetch'
 
-require 'teapot/name'
+require 'build/name'
 
 module Teapot
 	class Controller
 		def create(project_name, source, packages)
-			name = Name.new(project_name)
+			name = Build::Name.new(project_name)
 			
 			log "Creating project named #{project_name} at path #{@root}...".color(:cyan)
 			

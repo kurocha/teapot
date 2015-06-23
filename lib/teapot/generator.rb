@@ -66,7 +66,7 @@ module Teapot
 			source_path = Pathname(path) + source
 			destination_path = Pathname(context.root) + destination
 
-			destination_path.dirname.mkpath
+			destination_path.dirname.create
 
 			File.open(destination_path, mode) do |file|
 				text = File.read(source_path)
@@ -113,7 +113,7 @@ module Teapot
 		end
 
 		def copy_binary(source_path, destination_path)
-			destination_path.dirname.mkpath
+			destination_path.dirname.create
 			FileUtils.cp source_path, destination_path
 		end
 

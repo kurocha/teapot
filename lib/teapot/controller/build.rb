@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'teapot/controller'
-require 'teapot/build'
+require 'build/controller'
 
 $TEAPOT_DEBUG_GRAPH = false
 
@@ -37,7 +37,7 @@ module Teapot
 				ordered = context.direct_targets(ordered)
 			end
 			
-			controller = Teapot::Build::Controller.new do |controller|
+			controller = Build::Controller.new do |controller|
 				ordered.each do |(target, dependency)|
 					environment = target.environment_for_configuration(context.configuration)
 					
@@ -51,10 +51,7 @@ module Teapot
 			
 			# We need to catch interrupt here, and exit with the correct exit code:
 			begin
-				controller.run do
-					# The graph has been dirtied because files have changed, traverse and update it:
-					walker = controller.update_with_log
-					
+				controller.run do |walker|
 					if $TEAPOT_DEBUG_GRAPH
 						controller.nodes.each do |key, node|
 							puts "#{node.status} #{node.inspect}" unless node.clean?

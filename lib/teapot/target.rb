@@ -55,14 +55,14 @@ module Teapot
 			
 			# Calculate the dependency chain's ordered environments:
 			environments += chain.provisions.collect do |provision|
-				Environment.new(&provision.value)
+				Build::Environment.new(&provision.value)
 			end
 			
 			# Per-configuration package package environment:
 			environments << @package.options[:environment]
 			
 			# Merge all the environments together:
-			environment = Environment.combine(*environments)
+			environment = Build::Environment.combine(*environments)
 				
 			environment.merge do
 				default platforms_path configuration.platforms_path

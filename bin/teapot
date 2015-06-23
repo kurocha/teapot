@@ -95,7 +95,7 @@ module Application
 		end
 		
 		# Make the path:
-		root.mkpath
+		root.create
 		
 		Teapot::Repository.new(root).init!
 		
