@@ -22,7 +22,8 @@ require 'pathname'
 require 'teapot/dependency'
 require 'teapot/definition'
 
-require 'teapot/rulebook'
+require 'build/environment'
+require 'build/rulebook'
 
 module Teapot
 	class BuildError < StandardError
@@ -36,7 +37,7 @@ module Teapot
 			
 			@build = nil
 			
-			@rulebook = Rulebook.new
+			@rulebook = Build::Rulebook.new
 		end
 		
 		attr :rulebook

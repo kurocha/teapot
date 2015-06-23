@@ -20,8 +20,6 @@
 
 require 'set'
 
-require 'teapot/environment'
-
 module Teapot
 	module Dependency
 		class UnresolvedDependencyError < StandardError

@@ -22,10 +22,9 @@ require 'teapot/project'
 require 'teapot/target'
 require 'teapot/generator'
 require 'teapot/configuration'
-require 'teapot/rule'
 
-require 'teapot/name'
-
+require 'build/rule'
+require 'build/name'
 require 'build/files'
 
 module Teapot

@@ -22,7 +22,7 @@ require 'teapot/loader'
 require 'teapot/package'
 
 require 'teapot/metadata'
-require 'teapot/rulebook'
+require 'build/rulebook'
 
 module Teapot
 	TEAPOT_FILE = 'teapot.rb'.freeze
@@ -51,7 +51,7 @@ module Teapot
 			@generators = {}
 			@configurations = {}
 			@projects = {}
-			@rules = Rulebook.new
+			@rules = Build::Rulebook.new
 
 			@dependencies = []
 			@selection = Set.new

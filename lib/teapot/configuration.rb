@@ -24,7 +24,6 @@ require 'set'
 require 'yaml/store'
 
 require 'teapot/context'
-require 'teapot/environment'
 
 require 'teapot/definition'
 

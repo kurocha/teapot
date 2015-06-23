@@ -21,8 +21,6 @@
 require 'build/files'
 
 require 'teapot/context'
-require 'teapot/environment'
-
 require 'teapot/definition'
 
 module Teapot
