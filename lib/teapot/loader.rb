@@ -27,6 +27,9 @@ require 'build/rule'
 require 'build/name'
 require 'build/files'
 
+# Required for CPU count, etc.
+require 'system'
+
 module Teapot
 	LOADER_VERSION = "1.0.0"
 	MINIMUM_LOADER_VERSION = "1.0"
