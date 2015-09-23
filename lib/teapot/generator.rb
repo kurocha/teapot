@@ -66,7 +66,7 @@ module Teapot
 			source_path = Pathname(path) + source
 			destination_path = Pathname(context.root) + destination
 
-			destination_path.dirname.create
+			destination_path.dirname.mkpath
 
 			File.open(destination_path, mode) do |file|
 				text = File.read(source_path)

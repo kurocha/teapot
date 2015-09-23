@@ -88,8 +88,8 @@ module Application
 		source = ARGV.shift
 		packages = ARGV
 		
-		root = Pathname(Dir.getwd) + project_directory
-	
+		root = Build::Files::Path.join(Dir.getwd, project_directory)
+		
 		if root.exist?
 			abort "#{root} already exists!".color(:red)
 		end
