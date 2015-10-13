@@ -37,7 +37,7 @@ module Teapot
 				ordered = context.direct_targets(ordered)
 			end
 			
-			controller = Build::Controller.new do |controller|
+			controller = Build::Controller.new(logger: self.logger) do |controller|
 				ordered.each do |(target, dependency)|
 					environment = target.environment_for_configuration(context.configuration)
 					

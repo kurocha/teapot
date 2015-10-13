@@ -26,6 +26,8 @@ require 'rainbow'
 require 'rainbow/ext/string'
 require 'fileutils'
 
+require 'build/logger'
+
 module Teapot
 	class Controller
 		MAXIMUM_FETCH_DEPTH = 20
@@ -34,13 +36,21 @@ module Teapot
 			@root = Pathname(root)
 			@options = options
 			
-			@log_output = @options.fetch(:log, $stdout)
+			log_output = @options.fetch(:log, $stdout)
+			@logger = Logger.new(log_output)
+			@logger.formatter = Build::CompactFormatter.new
+			
+			if options[:verbose]
+				@logger.level = Logger::DEBUG
+			end
 			
 			@options[:maximum_fetch_depth] ||= MAXIMUM_FETCH_DEPTH
 		end
 		
+		attr :logger
+		
 		def log(*args)
-			@log_output.puts *args
+			@logger.info(*args)
 		end
 		
 		def context
