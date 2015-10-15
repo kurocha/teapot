@@ -37,11 +37,14 @@ module Teapot
 			@options = options
 			
 			log_output = @options.fetch(:log, $stdout)
+			
 			@logger = Logger.new(log_output)
 			@logger.formatter = Build::CompactFormatter.new
 			
 			if options[:verbose]
 				@logger.level = Logger::DEBUG
+			else
+				@logger.level = Logger::WARN
 			end
 			
 			@options[:maximum_fetch_depth] ||= MAXIMUM_FETCH_DEPTH

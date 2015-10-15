@@ -47,7 +47,7 @@ OPTIONS = Trollop::options do
 	
 	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
 	
-	opt :verbose, "Verbose output and error backtraces."
+	opt :verbose, "Verbose output and error backtraces.", :type => :boolean
 	opt :version, "Print version and exit", :short => :none
 end
 
