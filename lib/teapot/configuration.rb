@@ -23,67 +23,11 @@ require 'set'
 
 require 'yaml/store'
 
-require 'teapot/context'
-
-require 'teapot/definition'
+require_relative 'identity_set'
+require_relative 'context'
+require_relative 'definition'
 
 module Teapot
-	# Very similar to a set but uses a specific callback for object identity.
-	class IdentitySet
-		include Enumerable
-		
-		def initialize(contents = [], &block)
-			@table = {}
-			@identity = block
-			
-			contents.each do |object|
-				add(object)
-			end
-		end
-	
-		def initialize_dup(other)
-			@table = other.table.dup
-		end
-	
-		attr :table
-	
-		def add(object)
-			@table[@identity[object]] = object
-		end
-	
-		alias << add
-	
-		def remove(object)
-			@table.delete(@identity[object])
-		end
-	
-		def include?(object)
-			@table.include?(@identity[object])
-		end
-		
-		def each(&block)
-			@table.each_value(&block)
-		end
-	
-		def size
-			@table.size
-		end
-		
-		def clear
-			@table.clear
-		end
-		
-		alias count size
-	
-		def to_s
-			@table.to_s
-		end
-		
-		def self.by_name(contents = [])
-			self.new(contents, &:name)
-		end
-	end
-	
 	class Configuration < Definition
 		Import = Struct.new(:name, :explicit, :options)
 		
@@ -100,8 +44,8 @@ module Teapot
 				@options = DEFAULT_OPTIONS.dup
 			end
 
-			@packages = IdentitySet.by_name(packages)
-			@imports = IdentitySet.by_name
+			@packages = IdentitySet.new(packages)
+			@imports = IdentitySet.new
 
 			@visibility = :private
 		end
@@ -199,7 +143,7 @@ module Teapot
 			return false if @imports.count == 0
 			
 			# Avoid loops in the dependency chain:
-			imported = IdentitySet.new(&:name)
+			imported = IdentitySet.new
 			
 			# Enumerate all imports and attempt to resolve the packages:
 			begin
@@ -211,7 +155,7 @@ module Teapot
 				end
 				
 				imports = @imports
-				@imports = IdentitySet.new(&:name)
+				@imports = IdentitySet.new
 				
 				imports.each do |import|
 					named_configuration = @context.configurations[import.name]
