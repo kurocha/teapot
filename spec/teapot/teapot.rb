@@ -8,7 +8,7 @@ teapot_version "1.0.0"
 define_configuration 'test' do |configuration|
 	configuration.public!
 	
-	configuration[:source] = "../dream-framework"
+	configuration[:source] = "../kurocha"
 
 	configuration.require "variants"
 
