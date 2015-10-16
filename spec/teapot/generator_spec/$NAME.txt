@@ -1,0 +1,1 @@
+This $VARIABLE will be substituted.

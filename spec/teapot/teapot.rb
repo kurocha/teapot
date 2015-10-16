@@ -31,3 +31,18 @@ define_configuration 'test' do |configuration|
 
 	configuration.require "opencv"
 end
+
+define_generator "generator_spec" do |generator|
+	generator.generate do
+		directory = Files::Path.new('tmp')
+		
+		directory.mkpath
+		
+		substitutions = Substitutions.new
+		
+		substitutions['NAME'] = 'Alice'
+		substitutions['VARIABLE'] = '42'
+		
+		generator.copy('generator_spec', directory, substitutions)
+	end
+end
