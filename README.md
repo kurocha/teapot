@@ -23,7 +23,7 @@ Teapot doesn't have a centralised package management system. As such, this examp
 
 Firstly, create your project by running:
 
-	$ teapot create "My Project" https://github.com/dream-framework project
+	$ teapot create "My Project" https://github.com/kurocha project
 	$ cd my-project
 
 You will be asked to merge the project file. At present, merge tools are not very good and thus you may need to take a moment to review the changes. You want to keep most of the original file, but you would like to add the `define_target` blocks which are being added.
@@ -47,13 +47,13 @@ The resulting libraries will be framework dependent, but are typically located i
 
 For Linux (requires `clang-3.2` and `libstdc++-4.8`):
 
-	$ teapot create "Local Tagged Format" https://github.com/dream-framework platform-linux variants tagged-format
+	$ teapot create "Local Tagged Format" https://github.com/kurocha platform-linux variants tagged-format
 	$ cd local-tagged-format
 	$ teapot build Library/TaggedFormat variant-debug
 
 For Mac OS X (requires Xcode Command Line Tools):
 	
-	$ teapot create "Local Tagged Format" https://github.com/dream-framework platform-darwin-osx variants tagged-format
+	$ teapot create "Local Tagged Format" https://github.com/kurocha platform-darwin-osx variants tagged-format
 	$ cd local-tagged-format
 	$ teapot build Library/TaggedFormat variant-debug
 
