@@ -22,7 +22,7 @@ require 'teapot/context'
 require 'build/files/system'
 
 module Teapot::GeneratorSpec
-	ROOT = Build::Files::Path.new(__dir__)
+	ROOT = Build::Files::Path.new(__dir__) + "generator_spec"
 	TMP_PATH = ROOT + 'tmp'
 	ALICE_PATH = TMP_PATH + 'Alice.txt'
 	

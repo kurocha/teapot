@@ -34,7 +34,7 @@ end
 
 define_generator "generator_spec" do |generator|
 	generator.generate do
-		directory = Files::Path.new('tmp')
+		directory = context.root + 'tmp'
 		
 		directory.mkpath
 		
@@ -43,6 +43,12 @@ define_generator "generator_spec" do |generator|
 		substitutions['NAME'] = 'Alice'
 		substitutions['VARIABLE'] = '42'
 		
-		generator.copy('generator_spec', directory, substitutions)
+		generator.copy('template', directory, substitutions)
+	end
+end
+
+define_target "target_spec" do |target|
+	target.provides "Test/TargetSpec" do
+		append targets 'target_spec'
 	end
 end

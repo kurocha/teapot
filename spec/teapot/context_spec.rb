@@ -21,7 +21,7 @@
 require 'teapot/context'
 
 module Teapot::ContextSpec
-	ROOT = Build::Files::Path.new(__dir__)
+	ROOT = Build::Files::Path.new(__dir__) + "context_spec"
 	
 	describe Teapot::Context do
 		it "should load teapot.rb file" do
@@ -30,8 +30,7 @@ module Teapot::ContextSpec
 			# There is one configuration:
 			expect(context.configurations.count).to be == 1
 		
-			# No targets were defined:
-			expect(context.targets.count).to be == 0
+			expect(context.targets.count).to be == 1
 		
 			default_configuration = context.configuration
 		
