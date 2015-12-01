@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build", "~> 1.0.2"
 	
 	spec.add_dependency "process-daemon", "~> 0.5.5"
-	spec.add_dependency "process-group", "~> 0.2.1"
+	spec.add_dependency "process-group", "~> 1.0.0"
 	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
