@@ -28,6 +28,7 @@ require_relative 'context'
 require_relative 'definition'
 
 module Teapot
+	# A configuration represents a mapping between package/dependency names and actual source locations. Usually, there is only one configuration, but in some cases it is useful to have more than one, e.g. one for local development using local source code, one for continuous integration, and one for deployment.
 	class Configuration < Definition
 		Import = Struct.new(:name, :explicit, :options)
 		
