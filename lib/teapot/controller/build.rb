@@ -39,7 +39,7 @@ module Teapot
 			
 			controller = Build::Controller.new(logger: self.logger) do |controller|
 				ordered.each do |(target, dependency)|
-					environment = target.environment_for_configuration(context.configuration)
+					environment = target.environment(context.configuration)
 					
 					if target.build
 						controller.add_target(target, environment.flatten)

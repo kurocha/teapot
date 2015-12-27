@@ -111,7 +111,10 @@ module Teapot::DependencySpec
 			chain = Teapot::Dependency::chain(['apple'], ['salad'], [apple, bananna, salad])
 			expect(chain.unresolved).to be == []
 			expect(chain.conflicts).to be == {}
-			expect(chain.ordered).to be == [[apple, "apple"], [salad, "salad"]]
+			
+			expect(chain.ordered.size).to be == 2
+			expect(chain.ordered[0]).to be == Teapot::Dependency::Resolution.new(apple, "apple")
+			expect(chain.ordered[1]).to be == Teapot::Dependency::Resolution.new(salad, "salad")
 		end
 		
 		it "should select dependencies with high priority" do
@@ -129,7 +132,7 @@ module Teapot::DependencySpec
 			expect(chain.conflicts).to be == {}
 			
 			# Should select higher priority package by default:
-			expect(chain.ordered).to be == [[good_apple, 'apple']]
+			expect(chain.ordered).to be == [Teapot::Dependency::Resolution.new(good_apple, 'apple')]
 		end
 		
 		it "should expose direct dependencies" do
@@ -154,9 +157,9 @@ module Teapot::DependencySpec
 			expect(chain.unresolved).to be == []
 			expect(chain.conflicts).to be == {}
 			expect(chain.ordered).to be == [
-				[system, 'clang'],
-				[library, 'library'],
-				[application, 'application']
+				Teapot::Dependency::Resolution.new(system, 'clang'),
+				Teapot::Dependency::Resolution.new(library, 'library'),
+				Teapot::Dependency::Resolution.new(application, 'application'),
 			]
 		end
 	end

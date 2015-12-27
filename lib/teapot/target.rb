@@ -51,7 +51,7 @@ module Teapot
 		end
 		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
-		def environment_for_configuration(configuration)
+		def environment(configuration)
 			chain = provision_chain(configuration)
 			
 			environments = []
@@ -66,7 +66,14 @@ module Teapot
 			
 			# Merge all the environments together:
 			environment = Build::Environment.combine(*environments)
+			
+			environment.merge do
+				default platforms_path configuration.platforms_path
+			end
 		end
+		
+		# Legacy method name.
+		alias environment_for_configuration environment
 		
 		def build(&block)
 			if block_given?

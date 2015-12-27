@@ -34,6 +34,7 @@ module Teapot
 		
 		Provision = Struct.new(:value)
 		Alias = Struct.new(:dependencies)
+		Resolution = Struct.new(:provider, :name)
 		
 		def priority= value
 			@priority = value
@@ -151,7 +152,6 @@ module Teapot
 						explicit_providers = filter_by_priority(explicit_providers)
 					end
 					
-
 					if explicit_providers.size == 0
 						# No provider was explicitly specified, thus we require explicit conflict resolution:
 						@conflicts[dependency] = viable_providers
@@ -212,7 +212,7 @@ module Teapot
 					# puts "** Appending #{dependency} -> ordered".color(:magenta)
 					
 					# Add the provider to the ordered list.
-					@ordered << [provider, dependency]
+					@ordered << Resolution.new(provider, dependency)
 				end
 				
 				# This goes here because we want to ensure 1/ that if 

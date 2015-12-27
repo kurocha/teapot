@@ -28,20 +28,27 @@ module Teapot::TargetSpec
 		it "should generate environment for configuration" do
 			context = Teapot::Context.new(ROOT)
 			
-			target = context.targets['target_spec_with_dependencies']
+			target = context.targets['target_spec']
 			expect(target).to_not be nil
 			
-			chain = context.dependency_chain(["Test/TargetSpecWithDependencies"])
+			chain = context.dependency_chain(["Test/TargetSpec"])
+			expect(chain.providers.size).to be == 4
 			expect(chain.providers).to include target
 			
-			ordered = chain.ordered
-			expect(ordered.size).to be == 2
+			expect(chain.ordered.size).to be == 3
+			expect(chain.ordered[0].name).to be == 'Variant/debug'
+			expect(chain.ordered[1].name).to be == 'Platform/generic'
+			expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
+			expect(chain.ordered[2].provider).to be == target
 			
-			binding.pry
+			environment = target.environment(context.configuration)
+			# Environment#to_hash flattens the environment and evaluates all values:
+			hash = environment.to_hash
 			
-			ordered.each do |(target, dependency)|
-				environment = target.environment_for_configuration(context.configuration)
-			end
+			expect(hash[:variant]).to be == 'debug'
+			expect(hash[:platform_name]).to be == 'generic'
+			
+			expect(hash).to include(:buildflags, :linkflags, :build_prefix, :install_prefix, :platforms_path)
 		end
 	end
 end
