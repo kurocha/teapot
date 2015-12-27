@@ -34,7 +34,7 @@ module Teapot
 		
 		DEFAULT_OPTIONS = {
 			:import => true
-		}
+		}.freeze
 		
 		def initialize(context, package, name, packages = [], options = nil)
 			super context, package, name
