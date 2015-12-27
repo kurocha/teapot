@@ -40,6 +40,8 @@ module Teapot
 		end
 	end
 
+	# A context represents a specific root package instance with a given configuration and all related definitions.
+	# A context is stateful in the sense that package selection is specialized based on #select and #dependency_chain. These parameters are usually set up initially as part of the context setup.
 	class Context
 		def initialize(root, options = {})
 			@root = Path[root]
