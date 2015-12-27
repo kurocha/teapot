@@ -29,6 +29,10 @@ module Teapot
 			@description = nil
 		end
 
+		def pretty_print(pp)
+			pp.text self.to_s
+		end
+
 		# The context in which the definition was loaded:
 		attr :context
 		
@@ -55,7 +59,7 @@ module Teapot
 		end
 		
 		def to_s
-			"<#{self.class.name} #{@name.dump}>"
+			"#<#{self.class.name} #{@name.dump}>"
 		end
 	end
 end
