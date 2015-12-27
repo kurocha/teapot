@@ -66,12 +66,6 @@ module Teapot
 			
 			# Merge all the environments together:
 			environment = Build::Environment.combine(*environments)
-				
-			environment.merge do
-				default platforms_path configuration.platforms_path
-				default build_prefix {platforms_path + "cache/#{platform_name}-#{variant}"}
-				default install_prefix {platforms_path + "#{platform_name}-#{variant}"}
-			end
 		end
 		
 		def build(&block)
