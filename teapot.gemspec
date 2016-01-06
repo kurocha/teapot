@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 	development.
 	EOF
 	spec.summary       = %q{Teapot is a tool for managing complex cross-platform builds.}
-	spec.homepage      = "http://www.kyusu.org"
+	spec.homepage      = "http://www.teapot.nz"
 	spec.license       = "MIT"
 
 	spec.files         = `git ls-files`.split($/)
