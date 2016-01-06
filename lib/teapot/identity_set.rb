@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'forwardable'
+
 module Teapot
 	# Very similar to a set but uses a specific callback (defaults to &:name) for object identity.
 	class IdentitySet
@@ -52,7 +54,8 @@ module Teapot
 		end
 		
 		alias << add
-		def remove(object)
+		
+		def delete(object)
 			@table.delete(identity(object))
 		end
 		
@@ -64,26 +67,8 @@ module Teapot
 			@table.each_value(&block)
 		end
 		
-		def size
-			@table.size
-		end
+		extend Forwardable
 		
-		def empty?
-			@table.empty?
-		end
-		
-		def clear
-			@table.clear
-		end
-		
-		alias count size
-		
-		def [] key
-			@table[key]
-		end
-		
-		def to_s
-			@table.to_s
-		end
+		def_delegators :@table, :size, :empty?, :clear, :count, :[], :to_s, :inspect
 	end
 end

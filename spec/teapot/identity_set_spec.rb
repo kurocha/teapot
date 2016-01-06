@@ -67,12 +67,12 @@ module Teapot::IdentitySetSpec
 			expect(identity_set).to be_empty
 		end
 		
-		it "can remove items" do
+		it "can delete items" do
 			identity_set = bob_identity_set.dup
 			
 			expect(identity_set).to_not be_empty
 			
-			identity_set.remove(bob)
+			identity_set.delete(bob)
 			
 			expect(identity_set).to be_empty
 		end
