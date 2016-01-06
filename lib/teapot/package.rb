@@ -49,6 +49,15 @@ module Teapot
 			# Copy the options provided:
 			@options = options
 		end
+		
+		def freeze
+			@path.freeze
+			@name.freeze
+			@uri.freeze
+			@options.freeze
+			
+			super
+		end
 
 		attr :name
 		attr :path
@@ -79,7 +88,7 @@ module Teapot
 		end
 
 		def to_s
-			"<#{self.class.name} #{@name.dump} path=#{path}>"
+			"#<#{self.class} #{@name.dump} path=#{path}>"
 		end
 		
 		# Package may be used as hash key / in a set:

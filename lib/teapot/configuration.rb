@@ -51,6 +51,15 @@ module Teapot
 			@visibility = :private
 		end
 
+		def freeze
+			@options.freeze
+			@packages.freeze
+			@imports.freeze
+			@visibility.freeze
+			
+			super
+		end
+
 		# Controls how the configuration is exposed in the context.
 		attr :visibility
 
@@ -210,7 +219,7 @@ module Teapot
 		end
 		
 		def to_s
-			"<#{self.class.name} #{@name.dump} visibility=#{@visibility}>"
+			"#<#{self.class} #{@name.dump} visibility=#{@visibility}>"
 		end
 	end
 end

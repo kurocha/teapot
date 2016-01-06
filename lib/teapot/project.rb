@@ -31,6 +31,17 @@ module Teapot
 			@authors = []
 		end
 		
+		def freeze
+			@summary.freeze
+			@license.freeze
+			@website.freeze
+			@version.freeze
+			
+			@authors.freeze
+			
+			super
+		end
+		
 		attr :summary, true
 		attr :license, true
 		attr :website, true

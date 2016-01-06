@@ -28,11 +28,18 @@ module Teapot
 			
 			@description = nil
 		end
-
-		def pretty_print(pp)
-			pp.text self.to_s
+		
+		def freeze
+			@name.freeze
+			@description.freeze
+			
+			super
 		end
-
+		
+		def pretty_print(pp)
+			pp.text self.inspect
+		end
+		
 		# The context in which the definition was loaded:
 		attr :context
 		
@@ -58,12 +65,8 @@ module Teapot
 			@package.path
 		end
 		
-		def to_s
-			"#<#{self.class.name} #{@name.dump}>"
-		end
-		
 		def inspect
-			self.to_s
+			"#<#{self.class} #{@name.dump}>"
 		end
 	end
 end

@@ -20,10 +20,22 @@
 
 module Teapot
 	class Indentation
+		TAB = "\t".freeze
+		
 		def initialize(prefix, level, indent)
 			@prefix = prefix
 			@level = level
 			@indent = indent
+		end
+
+		def freeze
+			indentation
+			
+			@prefix.freeze
+			@level.freeze
+			@indent.freeze
+			
+			super
 		end
 
 		def indentation
@@ -47,13 +59,19 @@ module Teapot
 		end
 		
 		def self.none
-			self.new('', 0, "\t")
+			self.new('', 0, TAB)
 		end
 	end
 	
 	class Substitutions
 		def initialize(ordered = [])
 			@ordered = ordered
+		end
+		
+		def freeze
+			@ordered.freeze
+			
+			super
 		end
 		
 		def []= keyword, value
@@ -107,6 +125,13 @@ module Teapot
 
 			attr :keyword
 			attr :value
+			
+			def freeze
+				@keyword.freeze
+				@value.freeze
+				
+				super
+			end
 
 			def apply(text)
 				text.gsub(@keyword, @value)
@@ -129,6 +154,15 @@ module Teapot
 				@close = close
 
 				@indent = indent
+			end
+
+			def freeze
+				@keyword.freeze
+				@open.freeze
+				@close.freeze
+				@indent.freeze
+				
+				super
 			end
 
 			def line_pattern(prefix = '')
@@ -208,7 +242,8 @@ module Teapot
 			substitutions = self.new
 
 			# The user's current name:
-			substitutions['AUTHOR_NAME'] = `git config --global user.name`.chomp
+			substitutions['AUTHOR_NAME'] = context.metadata.user.name
+			substitutions['AUTHOR_EMAIL'] = context.metadata.user.email
 
 			substitutions['PROJECT_NAME'] = context.project.name
 			substitutions['LICENSE'] = context.project.license

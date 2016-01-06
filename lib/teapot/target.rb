@@ -42,6 +42,13 @@ module Teapot
 		
 		attr :rulebook
 		
+		def freeze
+			@build.freeze
+			@rulebook.freeze
+			
+			super
+		end
+		
 		# Given a configuration, compute the dependency chain for this target.
 		def provision_chain(configuration)
 			# Reduce the number of keystrokes for good health:
