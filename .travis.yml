@@ -11,6 +11,3 @@ rvm:
   - ruby-head
   - rbx-2
 env: COVERAGE=true
-matrix:
-  allow_failures:
-    - rvm: "rbx-2"
