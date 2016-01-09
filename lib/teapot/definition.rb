@@ -65,7 +65,7 @@ module Teapot
 			@package.path
 		end
 		
-		def inspect
+		def to_s
 			"#<#{self.class} #{@name.dump}>"
 		end
 	end
