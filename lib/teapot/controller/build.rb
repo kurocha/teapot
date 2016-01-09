@@ -38,7 +38,9 @@ module Teapot
 			end
 			
 			controller = Build::Controller.new(logger: self.logger) do |controller|
-				ordered.each do |(target, dependency)|
+				ordered.each do |resolution|
+					target = resolution.provider
+					
 					environment = target.environment(context.configuration)
 					
 					if target.build
