@@ -13,17 +13,17 @@ Teapot is a decentralised build tool for managing complex cross-platform project
 
 ## Installation
 
-Ensure that you already have a working install of Ruby 1.9.3+
+Ensure that you already have a working install of Ruby 2.0.0+ and run the following to install `teapot`:
 
 	$ gem install teapot
 
 ## Usage
 
-Teapot doesn't have a centralised package management system. As such, this example shows how to use an existing open source framework.
+Teapot doesn't have a default centralised package management system but there is a canonical one for developing cross-platform C++ applications. This example shows how to use this framework.
 
 Firstly, create your project by running:
 
-	$ teapot create "My Project" https://github.com/kurocha project
+	$ teapot create "My Project" https://github.com/kurocha platforms unit-test
 	$ cd my-project
 
 You will be asked to merge the project file. At present, merge tools are not very good and thus you may need to take a moment to review the changes. You want to keep most of the original file, but you would like to add the `define_target` blocks which are being added.
@@ -31,31 +31,156 @@ You will be asked to merge the project file. At present, merge tools are not ver
 In the resulting project directory that has been created, you can see the list of dependencies:
 
 	$ teapot list
+	Package root (from ./my-project):
+		#<Teapot::Configuration "my-project" visibility=private>
+			- references root from ./my-project
+			- clones platforms from https://github.com/kurocha/platforms
+			- clones unit-test from https://github.com/kurocha/unit-test
+			- clones variants from https://github.com/kurocha/variants
+			- clones platform-darwin-osx from https://github.com/kurocha/platform-darwin-osx
+			- clones platform-darwin-ios from https://github.com/kurocha/platform-darwin-ios
+			- clones build-clang from https://github.com/kurocha/build-clang
+			- clones build-darwin from https://github.com/kurocha/build-darwin
+	Package platforms (from ./my-project/teapot/packages/my-project/platforms):
+		#<Teapot::Configuration "platforms" visibility=public>
+			- clones platforms from https://github.com/kurocha/platforms
+			- references variants from ./my-project/teapot/packages/platforms/variants
+			- references platform-darwin-osx from ./my-project/teapot/packages/platforms/platform-darwin-osx
+			- references platform-darwin-ios from ./my-project/teapot/packages/platforms/platform-darwin-ios
+			- references build-clang from ./my-project/teapot/packages/platforms/build-clang
+			- references build-darwin from ./my-project/teapot/packages/platforms/build-darwin
+	Package unit-test (from ./my-project/teapot/packages/my-project/unit-test):
+		#<Teapot::Project "Unit Test">
+			- License: MIT License
+			- Version: 0.1.0
+			- Author: Samuel Williams
+		#<Teapot::Target "unit-test">
+			- depends on "Build/Files"
+			- depends on "Build/Clang"
+			- depends on :platform
+			- depends on "Language/C++11"
+			- provides "Library/UnitTest"
+		#<Teapot::Target "unit-test-tests">
+			- depends on "Build/Clang"
+			- depends on :platform
+			- depends on "Language/C++11"
+			- depends on "Library/UnitTest"
+			- provides "Test/UnitTest"
+		#<Teapot::Generator "Unit/Test">
+			Generates a basic test file in the project.
+			
+			usage: teapot generate Unit/Test Namespace::TestName
+		#<Teapot::Configuration "local" visibility=private>
+			- clones unit-test from https://github.com/kurocha/unit-test
+			- clones platforms from https://github.com/dream-framework/platforms
+			- clones build-files from https://github.com/dream-framework/build-files
+			- clones variants from https://github.com/dream-framework/variants
+			- clones platform-darwin-osx from https://github.com/dream-framework/platform-darwin-osx
+			- clones platform-darwin-ios from https://github.com/dream-framework/platform-darwin-ios
+			- clones build-clang from https://github.com/dream-framework/build-clang
+			- clones build-darwin from https://github.com/dream-framework/build-darwin
+		#<Teapot::Configuration "travis" visibility=private>
+			- clones unit-test from https://github.com/kurocha/unit-test
+			- clones platforms from https://github.com/dream-framework/platforms
+			- clones build-files from https://github.com/dream-framework/build-files
+			- clones variants from https://github.com/dream-framework/variants
+			- clones platform-darwin-osx from https://github.com/dream-framework/platform-darwin-osx
+			- clones platform-darwin-ios from https://github.com/dream-framework/platform-darwin-ios
+			- clones build-clang from https://github.com/dream-framework/build-clang
+			- clones build-darwin from https://github.com/dream-framework/build-darwin
+	Package variants (from ./my-project/teapot/packages/my-project/variants):
+		#<Teapot::Target "variant-generic">
+			- provides "Variant/generic"
+		#<Teapot::Target "variant-debug">
+			- depends on "Variant/generic"
+			- provides "Variant/debug"
+			- provides :variant => ["Variant/debug"]
+		#<Teapot::Target "variant-release">
+			- depends on "Variant/generic"
+			- provides "Variant/release"
+			- provides :variant => ["Variant/release"]
+	Package platform-darwin-osx (from ./my-project/teapot/packages/my-project/platform-darwin-osx):
+		#<Teapot::Target "platform-darwin-osx">
+			- depends on :variant
+			- provides "Platform/darwin-osx"
+			- provides :platform => ["Platform/darwin-osx"]
+			- provides "Language/C++11"
+			- provides "Library/OpenGL"
+			- provides "Library/OpenAL"
+			- provides "Library/z"
+			- provides "Library/bz2"
+	Package platform-darwin-ios (from ./my-project/teapot/packages/my-project/platform-darwin-ios):
+		#<Teapot::Target "platform-darwin-ios">
+			- depends on :variant
+			- provides "Platform/darwin-ios"
+			- provides :platform => ["Platform/darwin-ios"]
+			- provides "Language/C++11"
+			- provides "Library/OpenGLES"
+			- provides "Library/OpenGL" => ["Library/OpenGLES"]
+			- provides "Library/OpenAL"
+			- provides "Library/z"
+			- provides "Library/bz2"
+			- provides "Aggregate/Display"
+		#<Teapot::Target "platform-darwin-ios-simulator">
+			- depends on :variant
+			- provides "Platform/darwin-ios-simulator"
+			- provides :platform => ["Platform/darwin-ios-simulator"]
+			- provides "Language/C++11"
+			- provides "Library/OpenGLES"
+			- provides "Library/OpenGL" => ["Library/OpenGLES"]
+			- provides "Library/OpenAL"
+			- provides "Library/z"
+			- provides "Library/bz2"
+			- provides "Aggregate/Display"
+	Package build-clang (from ./my-project/teapot/packages/my-project/build-clang):
+		#<Teapot::Target "build-clang">
+			- depends on :linker
+			- provides "Build/Clang"
+			- provides "Language/C++11"
+	Package build-darwin (from ./my-project/teapot/packages/my-project/build-darwin):
+		#<Teapot::Target "build-darwin">
+			- provides :linker => ["Build/darwin"]
+			- provides "Build/darwin"
+	Elapsed Time: 0.007s
 
-To build your project:
+To only see things exported by your current project, you can run:
 
-	$ teapot build Application/MyProject
+	$ teapot list root
+
+The new project doesn't define any targets so we can do that now. Add the following to `teapot.rb`:
+
+	# Build Targets
+	
+	define_target "my-project-tests" do |target|
+		target.build do
+			run tests: 'UnitTest', source_files: target.package.path.glob("test/MyProject/**/*.cpp")
+		end
+		
+		target.depends :platform
+		target.depends "Language/C++11"
+		target.depends "Library/UnitTest"
+		
+		target.provides "Test/MyProject"
+	end
+
+We can now build and run unit tests (althoght there aren't any yet):
+
+	$ teapot build Test/MyProject
+	... snip ...
+	[Summary] 0 passed out of 0 total
 
 When you build, you need to specify dependencies. If you haven't specified all dependencies, they will be suggested to you.
 
-The resulting libraries will be framework dependent, but are typically located in
+The resulting executables and libraries will be framework dependent, but are typically located in:
 
 	$ cd teapot/$PROJECT_NAME/platforms/$PLATFORM_NAME/bin/
 	$ ./$PROJECT_NAME
 
 ### Example: Compiling TaggedFormat
 
-For Linux (requires `clang-3.2` and `libstdc++-4.8`):
-
-	$ teapot create "Local Tagged Format" https://github.com/kurocha platform-linux variants tagged-format
+	$ teapot create "Local Tagged Format" https://github.com/kurocha platforms tagged-format unit-test
 	$ cd local-tagged-format
-	$ teapot build Library/TaggedFormat variant-debug
-
-For Mac OS X (requires Xcode Command Line Tools):
-	
-	$ teapot create "Local Tagged Format" https://github.com/kurocha platform-darwin-osx variants tagged-format
-	$ cd local-tagged-format
-	$ teapot build Library/TaggedFormat variant-debug
+	$ teapot build Test/TaggedFormat variant-debug
 
 You need to make sure any basic tools, e.g. compilers, system libraries, are installed correctly before building. Consult the platform and library documentation for any dependencies.
 
