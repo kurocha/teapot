@@ -23,11 +23,13 @@ require 'teapot/controller'
 module Teapot
 	class Controller
 		def clean
+			configuration = context.configuration
+			
 			log "Removing #{configuration.platforms_path}...".color(:cyan)
-			FileUtils.rm_rf context.configuration.platforms_path
+			FileUtils.rm_rf configuration.platforms_path
 		
 			log "Removing #{configuration.packages_path}...".color(:cyan)
-			FileUtils.rm_rf context.configuration.packages_path
+			FileUtils.rm_rf configuration.packages_path
 		end
 	end
 end
