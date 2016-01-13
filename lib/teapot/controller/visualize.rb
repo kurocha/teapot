@@ -44,7 +44,10 @@ module Teapot
 				:color => 'grey',
 			}
 			
-			chain.ordered.each do |(provider, name)|
+			chain.ordered.each do |resolution|
+				provider = resolution.provider
+				name = resolution.name
+				
 				# Provider is the target that provides the dependency referred to by name.
 				node = g.add_node(name.to_s, base_attributes.dup)
 				
@@ -80,7 +83,10 @@ module Teapot
 			
 			# Put all dependencies at the same level so as to not make the graph too confusing.
 			done = Set.new
-			chain.ordered.each do |(provider, name)|
+			chain.ordered.each do |resolution|
+				provider = resolution.provider
+				name = resolution.name
+				
 				p = g.graphs[provider.name] || g.add_subgraph(provider.name, :rank => :same)
 				
 				provider.dependencies.each do |dependency|
@@ -94,7 +100,7 @@ module Teapot
 				end
 			end
 			
-			# Graphviz::output(g, :path => "graph.pdf")
+			Graphviz::output(g, :path => "graph.pdf")
 			
 			puts g.to_dot
 		end
