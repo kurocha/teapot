@@ -21,11 +21,42 @@
 require 'teapot/controller'
 require 'build/controller'
 
-$TEAPOT_DEBUG_GRAPH = false
 
 module Teapot
 	class Controller
 		class BuildFailedError < StandardError
+		end
+		
+		def show_dependencies(walker)
+			outputs = {}
+			
+			walker.tasks.each do |node, task|
+				# puts "Task #{task} (#{node}) outputs:"
+				
+				task.outputs.each do |path|
+					path = path.to_s
+					
+					# puts "\t#{path}"
+					
+					outputs[path] = task
+				end
+			end
+			
+			walker.tasks.each do |node, task|
+				dependencies = {}
+				task.inputs.each do |path|
+					path = path.to_s
+					
+					if generating_task = outputs[path]
+						dependencies[path] = generating_task
+					end
+				end
+				
+				puts "Task #{task.inspect} has #{dependencies.count} dependencies."
+				dependencies.each do |path, task|
+					puts "\t#{task.inspect}: #{path}"
+				end
+			end
 		end
 		
 		def build(dependency_names)
@@ -54,11 +85,7 @@ module Teapot
 			# We need to catch interrupt here, and exit with the correct exit code:
 			begin
 				controller.run do |walker|
-					if $TEAPOT_DEBUG_GRAPH
-						controller.nodes.each do |key, node|
-							puts "#{node.status} #{node.inspect}" unless node.clean?
-						end
-					end
+					show_dependencies(walker)
 					
 					# Only run once is asked:
 					unless @options[:continuous]
