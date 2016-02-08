@@ -61,9 +61,9 @@ module Teapot
 		
 		def build(dependency_names)
 			chain = context.dependency_chain(dependency_names, context.configuration)
-		
+			
 			ordered = chain.ordered
-		
+			
 			if @options[:only]
 				ordered = context.direct_targets(ordered)
 			end

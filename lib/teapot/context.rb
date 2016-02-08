@@ -101,9 +101,9 @@ module Teapot
 
 		def dependency_chain(dependency_names, configuration = @configuration)
 			configuration.load_all
-		
+			
 			select(dependency_names)
-		
+			
 			Dependency::chain(@selection, @dependencies, @targets.values)
 		end
 

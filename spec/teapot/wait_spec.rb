@@ -1,4 +1,4 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2016, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,35 +19,37 @@
 # THE SOFTWARE.
 
 require 'teapot/context'
+require 'build/controller'
 
 module Teapot::TargetSpec
-	ROOT = Build::Files::Path.new(__dir__) + "target_spec"
-	
+	ROOT = Build::Files::Path.join(__dir__, "wait_spec")
+		
 	describe Teapot::Target do
-		it "should generate environment for configuration" do
+		let(:logger) {Logger.new($stdout).tap{|logger| logger.level = Logger::DEBUG; logger.formatter = Build::CompactFormatter.new}}
+		
+		it "should wait on completion of dependent targets" do
 			context = Teapot::Context.new(ROOT)
 			
-			target = context.targets['target_spec']
-			expect(target).to_not be nil
+			a, b, c = context.targets.values_at('A', 'B', 'C')
 			
-			chain = context.dependency_chain(["Test/TargetSpec"])
-			expect(chain.providers.size).to be == 4
-			expect(chain.providers).to include target
+			chain = context.dependency_chain(["Teapot/C"])
+			ordered = chain.ordered
 			
-			expect(chain.ordered.size).to be == 3
-			expect(chain.ordered[0].name).to be == 'Variant/debug'
-			expect(chain.ordered[1].name).to be == 'Platform/generic'
-			expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
-			expect(chain.ordered[2].provider).to be == target
+			controller = Build::Controller.new(logger: logger) do |controller|
+				ordered.each do |resolution|
+					target = resolution.provider
+					
+					environment = target.environment(context.configuration)
+					
+					if target.build
+						controller.add_target(target, environment.flatten)
+					end
+				end
+			end
 			
-			environment = target.environment(context.configuration)
-			# Environment#to_hash flattens the environment and evaluates all values:
-			hash = environment.to_hash
+			controller.update
 			
-			expect(hash[:variant]).to be == 'debug'
-			expect(hash[:platform_name]).to be == 'generic'
-			
-			expect(hash).to include(:buildflags, :linkflags, :build_prefix, :install_prefix, :platforms_path)
+			puts $log
 		end
 	end
 end
