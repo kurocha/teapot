@@ -68,7 +68,7 @@ module Teapot
 				ordered = context.direct_targets(ordered)
 			end
 			
-			controller = Build::Controller.new(logger: self.logger) do |controller|
+			controller = Build::Controller.new(logger: self.logger, limit: @options[:limit]) do |controller|
 				ordered.each do |resolution|
 					target = resolution.provider
 					
@@ -85,7 +85,7 @@ module Teapot
 			# We need to catch interrupt here, and exit with the correct exit code:
 			begin
 				controller.run do |walker|
-					show_dependencies(walker)
+					# show_dependencies(walker)
 					
 					# Only run once is asked:
 					unless @options[:continuous]
