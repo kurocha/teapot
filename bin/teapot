@@ -34,23 +34,6 @@ require 'teapot/repository'
 require 'time'
 require 'trollop'
 
-OPTIONS = Trollop::options do
-	version "teapot v#{Teapot::VERSION}"
-	
-	opt :configuration, "Specify a specific build configuration.", :type => :string
-	
-	opt :only, "Only compiled direct dependencies."
-	opt :continuous, "Run the build graph continually.", :type => :boolean, :short => :n
-	
-	opt :in, "Work in the given directory.", :type => :string
-	opt :unlock, "Don't use package lockfile when fetching."
-	
-	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
-	
-	opt :verbose, "Verbose output and error backtraces.", :type => :boolean
-	opt :version, "Print version and exit", :short => :none
-end
-
 def make_controller(root = nil)
 	root ||= OPTIONS[:in] || Dir.getwd
 	Teapot::Controller.new(root, OPTIONS)
@@ -66,10 +49,14 @@ module Application
 		make_controller.fetch
 	end
 	
-	def self.build(targets = ARGV)
+	def self.build(targets = ARGV.slice!(0..-1))
 		make_controller.build(targets)
 	end
-		
+	
+	def self.exec(target = ARGV.shift)
+		make_controller.build([target])
+	end
+	
 	def self.list(only = ARGV)
 		if only.size > 0
 			make_controller.list(Set.new(only))
@@ -86,7 +73,7 @@ module Application
 		project_name = ARGV.shift
 		project_directory = project_name.gsub(/\s+/, '-').downcase
 		source = ARGV.shift
-		packages = ARGV
+		packages = ARGV.slice!(0..-1)
 		
 		root = Build::Files::Path.join(Dir.getwd, project_directory)
 		
@@ -108,6 +95,10 @@ module Application
 	end
 end
 
+def valid_actions
+	(Application.public_methods - Module.methods).collect(&:to_s)
+end
+
 def track_time
 	start_time = Time.now
 	
@@ -117,10 +108,31 @@ ensure
 	elapsed_time = end_time - start_time
 	
 	$stdout.flush
-	$stderr.puts ("Elapsed Time: %0.3fs" % elapsed_time).color(:magenta)
+	$stderr.puts Rainbow("Elapsed Time: %0.3fs" % elapsed_time).magenta
 end
 
-valid_actions = (Application.public_methods - Module.methods).collect(&:to_s)
+OPTIONS = Trollop::options do
+	banner Rainbow("Teapot: a decentralised package manager and build tool.").bright.blue
+	version "teapot v#{Teapot::VERSION}"
+	
+	opt :configuration, "Specify a specific build configuration.", :type => :string
+	
+	opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
+	
+	opt :only, "Only compiled direct dependencies."
+	opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
+	
+	opt :in, "Work in the given directory.", :type => :string
+	opt :unlock, "Don't use package lockfile when fetching."
+	
+	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
+	
+	opt :verbose, "Verbose output and error backtraces.", :type => :boolean
+	opt :version, "Print version and exit", :short => :none
+	
+	opt :help, "Show this message"
+end
+
 action = ARGV.shift
 
 # Check that the command was invoked correctly...
