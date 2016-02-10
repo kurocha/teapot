@@ -28,7 +28,7 @@ module Teapot::TargetSpec
 			context = Teapot::Context.new(ROOT)
 			
 			target = context.targets['target_spec']
-			expect(target).to_not be nil
+			expect(target).to_not be == nil
 			
 			chain = context.dependency_chain(["Test/TargetSpec"])
 			expect(chain.providers.size).to be == 4

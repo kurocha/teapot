@@ -21,7 +21,7 @@
 require 'teapot/context'
 require 'build/controller'
 
-module Teapot::TargetSpec
+module Teapot::WaitSpec
 	ROOT = Build::Files::Path.join(__dir__, "wait_spec")
 		
 	describe Teapot::Target do

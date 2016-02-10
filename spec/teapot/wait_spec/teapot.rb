@@ -6,7 +6,7 @@ $log = []
 define_target "A" do |target|
 	target.build do
 		$log << :a_enter
-		run! "sleep 5"
+		run! "sleep 1"
 		$log << :a_exit
 	end
 	
@@ -16,7 +16,7 @@ end
 define_target "B" do |target|
 	target.build do
 		$log << :b_enter
-		run! "sleep 5"
+		run! "sleep 1"
 		$log << :b_exit
 	end
 	
@@ -27,7 +27,7 @@ define_target "C" do |target|
 	target.build do
 		$log << :c_enter
 		# This should not execute until A and B have completed.
-		run! "sleep 5"
+		run! "sleep 1"
 		$log << :c_exit
 	end
 	
