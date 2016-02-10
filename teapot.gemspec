@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "graphviz", "~> 0.2.0"
 	
-	spec.add_dependency "build", "~> 1.0.4"
+	spec.add_dependency "build", "~> 1.0.6"
 	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
