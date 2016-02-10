@@ -26,14 +26,14 @@ Gem::Specification.new do |spec|
 	
 	spec.has_rdoc = 'yard'
 	
-	spec.required_ruby_version = '>= 2.0'
+	spec.required_ruby_version = '>= 2.1'
 	
 	spec.add_dependency "rainbow", "~> 2.0.0"
 	spec.add_dependency "trollop", "~> 2.1"
 	
 	spec.add_dependency "system", "~> 0.1.3"
 	
-	spec.add_dependency "graphviz", "~> 0.2.0"
+	spec.add_dependency "graphviz", "~> 0.3.0"
 	
 	spec.add_dependency "build", "~> 1.0.6"
 	
