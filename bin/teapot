@@ -53,6 +53,7 @@ module Application
 		make_controller.build(targets)
 	end
 	
+	# TODO: This needs to be modified to handle multiple targets, e.g. 'Run/Lab variant-debug'
 	def self.exec(target = ARGV.shift)
 		make_controller.build([target])
 	end
