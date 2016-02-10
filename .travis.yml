@@ -4,10 +4,14 @@ before_install:
   # For testing purposes:
   - git config --local user.name "Samuel Williams"
 rvm:
-  - 2.0.0
   - 2.1.8
   - 2.2.4
   - 2.3.0
   - ruby-head
   - rbx-2
 env: COVERAGE=true
+matrix:
+  fast_finish: true
+  allow_failures:
+    - rvm: ruby-head
+    - rvm: "rbx-2"
