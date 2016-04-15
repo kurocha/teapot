@@ -18,9 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/definition'
-require 'teapot/substitutions'
-require 'teapot/merge'
+require_relative 'definition'
+require_relative 'substitutions'
+require_relative 'merge'
 
 require 'tempfile'
 

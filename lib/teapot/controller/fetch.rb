@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/controller'
-require 'teapot/repository'
+require_relative '../controller'
+require_relative '../repository'
 
 module Teapot
 	class Controller

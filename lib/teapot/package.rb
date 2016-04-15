@@ -20,8 +20,8 @@
 
 require 'build/files'
 
-require 'teapot/context'
-require 'teapot/definition'
+require_relative 'context'
+require_relative 'definition'
 
 module Teapot
 	Path = Build::Files::Path

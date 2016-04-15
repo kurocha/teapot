@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/controller'
-require 'teapot/controller/fetch'
+require_relative '../controller'
+require_relative 'fetch'
 
 require 'build/name'
 

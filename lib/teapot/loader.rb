@@ -18,10 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/project'
-require 'teapot/target'
-require 'teapot/generator'
-require 'teapot/configuration'
+require_relative 'project'
+require_relative 'target'
+require_relative 'generator'
+require_relative 'configuration'
 
 require 'build/rule'
 require 'build/name'

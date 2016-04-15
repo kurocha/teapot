@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/configuration'
-require 'teapot/version'
+require_relative 'configuration'
+require_relative 'version'
 
 require 'uri'
 require 'rainbow'

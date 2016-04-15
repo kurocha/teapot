@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 
 require 'pathname'
-require 'teapot/dependency'
-require 'teapot/definition'
+require_relative 'dependency'
+require_relative 'definition'
 
 require 'build/environment'
 require 'build/rulebook'

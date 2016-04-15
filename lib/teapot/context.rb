@@ -18,10 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/loader'
-require 'teapot/package'
+require_relative 'loader'
+require_relative 'package'
+require_relative 'metadata'
 
-require 'teapot/metadata'
 require 'build/rulebook'
 
 module Teapot
