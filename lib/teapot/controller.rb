@@ -62,5 +62,10 @@ module Teapot
 				:configuration => @options[:configuration]
 			)
 		end
+		
+		# Reload the current context, e.g. if it's been modified by a generator.
+		def reload!
+			@context = nil
+		end
 	end
 end

@@ -50,11 +50,16 @@ module Teapot
 				output.puts "end", ''
 			end
 
-			# Fetch all packages:
-			fetch
+			# Fetch the initial packages:
+			self.fetch
 
 			# Generate the default project if it is possible to do so:
 			generate_project(project_name)
+			
+			self.reload!
+			
+			# Fetch any additional packages:
+			self.fetch
 		end
 		
 		private
