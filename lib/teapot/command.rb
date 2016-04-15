@@ -41,7 +41,7 @@ module Teapot
 		end
 		
 		def controller(root = nil)
-			Teapot::Controller.new(root || @options[:in], @options)
+			Teapot::Controller.new(root || @options[:in] || Dir.getwd, @options)
 		end
 		
 		def invoke
