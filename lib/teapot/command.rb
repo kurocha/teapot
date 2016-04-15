@@ -30,6 +30,7 @@ require_relative 'controller/visualize'
 require_relative 'repository'
 
 require 'trollop'
+require 'pry'
 
 module Teapot
 	# This module implements all top-level teapot commands.
@@ -87,9 +88,9 @@ module Teapot
 		
 		def create
 			project_name, source, *packages = @arguments
-			project_path = @options.fetch(:in) {project_name.gsub(/\s+/, '-').downcase}
+			project_path = @options[:in] || project_name.gsub(/\s+/, '-').downcase
 			
-			root = Build::Files::Path.join(Dir.getwd, project_path)
+			root = Build::Files::Path.expand(project_path)
 			
 			if root.exist?
 				abort "#{root} already exists!".color(:red)

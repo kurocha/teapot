@@ -31,7 +31,10 @@ require 'build/files'
 require 'system'
 
 module Teapot
-	LOADER_VERSION = "1.0.0"
+	# Cannot load packages newer than this:
+	LOADER_VERSION = "1.1"
+	
+	# Cannot load packages older than this:
 	MINIMUM_LOADER_VERSION = "1.0"
 	
 	class IncompatibleTeapotError < StandardError

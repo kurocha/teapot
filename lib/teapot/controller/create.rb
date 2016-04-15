@@ -31,9 +31,9 @@ module Teapot
 			log "Creating project named #{project_name} at path #{@root}...".color(:cyan)
 			
 			File.open(@root + TEAPOT_FILE, "w") do |output|
-				output.puts "\# Teapot configuration generated at #{Time.now.to_s}", ''
+				output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''
 			
-				output.puts "required_version #{VERSION.dump}", ''
+				output.puts "required_version #{LOADER_VERSION.dump}", ''
 			
 				output.puts "\# Build Targets", ''
 			
