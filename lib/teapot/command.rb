@@ -79,6 +79,8 @@ module Teapot
 			controller.build(@arguments)
 		end
 		
+		alias brew build
+		
 		def visualize
 			controller.visualize(@arguments)
 		end
