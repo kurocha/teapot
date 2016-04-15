@@ -20,85 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/controller'
-require 'teapot/controller/build'
-require 'teapot/controller/clean'
-require 'teapot/controller/create'
-require 'teapot/controller/fetch'
-require 'teapot/controller/generate'
-require 'teapot/controller/list'
-require 'teapot/controller/visualize'
-
-require 'teapot/repository'
-
+require 'teapot/command'
 require 'time'
-require 'trollop'
-
-def make_controller(root = nil)
-	root ||= OPTIONS[:in] || Dir.getwd
-	Teapot::Controller.new(root, OPTIONS)
-end
-
-# It would be nice to make this code a bit simpler, perhaps moving some parts of it to lib/teapot/application/{function}.rb
-module Application
-	def self.clean
-		make_controller.clean
-	end
-	
-	def self.fetch
-		make_controller.fetch
-	end
-	
-	def self.build(targets = ARGV.slice!(0..-1))
-		make_controller.build(targets)
-	end
-	
-	# TODO: This needs to be modified to handle multiple targets, e.g. 'Run/Lab variant-debug'
-	def self.exec(target = ARGV.shift)
-		make_controller.build([target])
-	end
-	
-	def self.list(only = ARGV)
-		if only.size > 0
-			make_controller.list(Set.new(only))
-		else
-			make_controller.list
-		end
-	end
-	
-	def self.visualize(targets = ARGV)
-		make_controller.visualize(targets)
-	end
-	
-	def self.create
-		project_name = ARGV.shift
-		project_directory = project_name.gsub(/\s+/, '-').downcase
-		source = ARGV.shift
-		packages = ARGV.slice!(0..-1)
-		
-		root = Build::Files::Path.join(Dir.getwd, project_directory)
-		
-		if root.exist?
-			abort "#{root} already exists!".color(:red)
-		end
-		
-		# Make the path:
-		root.create
-		
-		Teapot::Repository.new(root).init!
-		
-		make_controller(root).create(project_name, source, packages)
-	end
-	
-	def self.generate(arguments = ARGV)
-		generator_name = arguments.shift
-		make_controller.generate(generator_name, arguments, OPTIONS[:force])
-	end
-end
-
-def valid_actions
-	(Application.public_methods - Module.methods).collect(&:to_s)
-end
 
 def track_time
 	start_time = Time.now
@@ -112,40 +35,17 @@ ensure
 	$stderr.puts Rainbow("Elapsed Time: %0.3fs" % elapsed_time).magenta
 end
 
-OPTIONS = Trollop::options do
-	banner Rainbow("Teapot: a decentralised package manager and build tool.").bright.blue
-	version "teapot v#{Teapot::VERSION}"
-	
-	opt :configuration, "Specify a specific build configuration.", :type => :string
-	
-	opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
-	
-	opt :only, "Only compiled direct dependencies."
-	opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
-	
-	opt :in, "Work in the given directory.", :type => :string
-	opt :unlock, "Don't use package lockfile when fetching."
-	
-	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
-	
-	opt :verbose, "Verbose output and error backtraces.", :type => :boolean
-	opt :version, "Print version and exit", :short => :none
-	
-	opt :help, "Show this message"
-end
-
-action = ARGV.shift
-
-# Check that the command was invoked correctly...
-unless action and valid_actions.include?(action)
-	puts "You must specify an action from: #{valid_actions.join(', ')}".color(:red)
-	
-	exit -1
+# Get the arguments up until "--"
+if split_index = ARGV.index('--')
+	arguments = ARGV.shift(split_index)
+	ARGV.shift # remove the "--"
+else
+	arguments = ARGV
 end
 
 track_time do
 	begin
-		Application.send(action.to_sym)
+		Teapot::Command.parse(arguments).invoke
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
 		$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
