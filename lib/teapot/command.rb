@@ -36,7 +36,7 @@ module Teapot
 	class Command
 		# This function handles the sub-command logic where there migth be additional options.
 		def self.parse(arguments, options)
-			command = self.new(arguments.options)
+			command = self.new(arguments, options)
 			
 			if additional_options = yield(command.action, command.arguments)
 				command.merge!(additional_options)
@@ -113,8 +113,6 @@ module Teapot
 		action def build
 			controller.build(@arguments)
 		end
-		
-		action alias brew build
 		
 		action def visualize
 			controller.visualize(@arguments)

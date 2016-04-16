@@ -44,7 +44,7 @@ def parse_argv
 end
 
 def parse_command(arguments)
-	OPTIONS = Trollop::options(ARGUMENTS) do
+	options = Trollop::options(arguments) do
 		banner Rainbow("Teapot: a decentralised package manager and build tool.").bright.blue
 		version "teapot #{Teapot::VERSION}"
 		
@@ -56,24 +56,51 @@ def parse_command(arguments)
 		opt :version, "Print version and exit", :short => :none
 		opt :help, "Show this message"
 		
-		stop_on Teapot::Command.valid_actions
+		text "Valid commands: #{Rainbow(Teapot::Command.valid_actions.sort.join(', ')).bright}"
+		text "For more information, run: teapot $command --help"
+		
+		stop_on Teapot::Command.valid_actions.collect(&:to_s)
 	end
+	
+	Trollop.die("No action specified") if arguments.empty?
 
-	command = Teapot::Commands.parse(ARGV, OPTIONS) do |action, arguments|
+	command = Teapot::Command.parse(arguments, options) do |action, arguments|
 		case action
+		when :clean
+			Trollop::options(arguments) do
+				banner "teapot clean"
+			end
+		when :list
+			Trollop::options(arguments) do
+				banner "teapot list [$targets...]"
+			end
 		when :fetch
 			Trollop::options(arguments) do
+				banner "teapot fetch"
 				opt :unlock, "Don't use package lockfile when fetching."
+			end
+		when :generate
+			Trollop::options(arguments) do
+				banner "teapot generate $generator_name $arguments..."
+				opt :force, "Forcefully make changes to source code even if there are uncommitted changes.", :type => :boolean
 			end
 		when :build
 			Trollop::options(arguments) do
+				banner "teapot build [options] $targets -- $ARGV"
 				opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
 				opt :only, "Only compiled direct dependencies."
 				opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
 			end
-		when :generate
+		when :visualize
 			Trollop::options(arguments) do
-				opt :force, "Forcefully make changes to source code even if they are destructive.", :type => :boolean
+				banner "teapot build [options] $targets -- $ARGV"
+				opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
+				opt :only, "Only compiled direct dependencies."
+				opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
+			end
+		when :create
+			Trollop::options(arguments) do
+				banner "teapot create $project_name $source $main_package [$additional_packages]"
 			end
 		end
 	end
@@ -81,11 +108,12 @@ def parse_command(arguments)
 	return command
 end
 
+# Get the arguments up until "--"
+arguments = parse_argv
+command = parse_command(arguments)
+
 track_time do
 	begin
-		# Get the arguments up until "--"
-		arguments = parse_argv
-		command = parse_command(arguments)
 		command.invoke
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
