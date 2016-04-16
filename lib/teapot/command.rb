@@ -29,9 +29,6 @@ require_relative 'controller/visualize'
 
 require_relative 'repository'
 
-require 'trollop'
-require 'pry'
-
 module Teapot
 	class Command
 		# This function handles the sub-command logic where there migth be additional options.
@@ -125,7 +122,7 @@ module Teapot
 			root = Build::Files::Path.expand(project_path)
 			
 			if root.exist?
-				abort "#{root} already exists!".color(:red)
+				raise ArgumentError.new("#{root} already exists!")
 			end
 			
 			# Make the path:
