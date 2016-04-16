@@ -29,108 +29,131 @@ require_relative 'controller/visualize'
 
 require_relative 'repository'
 
+require_relative '../flop'
+
 module Teapot
-	class Command
-		# This function handles the sub-command logic where there migth be additional options.
-		def self.parse(arguments, options)
-			command = self.new(arguments, options)
+	module Command
+		class Create < Flop::Command
+			self.description = "Create a new teapot package using the specified repository."
 			
-			if additional_options = yield(command.action, command.arguments)
-				command.merge!(additional_options)
+			consumes :project_name
+			consumes :source
+			consumes :packages, type: Array
+			
+			def invoke(parent)
+				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
+				
+				root = Build::Files::Path.expand(@project_path)
+				
+				if root.exist?
+					raise ArgumentError.new("#{root} already exists!")
+				end
+				
+				# Make the path:
+				root.create
+				
+				Teapot::Repository.new(root).init!
+				
+				parent.controller(root).create(@project_name, @source, @packages)
+			end
+		end
+
+		class Generate < Flop::Command
+			self.description = "Run a generator to create files in your project."
+			
+			option '-f | --force', "Force the generator to run even if the current work-tree is dirty.", key: :force
+			
+			consumes :generator_name
+			consumes :arguments, type: Array
+			
+			def invoke(parent)
+				generator_name, *arguments = @arguments
+				
+				parent.controller.generate(@generator_name, @arguments, @force)
+			end
+		end
+
+		class Fetch < Flop::Command
+			self.description = "Fetch remote packages according to the specified configuration."
+			
+			option '--update', "Update dependencies to the latest versions.", key: :update
+			option '--no-recursion', "Don't recursively fetch dependencies.", key: :recursion
+			
+			def invoke(parent)
+				# TODO: Need to modify controller to pass arguments through.
+				parent.controller.fetch
+			end
+		end
+
+		class List < Flop::Command
+			self.description = "List provisions and dependencies of the specified package."
+			
+			consumes :packages, type: Array
+			
+			def invoke(parent)
+				only = nil
+				
+				if @packages
+					only = Set.new(@packages)
+				end
+				
+				parent.controller.list(only)
+			end
+		end
+
+		class Build < Flop::Command
+			self.description = "Build the specified target."
+			
+			option '-l <int>', "Limit build the given number of concurrent processes.", key: :limit
+			option '--only', "Only compile direct dependencies.", key: :only
+			option '--continuous', "Run the build graph continually (experimental).", key: :continuous
+			
+			split :argv, marker: '--'
+			consumes :targets, type: Array
+			
+			def invoke(parent)
+				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
+				ARGV.replace(@argv)
+				
+				controller.build(@targets)
+			end
+		end
+
+		class Clean < Flop::Command
+			self.description = "Delete everything in the teapot directory."
+			
+			def invoke(parent)
+				controller.clean
+			end
+		end
+
+		class Help < Flop::Command
+			self.description = "Show detailed information about a specified command."
+		end
+
+		class Top < Flop::Command
+			self.description = "A decentralised package manager and build tool."
+			#version "1.0.0"
+			
+			option '-c', "Specify a specific build configuration", key: :configuration
+			option '-i <path>', "Work in the given root directory", key: :root
+			option '--verbose | --quiet', "Verbose output for debugging.", key: :logging
+			
+			nested '<command>',
+				'create' => Create,
+				'generate' => Generate,
+				'fetch' => Fetch,
+				'list' => List,
+				'build' => Build,
+				'clean' => Clean
+			
+			def controller(root = nil, **options)
+				Teapot::Controller.new(root || @root || Dir.getwd, **options)
 			end
 			
-			return command
-		end
-		
-		def initialize(arguments, options)
-			action, *@arguments = arguments
-			@action = action.to_sym
-			
-			@options = options
-		end 
-		
-		attr :action
-		attr :arguments
-		attr :options
-		
-		def merge!(options)
-			@options.merge(options)
-		end
-		
-		def controller(root = nil)
-			Teapot::Controller.new(root || @options[:in] || Dir.getwd, @options)
-		end
-		
-		def invoke
-			raise NoMethodError.new("no such action #{@action}", @action) unless valid_action?(@action)
-			
-			self.send(@action)
-		end
-		
-		def self.invoke(*args)
-			self.new(*args).invoke
-		end
-		
-		def self.valid_actions
-			@valid_actions ||= Set.new
-		end
-		
-		def self.action(name)
-			valid_actions << name
-		end
-		
-		def valid_action?(name)
-			self.class.valid_actions.include?(@action)
-		end
-		
-		action def clean
-			controller.clean
-		end
-		
-		action def fetch
-			controller.fetch
-		end
-		
-		action def list
-			only = nil
-			
-			if @arguments.any?
-				only = Set.new(@arguments)
+			def invoke
+				@command.invoke(self)
 			end
-			
-			controller.list(only)
-		end
-		
-		action def generate
-			generator_name, *arguments = @arguments
-			
-			controller.generate(generator_name, arguments, @options[:force])
-		end
-		
-		action def build
-			controller.build(@arguments)
-		end
-		
-		action def visualize
-			controller.visualize(@arguments)
-		end
-		
-		action def create
-			project_name, source, *packages = @arguments
-			project_path = @options[:in] || project_name.gsub(/\s+/, '-').downcase
-			
-			root = Build::Files::Path.expand(project_path)
-			
-			if root.exist?
-				raise ArgumentError.new("#{root} already exists!")
-			end
-			
-			# Make the path:
-			root.create
-			
-			Teapot::Repository.new(root).init!
-			
-			controller(root).create(project_name, source, packages)
 		end
 	end
 end
