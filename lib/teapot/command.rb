@@ -33,11 +33,31 @@ require 'trollop'
 require 'pry'
 
 module Teapot
-	# This module implements all top-level teapot commands.
 	class Command
+		# This function handles the sub-command logic where there migth be additional options.
+		def self.parse(arguments, options)
+			command = self.new(arguments.options)
+			
+			if additional_options = yield(command.action, command.arguments)
+				command.merge!(additional_options)
+			end
+			
+			return command
+		end
+		
 		def initialize(arguments, options)
-			@action, *@arguments = arguments
+			action, *@arguments = arguments
+			@action = action.to_sym
+			
 			@options = options
+		end 
+		
+		attr :action
+		attr :arguments
+		attr :options
+		
+		def merge!(options)
+			@options.merge(options)
 		end
 		
 		def controller(root = nil)
@@ -45,22 +65,36 @@ module Teapot
 		end
 		
 		def invoke
-			if @action == "invoke"
-				fail "The meaning of life is 42."
-			end
+			raise NoMethodError.new("no such action #{@action}", @action) unless valid_action?(@action)
 			
 			self.send(@action)
 		end
 		
-		def clean
+		def self.invoke(*args)
+			self.new(*args).invoke
+		end
+		
+		def self.valid_actions
+			@valid_actions ||= Set.new
+		end
+		
+		def self.action(name)
+			valid_actions << name
+		end
+		
+		def valid_action?(name)
+			self.class.valid_actions.include?(@action)
+		end
+		
+		action def clean
 			controller.clean
 		end
 		
-		def fetch
+		action def fetch
 			controller.fetch
 		end
 		
-		def list
+		action def list
 			only = nil
 			
 			if @arguments.any?
@@ -70,23 +104,23 @@ module Teapot
 			controller.list(only)
 		end
 		
-		def generate
+		action def generate
 			generator_name, *arguments = @arguments
 			
 			controller.generate(generator_name, arguments, @options[:force])
 		end
 		
-		def build
+		action def build
 			controller.build(@arguments)
 		end
 		
-		alias brew build
+		action alias brew build
 		
-		def visualize
+		action def visualize
 			controller.visualize(@arguments)
 		end
 		
-		def create
+		action def create
 			project_name, source, *packages = @arguments
 			project_path = @options[:in] || project_name.gsub(/\s+/, '-').downcase
 			

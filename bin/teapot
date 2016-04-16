@@ -43,39 +43,55 @@ def parse_argv
 	end
 end
 
-# Get the arguments up until "--"
-ARGUMENTS = parse_argv
+def parse_command(arguments)
+	OPTIONS = Trollop::options(ARGUMENTS) do
+		banner Rainbow("Teapot: a decentralised package manager and build tool.").bright.blue
+		version "teapot #{Teapot::VERSION}"
+		
+		opt :configuration, "Specify a specific build configuration.", :type => :string
+		opt :in, "Work in the given directory.", :type => :string
+		
+		opt :verbose, "Verbose output and error backtraces.", :type => :boolean
+		
+		opt :version, "Print version and exit", :short => :none
+		opt :help, "Show this message"
+		
+		stop_on Teapot::Command.valid_actions
+	end
 
-OPTIONS = Trollop::options(ARGUMENTS) do
-	banner Rainbow("Teapot: a decentralised package manager and build tool.").bright.blue
-	version "teapot #{Teapot::VERSION}"
+	command = Teapot::Commands.parse(ARGV, OPTIONS) do |action, arguments|
+		case action
+		when :fetch
+			Trollop::options(arguments) do
+				opt :unlock, "Don't use package lockfile when fetching."
+			end
+		when :build
+			Trollop::options(arguments) do
+				opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
+				opt :only, "Only compiled direct dependencies."
+				opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
+			end
+		when :generate
+			Trollop::options(arguments) do
+				opt :force, "Forcefully make changes to source code even if they are destructive.", :type => :boolean
+			end
+		end
+	end
 	
-	opt :configuration, "Specify a specific build configuration.", :type => :string
-	
-	opt :limit, "Limit build to <i> concurrent processes at once where possible", :type => :integer
-	
-	opt :only, "Only compiled direct dependencies."
-	opt :continuous, "Run the build graph continually (experimental).", :type => :boolean, :short => :n
-	
-	opt :in, "Work in the given directory.", :type => :string
-	opt :unlock, "Don't use package lockfile when fetching."
-	
-	opt :force, "Force the operation if it would otherwise be be stopped due to a warning."
-	
-	opt :verbose, "Verbose output and error backtraces.", :type => :boolean
-	
-	opt :version, "Print version and exit", :short => :none
-	opt :help, "Show this message"
+	return command
 end
 
 track_time do
 	begin
-		Teapot::Command.new(ARGUMENTS, OPTIONS).invoke
+		# Get the arguments up until "--"
+		arguments = parse_argv
+		command = parse_command(arguments)
+		command.invoke
 	rescue Teapot::IncompatibleTeapotError => error
 		$stderr.puts error.message.color(:red)
 		$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
 		
-		exit -3
+		exit 1
 	rescue Teapot::Dependency::UnresolvedDependencyError => error
 		$stderr.puts "Unresolved dependencies:"
 
@@ -93,17 +109,13 @@ track_time do
 	
 		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
 		
-		exit -5
+		exit 2
 	rescue StandardError => error
 		$stderr.puts error.message.color(:red)
 		
 		# Could be nice to have some improved error reporting.
-		if OPTIONS[:verbose]
-			$stderr.puts error.backtrace
-		else
-			$stderr.puts "Run with --verbose for more details."
-		end
+		$stderr.puts error.backtrace
 		
-		exit -10
+		exit 3
 	end
 end
