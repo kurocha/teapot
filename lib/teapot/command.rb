@@ -36,9 +36,9 @@ module Teapot
 		class Create < Flop::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			consumes :project_name
-			consumes :source
-			consumes :packages, type: Array
+			consumes :project_name, "The name of the new project in title-case, e.g. 'My Project'"
+			consumes :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha"
+			consumes :packages, "Any additional packages you'd like to include in the project", type: Array
 			
 			def invoke(parent)
 				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
@@ -63,8 +63,8 @@ module Teapot
 			
 			option '-f | --force', "Force the generator to run even if the current work-tree is dirty.", key: :force
 			
-			consumes :generator_name
-			consumes :arguments, type: Array
+			consumes :generator_name, "The name of the generator to be invoked."
+			consumes :arguments, "The arguments that will be passed to the generator.", type: Array
 			
 			def invoke(parent)
 				generator_name, *arguments = @arguments
@@ -88,7 +88,7 @@ module Teapot
 		class List < Flop::Command
 			self.description = "List provisions and dependencies of the specified package."
 			
-			consumes :packages, type: Array
+			consumes :packages, "Limit the listing to only these packages, or all packages if none specified.", type: Array
 			
 			def invoke(parent)
 				only = nil
@@ -108,8 +108,8 @@ module Teapot
 			option '--only', "Only compile direct dependencies.", key: :only
 			option '--continuous', "Run the build graph continually (experimental).", key: :continuous
 			
-			split :argv, marker: '--'
-			consumes :targets, type: Array
+			consumes :targets, "Build these targets, or use them to help the dependency resolution process.", type: Array
+			split :argv, "Arguments passed to child process(es) of build if any.", marker: '--'
 			
 			def invoke(parent)
 				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
@@ -126,11 +126,7 @@ module Teapot
 				controller.clean
 			end
 		end
-
-		class Help < Flop::Command
-			self.description = "Show detailed information about a specified command."
-		end
-
+		
 		class Top < Flop::Command
 			self.description = "A decentralised package manager and build tool."
 			#version "1.0.0"
@@ -138,6 +134,7 @@ module Teapot
 			option '-c', "Specify a specific build configuration", key: :configuration
 			option '-i <path>', "Work in the given root directory", key: :root
 			option '--verbose | --quiet', "Verbose output for debugging.", key: :logging
+			option '--help', "Print out help information", key: :help
 			
 			nested '<command>',
 				'create' => Create,
@@ -152,7 +149,11 @@ module Teapot
 			end
 			
 			def invoke
-				@command.invoke(self)
+				if @command.nil? or @help
+					self.class.usage($0)
+				else
+					@command.invoke(self)
+				end
 			end
 		end
 	end

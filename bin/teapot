@@ -39,6 +39,7 @@ begin
 	options = Teapot::Command::Top.new(ARGV)
 rescue
 	Teapot::Command::Top.usage($0)
+	raise
 end
 	
 track_time do

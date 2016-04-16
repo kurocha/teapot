@@ -91,6 +91,10 @@ module Flop
 			@flags.parse(input)
 		end
 		
+		def to_s
+			@flags
+		end
+		
 		def to_a
 			[@flags, @description]
 		end
@@ -105,6 +109,10 @@ module Flop
 		
 		attr :key
 		
+		def to_s
+			@name
+		end
+		
 		def to_a
 			[@name, "One of #{@commands.keys.join(', ')}"]
 		end
@@ -117,15 +125,34 @@ module Flop
 				command.new(input)
 			end
 		end
+		
+		def usage
+			@commands.each do |key, klass|
+				klass.usage(key)
+			end
+		end
 	end
 	
 	class Consumes
-		def initialize(key, type: String)
+		def initialize(key, description, type: String)
 			@key = key
+			@description = description
 			@type = type
 		end
 		
 		attr :key
+		
+		def to_s
+			if @type == Array
+				"<#{@key}...>"
+			else
+				"<#{@key}>"
+			end
+		end
+		
+		def to_a
+			[to_s, @description]
+		end
 		
 		def parse(input)
 			if @type == Array
@@ -137,12 +164,21 @@ module Flop
 	end
 	
 	class Split
-		def initialize(key, marker: '--')
+		def initialize(key, description, marker: '--')
 			@key = key
+			@description = description
 			@marker = marker
 		end
 		
 		attr :key
+		
+		def to_s
+			"#{@marker} <#{@key}...>"
+		end
+		
+		def to_a
+			[to_s, @description]
+		end
 		
 		def parse(input)
 			if offset = input.index(@marker)
@@ -180,7 +216,7 @@ module Flop
 			items = Array.new
 			
 			@rows.each do |row|
-				items << row.to_a[0]
+				items << row.to_s
 			end
 			
 			items.join(' ')
@@ -229,12 +265,14 @@ module Flop
 		end
 		
 		def self.usage(name)
+			return unless @table
+			
 			puts "#{name} #{@table.usage}"
 			@table.rows.each do |row|
 				puts "\t" + row.to_a.join("\t")
 				
-				if command.is_a?(Nested)
-					command.usage
+				if row.is_a?(Nested)
+					row.usage
 				end
 			end
 		end
