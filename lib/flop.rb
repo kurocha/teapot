@@ -11,6 +11,14 @@ module Flop
 			@ordered.each(&block)
 		end
 		
+		def first
+			@ordered.first
+		end
+		
+		def count
+			return @ordered.count
+		end
+		
 		def to_s
 			'[' + @ordered.join(' | ') + ']'
 		end
@@ -69,13 +77,21 @@ module Flop
 	end
 	
 	class Option
-		def initialize(flags, description, key:, default: nil, value: nil)
+		def initialize(flags, description, key: nil, default: nil, value: nil)
 			@flags = Flags.new(flags)
 			@description = description
 			
-			@key = key
+			if key
+				@key = key
+			else
+				@key = flags.first.value
+			end
+			
 			@default = default
+			
 			@value = value
+			
+			@value ||= true if @flags.count == 1
 		end
 		
 		attr :flags

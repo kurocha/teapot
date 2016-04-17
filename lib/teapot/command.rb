@@ -62,7 +62,7 @@ module Teapot
 			self.description = "Run a generator to create files in your project."
 			
 			options do
-				option '-f | --force', "Force the generator to run even if the current work-tree is dirty.", key: :force
+				option '-f/--force', "Force the generator to run even if the current work-tree is dirty."
 			end
 			
 			one :generator_name, "The name of the generator to be invoked."
@@ -79,7 +79,7 @@ module Teapot
 			self.description = "Fetch remote packages according to the specified configuration."
 			
 			options do
-				option '--update', "Update dependencies to the latest versions.", key: :update
+				option '--update', "Update dependencies to the latest versions."
 			end
 			
 			def invoke(parent)
@@ -108,9 +108,9 @@ module Teapot
 			self.description = "Build the specified target."
 			
 			options do
-				option '-l <int>', "Limit build the given number of concurrent processes.", key: :limit
-				option '--only', "Only compile direct dependencies.", key: :only
-				option '--continuous', "Run the build graph continually (experimental).", key: :continuous
+				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes."
+				option '--only', "Only compile direct dependencies."
+				option '-c/--continuous', "Run the build graph continually (experimental)."
 			end
 			
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
@@ -137,10 +137,10 @@ module Teapot
 			#version "1.0.0"
 			
 			options do
-				option '-c <path>', "Specify a specific build configuration.", key: :configuration
-				option '-i <path>', "Work in the given root directory.", key: :root
+				option '-c/--configuration <name>', "Specify a specific build configuration."
+				option '-i/--in/--root <path>', "Work in the given root directory."
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
-				option '-h/--help', "Print out help information.", key: :help, value: true
+				option '-h/--help', "Print out help information."
 			end
 			
 			nested '<command>',
