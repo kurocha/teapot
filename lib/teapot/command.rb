@@ -36,9 +36,9 @@ module Teapot
 		class Create < Flop::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			consumes :project_name, "The name of the new project in title-case, e.g. 'My Project'"
-			consumes :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha"
-			consumes :packages, "Any additional packages you'd like to include in the project", type: Array
+			one :project_name, "The name of the new project in title-case, e.g. 'My Project'"
+			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha"
+			many :packages, "Any additional packages you'd like to include in the project"
 			
 			def invoke(parent)
 				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
@@ -61,10 +61,12 @@ module Teapot
 		class Generate < Flop::Command
 			self.description = "Run a generator to create files in your project."
 			
-			option '-f | --force', "Force the generator to run even if the current work-tree is dirty.", key: :force
+			options do
+				option '-f | --force', "Force the generator to run even if the current work-tree is dirty.", key: :force
+			end
 			
-			consumes :generator_name, "The name of the generator to be invoked."
-			consumes :arguments, "The arguments that will be passed to the generator.", type: Array
+			one :generator_name, "The name of the generator to be invoked."
+			many :arguments, "The arguments that will be passed to the generator."
 			
 			def invoke(parent)
 				generator_name, *arguments = @arguments
@@ -76,8 +78,10 @@ module Teapot
 		class Fetch < Flop::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
-			option '--update', "Update dependencies to the latest versions.", key: :update
-			option '--no-recursion', "Don't recursively fetch dependencies.", key: :recursion
+			options do
+				option '--update', "Update dependencies to the latest versions.", key: :update
+				option '--no-recursion', "Don't recursively fetch dependencies.", key: :recursion
+			end
 			
 			def invoke(parent)
 				# TODO: Need to modify controller to pass arguments through.
@@ -88,7 +92,7 @@ module Teapot
 		class List < Flop::Command
 			self.description = "List provisions and dependencies of the specified package."
 			
-			consumes :packages, "Limit the listing to only these packages, or all packages if none specified.", type: Array
+			many :packages, "Limit the listing to only these packages, or all packages if none specified."
 			
 			def invoke(parent)
 				only = nil
@@ -104,18 +108,20 @@ module Teapot
 		class Build < Flop::Command
 			self.description = "Build the specified target."
 			
-			option '-l <int>', "Limit build the given number of concurrent processes.", key: :limit
-			option '--only', "Only compile direct dependencies.", key: :only
-			option '--continuous', "Run the build graph continually (experimental).", key: :continuous
+			options do
+				option '-l <int>', "Limit build the given number of concurrent processes.", key: :limit
+				option '--only', "Only compile direct dependencies.", key: :only
+				option '--continuous', "Run the build graph continually (experimental).", key: :continuous
+			end
 			
-			consumes :targets, "Build these targets, or use them to help the dependency resolution process.", type: Array
+			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any.", marker: '--'
 			
 			def invoke(parent)
 				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
 				ARGV.replace(@argv)
 				
-				controller.build(@targets)
+				parent.controller.build(@targets)
 			end
 		end
 
@@ -123,7 +129,7 @@ module Teapot
 			self.description = "Delete everything in the teapot directory."
 			
 			def invoke(parent)
-				controller.clean
+				parent.controller.clean
 			end
 		end
 		
@@ -131,10 +137,12 @@ module Teapot
 			self.description = "A decentralised package manager and build tool."
 			#version "1.0.0"
 			
-			option '-c', "Specify a specific build configuration", key: :configuration
-			option '-i <path>', "Work in the given root directory", key: :root
-			option '--verbose | --quiet', "Verbose output for debugging.", key: :logging
-			option '--help', "Print out help information", key: :help
+			options do
+				option '-c', "Specify a specific build configuration", key: :configuration
+				option '-i <path>', "Work in the given root directory", key: :root
+				option '--verbose | --quiet', "Verbose output for debugging.", key: :logging
+				option '--help', "Print out help information", key: :help
+			end
 			
 			nested '<command>',
 				'create' => Create,

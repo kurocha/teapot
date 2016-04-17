@@ -7,6 +7,10 @@ module Flop
 			@ordered = text.split(/\s+\|\s+/).map{|part| Flag.new(part)}
 		end
 		
+		def each(&block)
+			@ordered.each(&block)
+		end
+		
 		def to_s
 			'[' + @ordered.join(' | ') + ']'
 		end
@@ -81,7 +85,7 @@ module Flop
 			@default = options[:default]
 		end
 		
-		attr :name
+		attr :flags
 		attr :description
 		attr :type
 		
@@ -97,6 +101,54 @@ module Flop
 		
 		def to_a
 			[@flags, @description]
+		end
+	end
+	
+	class Options
+		def self.parse(*args, **options, &block)
+			options = self.new(*args, **options)
+			
+			options.instance_eval(&block) if block_given?
+			
+			return options
+		end
+		
+		def initialize(title = "Options", key: :options)
+			@title = title
+			@ordered = []
+			@keyed = {}
+			@key = key
+		end
+		
+		attr :key
+		
+		def option(*args, **options)
+			self << Option.new(*args, **options)
+		end
+		
+		def << option
+			@ordered << option
+			option.flags
+		end
+		
+		def parse(input)
+			values = []
+			
+			while option = @keyed[input.first]
+				values << option.parse(input)
+			end
+			
+			return values
+		end
+		
+		def to_a
+			["Options:"]
+		end
+		
+		def usage
+			@ordered.each do |option|
+				puts "\t" + option.to_a.join("\t")
+			end
 		end
 	end
 	
@@ -133,21 +185,17 @@ module Flop
 		end
 	end
 	
-	class Consumes
-		def initialize(key, description, type: String)
+	class One
+		def initialize(key, description, pattern: //)
 			@key = key
 			@description = description
-			@type = type
+			@pattern = pattern
 		end
 		
 		attr :key
 		
 		def to_s
-			if @type == Array
-				"<#{@key}...>"
-			else
-				"<#{@key}>"
-			end
+			"<#{@key}>"
 		end
 		
 		def to_a
@@ -155,10 +203,34 @@ module Flop
 		end
 		
 		def parse(input)
-			if @type == Array
-				input.shift(input.size)
-			else
+			if input.first =~ @pattern
 				input.shift
+			end
+		end
+	end
+	
+	class Many
+		def initialize(key, description, stop: /^-/)
+			@key = key
+			@description = description
+			@stop = stop
+		end
+		
+		attr :key
+		
+		def to_s
+			"<#{key}...>"
+		end
+		
+		def to_a
+			[to_s, @description]
+		end
+		
+		def parse(input)
+			if @stop and stop_index = input.index{|item| @stop === item}
+				input.shift(stop_index)
+			else
+				input.shift(input.size)
 			end
 		end
 	end
@@ -190,25 +262,16 @@ module Flop
 	class Table
 		def initialize
 			@rows = []
+			@parser = []
 		end
 		
 		attr :rows
 		
 		def << row
 			@rows << row
-		end
-		
-		def parse(input)
-			while input.any?
-				size = input.size
-				
-				@rows.each do |row|
-					if result = row.parse(input)
-						yield row.key, result, row
-					end
-				end
-				
-				raise ArgumentError.new("Could not parse #{input.inspect}") if input.size == size
+			
+			if row.respond_to?(:parse)
+				@parser << row
 			end
 		end
 		
@@ -220,6 +283,15 @@ module Flop
 			end
 			
 			items.join(' ')
+		end
+		
+		def parse(input)
+			@parser.each do |row|
+				puts "Trying #{row} with #{input}"
+				if result = row.parse(input)
+					yield row.key, result, row
+				end
+			end
 		end
 	end
 	
@@ -248,16 +320,20 @@ module Flop
 			self.table << row
 		end
 		
-		def self.option(*args, **options)
-			append Option.new(*args, **options)
+		def self.options(*args, **options, &block)
+			append Options.parse(*args, **options, &block)
 		end
 		
 		def self.nested(*args, **options)
 			append Nested.new(*args, **options)
 		end
 		
-		def self.consumes(*args, **options)
-			append Consumes.new(*args, **options)
+		def self.one(*args, **options)
+			append One.new(*args, **options)
+		end
+		
+		def self.many(*args, **options)
+			append Many.new(*args, **options)
 		end
 		
 		def self.split(*args, **options)
@@ -271,7 +347,7 @@ module Flop
 			@table.rows.each do |row|
 				puts "\t" + row.to_a.join("\t")
 				
-				if row.is_a?(Nested)
+				if row.respond_to?(:usage)
 					row.usage
 				end
 			end
