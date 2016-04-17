@@ -61,8 +61,8 @@ module Flop
 			@prefix == token or @alternatives.include?(token)
 		end
 		
-		def value
-			@value ||= @prefix.sub(/^-*/, '').gsub('-', '_').to_sym
+		def key
+			@key ||= @prefix.sub(/^-*/, '').gsub('-', '_').to_sym
 		end
 		
 		def parse(input)
@@ -70,7 +70,7 @@ module Flop
 				if @value
 					input.shift(2).last
 				else
-					input.shift; value
+					input.shift; key
 				end
 			end
 		end
@@ -84,13 +84,12 @@ module Flop
 			if key
 				@key = key
 			else
-				@key = flags.first.value
+				@key = @flags.first.key
 			end
 			
 			@default = default
 			
 			@value = value
-			
 			@value ||= true if @flags.count == 1
 		end
 		
