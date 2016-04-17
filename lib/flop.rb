@@ -26,24 +26,6 @@ module Flop
 		end
 	end
 	
-	class Value
-		def initialize(flag, value)
-			@flag = flag
-			@value = value
-		end
-		
-		attr :flag
-		attr :value
-		
-		def to_str
-			@value
-		end
-		
-		def inspect
-			"#<#{self.class} #{@flag} #{value.inspect}>"
-		end
-	end
-	
 	class Flag
 		def initialize(text)
 			@text = text
