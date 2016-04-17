@@ -27,9 +27,8 @@ module Teapot
 			resolved = Set.new
 			configuration = context.configuration
 			unresolved = context.unresolved(configuration.packages)
-			tries = 0
 			
-			while tries < @options[:maximum_fetch_depth]
+			while true
 				configuration.packages.each do |package|
 					next if resolved.include? package
 				
@@ -49,8 +48,6 @@ module Teapot
 				if previously_unresolved == unresolved || unresolved.count == 0
 					break
 				end
-			
-				tries += 1
 			end
 		
 			if unresolved.count > 0

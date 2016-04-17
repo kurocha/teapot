@@ -30,37 +30,46 @@ require 'build/logger'
 
 module Teapot
 	class Controller
-		MAXIMUM_FETCH_DEPTH = 20
-		
 		def initialize(root, options)
 			@root = Pathname(root)
 			@options = options
 			
-			log_output = @options.fetch(:log, $stdout)
-			
-			@logger = Logger.new(log_output)
-			
-			@logger.formatter = Build::CompactFormatter.new(verbose: options[:verbose])
-			
-			if options[:verbose]
-				@logger.level = Logger::DEBUG
-			else
-				@logger.level = Logger::INFO
-			end
-			
-			@options[:maximum_fetch_depth] ||= MAXIMUM_FETCH_DEPTH
+			@log_device = @options.fetch(:log, $stdout)
+			@logging = options[:logging]
 		end
 		
-		attr :logger
+		def verbose?
+			@logging == :verbose
+		end
+		
+		def quiet?
+			@logging == :quiet
+		end
+		
+		def logger
+			@logger ||= Logger.new(@log_output).tap do |logger|
+				logger.formatter = Build::CompactFormatter.new(verbose: verbose?)
+				
+				if verbose?
+					logger.level = Logger::DEBUG
+				elsif quiet?
+					logger.level = Logger::WARN
+				else
+					logger.level = Logger::INFO
+				end
+			end
+		end
 		
 		def log(*args)
-			@logger.info(*args)
+			logger.info(*args)
+		end
+		
+		def configuration
+			@options[:configuration]
 		end
 		
 		def context
-			@context ||= Context.new(@root,
-				:configuration => @options[:configuration]
-			)
+			@context ||= Context.new(@root, configuration: configuration)
 		end
 		
 		# Reload the current context, e.g. if it's been modified by a generator.

@@ -36,9 +36,9 @@ module Teapot
 		class Create < Flop::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			one :project_name, "The name of the new project in title-case, e.g. 'My Project'"
-			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha"
-			many :packages, "Any additional packages you'd like to include in the project"
+			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
+			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
+			many :packages, "Any additional packages you'd like to include in the project."
 			
 			def invoke(parent)
 				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
@@ -80,7 +80,6 @@ module Teapot
 			
 			options do
 				option '--update', "Update dependencies to the latest versions.", key: :update
-				option '--no-recursion', "Don't recursively fetch dependencies.", key: :recursion
 			end
 			
 			def invoke(parent)
@@ -138,10 +137,10 @@ module Teapot
 			#version "1.0.0"
 			
 			options do
-				option '-c', "Specify a specific build configuration", key: :configuration
-				option '-i <path>', "Work in the given root directory", key: :root
-				option '--verbose | --quiet', "Verbose output for debugging.", key: :logging
-				option '--help', "Print out help information", key: :help
+				option '-c <path>', "Specify a specific build configuration.", key: :configuration
+				option '-i <path>', "Work in the given root directory.", key: :root
+				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
+				option '-h/--help', "Print out help information.", key: :help, value: true
 			end
 			
 			nested '<command>',
@@ -153,11 +152,11 @@ module Teapot
 				'clean' => Clean
 			
 			def controller(root = nil, **options)
-				Teapot::Controller.new(root || @root || Dir.getwd, **options)
+				Teapot::Controller.new(root || @root || Dir.getwd, @options)
 			end
 			
 			def invoke
-				if @command.nil? or @help
+				if @command.nil? or @options[:help]
 					self.class.usage($0)
 				else
 					@command.invoke(self)
