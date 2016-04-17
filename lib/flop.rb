@@ -193,7 +193,7 @@ module Flop
 			if command = @commands[input.first]
 				input.shift
 				
-				puts "Instantiating #{command} with #{input}"
+				# puts "Instantiating #{command} with #{input}"
 				command.new(input)
 			end
 		end
