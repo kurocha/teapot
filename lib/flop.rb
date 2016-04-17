@@ -161,6 +161,10 @@ module Flop
 			return values
 		end
 		
+		def to_s
+			@ordered.collect(&:to_s).join(' ')
+		end
+		
 		def to_a
 			["Options:"]
 		end
