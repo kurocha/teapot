@@ -314,7 +314,18 @@ module Flop
 		end
 	end
 	
+	class IncompleteParse < StandardError
+	end
+	
 	class Command
+		def self.parse(input)
+			command = self.new(input)
+			
+			raise IncompleteParse.new("Could not parse #{input}") unless input.empty?
+			
+			return command
+		end
+		
 		def initialize(input)
 			self.class.table.parse(input) do |key, value|
 				self.send("#{key}=", value)

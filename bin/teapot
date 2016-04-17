@@ -35,13 +35,8 @@ ensure
 	$stderr.puts Rainbow("Elapsed Time: %0.3fs" % elapsed_time).magenta
 end
 
-begin
-	options = Teapot::Command::Top.new(ARGV)
-rescue
-	Teapot::Command::Top.usage($0)
-	raise
-end
-	
+options = Teapot::Command::Top.parse(ARGV)
+
 track_time do
 	begin
 		options.invoke
