@@ -114,7 +114,7 @@ module Teapot
 			end
 			
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
-			split :argv, "Arguments passed to child process(es) of build if any.", marker: '--'
+			split :argv, "Arguments passed to child process(es) of build if any."
 			
 			def invoke(parent)
 				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
