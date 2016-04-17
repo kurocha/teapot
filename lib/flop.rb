@@ -54,35 +54,46 @@ module Flop
 			else
 				@prefix = @text
 			end
+			
+			*@alternatives, @prefix = @prefix.split('/')
 		end
 		
 		attr :text
 		attr :prefix
+		attr :alternatives
 		attr :value
 		
 		def to_s
 			@text
 		end
 		
+		def prefix?(token)
+			@prefix == token or @alternatives.include?(token)
+		end
+		
+		def value
+			@value ||= @prefix.sub(/^-*/, '').gsub('-', '_').to_sym
+		end
+		
 		def parse(input)
-			if @prefix == input.first
+			if prefix?(input.first)
 				if @value
-					Value.new(*input.shift(2))
+					input.shift(2).last
 				else
-					input.shift
+					input.shift; value
 				end
 			end
 		end
 	end
 	
 	class Option
-		def initialize(flags, description, **options)
+		def initialize(flags, description, key:, default: nil, value: nil)
 			@flags = Flags.new(flags)
 			@description = description
 			
-			@type = options[:type]
-			@key = options[:key]
-			@default = options[:default]
+			@key = key
+			@default = default
+			@value = value
 		end
 		
 		attr :flags
@@ -92,7 +103,11 @@ module Flop
 		attr :key
 		
 		def parse(input)
-			@flags.parse(input)
+			if result = @flags.parse(input)
+				@value.nil? ? result : @value
+			else
+				@default
+			end
 		end
 		
 		def to_s
@@ -128,14 +143,22 @@ module Flop
 		
 		def << option
 			@ordered << option
-			option.flags
+			option.flags.each do |flag|
+				@keyed[flag.prefix] = option
+				
+				flag.alternatives.each do |alternative|
+					@keyed[alternative] = option
+				end
+			end
 		end
 		
 		def parse(input)
-			values = []
+			values = Hash.new
 			
 			while option = @keyed[input.first]
-				values << option.parse(input)
+				if result = option.parse(input)
+					values[option.key] = result
+				end
 			end
 			
 			return values
@@ -287,7 +310,6 @@ module Flop
 		
 		def parse(input)
 			@parser.each do |row|
-				puts "Trying #{row} with #{input}"
 				if result = row.parse(input)
 					yield row.key, result, row
 				end
