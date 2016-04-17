@@ -141,6 +141,7 @@ module Teapot
 				option '-i/--in/--root <path>', "Work in the given root directory."
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
 				option '-h/--help', "Print out help information."
+				option '-v/--version', "Print out the application version."
 			end
 			
 			nested '<command>',
@@ -155,9 +156,11 @@ module Teapot
 				Teapot::Controller.new(root || @root || Dir.getwd, @options)
 			end
 			
-			def invoke
+			def invoke(program_name: $PROGRAM_NAME)
 				if @command.nil? or @options[:help]
-					self.class.usage($0)
+					self.class.usage(program_name)
+				elsif @options[:version]
+					puts "teapot v#{Teapot::VERSION}"
 				else
 					@command.invoke(self)
 				end
