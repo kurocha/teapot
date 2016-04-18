@@ -118,7 +118,7 @@ module Teapot
 			
 			def invoke(parent)
 				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
-				ARGV.replace(@argv)
+				ARGV.replace(@argv) if @argv
 				
 				parent.controller.build(@targets)
 			end
