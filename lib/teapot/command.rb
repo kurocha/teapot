@@ -71,7 +71,7 @@ module Teapot
 			def invoke(parent)
 				generator_name, *arguments = @arguments
 				
-				parent.controller.generate(@generator_name, @arguments, @force)
+				parent.controller.generate(@generator_name, @arguments, @options[:force])
 			end
 		end
 
