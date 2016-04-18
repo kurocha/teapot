@@ -23,7 +23,7 @@ require_relative '../repository'
 
 module Teapot
 	class Controller
-		def fetch
+		def fetch(update = false)
 			resolved = Set.new
 			configuration = context.configuration
 			unresolved = context.unresolved(configuration.packages)
@@ -32,7 +32,7 @@ module Teapot
 				configuration.packages.each do |package|
 					next if resolved.include? package
 				
-					fetch_package(context, configuration, package)
+					fetch_package(context, configuration, package, update)
 				
 					# We are done with this package, don't try to process it again:
 					resolved << package
@@ -68,7 +68,7 @@ module Teapot
 			end
 		end
 
-		def fetch_package(context, configuration, package)
+		def fetch_package(context, configuration, package, update = false)
 			destination_path = package.path
 			lock_store = configuration.lock_store
 		
@@ -86,7 +86,7 @@ module Teapot
 			elsif package.external?
 				package_lock = nil
 				
-				unless @options[:unlock]
+				if update
 					package_lock = lock_store.transaction(true){|store| store[package.name]}
 				end
 

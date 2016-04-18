@@ -83,8 +83,7 @@ module Teapot
 			end
 			
 			def invoke(parent)
-				# TODO: Need to modify controller to pass arguments through.
-				parent.controller.fetch
+				parent.controller.fetch(@options[:update])
 			end
 		end
 
