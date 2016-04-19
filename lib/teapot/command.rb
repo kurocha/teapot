@@ -87,6 +87,14 @@ module Teapot
 			end
 		end
 
+		class Update < Flop::Command
+			self.description = "Shortcut for `fetch --update`: fetch and update all packages."
+			
+			def invoke(parent)
+				parent.controller.fetch(true)
+			end
+		end
+
 		class List < Flop::Command
 			self.description = "List provisions and dependencies of the specified package."
 			
@@ -147,6 +155,7 @@ module Teapot
 				'create' => Create,
 				'generate' => Generate,
 				'fetch' => Fetch,
+				'update' => Update,
 				'list' => List,
 				'build' => Build,
 				'clean' => Clean
