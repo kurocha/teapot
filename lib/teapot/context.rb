@@ -195,12 +195,16 @@ module Teapot
 			# Find the default configuration, if it exists:
 			@default_configuration = defined.default_configuration
 
-			if options[:configuration]
-				@configuration = @configurations[options[:configuration]]
+			if configuration_name = options[:configuration]
+				@configuration = @configurations[configuration_name]
 			else
 				@configuration = @default_configuration
 			end
-
+			
+			if @configuration.nil?
+				raise ArgumentError.new("Could not load configuration: #{configuration_name}")
+			end
+			
 			# Materialize the configuration:
 			@configuration.materialize if @configuration
 		end
