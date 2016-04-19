@@ -34,8 +34,8 @@ module Teapot
 			@root = Pathname(root)
 			@options = options
 			
-			@log_device = @options.fetch(:log, $stdout)
-			@logging = options[:logging]
+			@log_output = @options.fetch(:log, $stdout)
+			@logging = @options[:logging] 
 		end
 		
 		def verbose?
