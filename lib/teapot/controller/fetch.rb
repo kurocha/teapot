@@ -136,6 +136,8 @@ module Teapot
 						}
 					end
 				end
+			else
+				log "Ignoring package #{package.name} because no source is specified."
 			end
 		end
 	end

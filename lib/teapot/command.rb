@@ -101,9 +101,7 @@ module Teapot
 			many :packages, "Limit the listing to only these packages, or all packages if none specified."
 			
 			def invoke(parent)
-				only = nil
-				
-				if @packages
+				if @packages.any?
 					only = Set.new(@packages)
 				end
 				
