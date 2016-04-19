@@ -142,7 +142,7 @@ module Teapot
 			#version "1.0.0"
 			
 			options do
-				option '-c/--configuration <name>', "Specify a specific build configuration."
+				option '-c/--configuration <name>', "Specify a specific build configuration.", default: ENV['TEAPOT_CONFIGURATION']
 				option '-i/--in/--root <path>', "Work in the given root directory."
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
 				option '-h/--help', "Print out help information."

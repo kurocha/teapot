@@ -117,7 +117,11 @@ module Flop
 		end
 		
 		def to_a
-			[@flags, @description]
+			unless @default.nil?
+				[@flags, @description, "Default: #{@default}"]
+			else
+				[@flags, @description]
+			end
 		end
 	end
 	
