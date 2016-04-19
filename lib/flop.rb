@@ -15,6 +15,11 @@ module Flop
 			@ordered.first
 		end
 		
+		# Whether or not this flag should have a true/false value if not specified otherwise.
+		def boolean?
+			@ordered.count == 1 and @ordered.first.value.nil?
+		end
+		
 		def count
 			return @ordered.count
 		end
@@ -90,7 +95,7 @@ module Flop
 			@default = default
 			
 			@value = value
-			@value ||= true if @flags.count == 1
+			@value ||= true if @flags.boolean?
 		end
 		
 		attr :flags
