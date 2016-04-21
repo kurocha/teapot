@@ -78,20 +78,18 @@ module Teapot
 		class Fetch < Flop::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
+			# 3 typical use cases:
+			# - fetch current packages according to lockfile
+			# - write current pacakges into lockfile
+			# - update packages and update lockfile
+			
 			options do
 				option '--update', "Update dependencies to the latest versions."
+				option '--local', "Don't update from source, assume updated local packages."
 			end
 			
 			def invoke(parent)
-				parent.controller.fetch(@options[:update])
-			end
-		end
-
-		class Update < Flop::Command
-			self.description = "Shortcut for `fetch --update`: fetch and update all packages."
-			
-			def invoke(parent)
-				parent.controller.fetch(true)
+				parent.controller.fetch(**@options)
 			end
 		end
 
@@ -153,7 +151,6 @@ module Teapot
 				'create' => Create,
 				'generate' => Generate,
 				'fetch' => Fetch,
-				'update' => Update,
 				'list' => List,
 				'build' => Build,
 				'clean' => Clean
