@@ -42,8 +42,7 @@ module Teapot
 			
 			def invoke(parent)
 				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
-				
-				root = Build::Files::Path.expand(@project_path)
+				root = ::Build::Files::Path.expand(project_path)
 				
 				if root.exist?
 					raise ArgumentError.new("#{root} already exists!")
@@ -155,8 +154,12 @@ module Teapot
 				'build' => Build,
 				'clean' => Clean
 			
+			def root
+				@options[:root] || Dir.getwd
+			end
+			
 			def controller(root = nil, **options)
-				Teapot::Controller.new(root || @root || Dir.getwd, @options)
+				Teapot::Controller.new(root || self.root, @options)
 			end
 			
 			def invoke(program_name: File.basename($0))

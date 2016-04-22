@@ -159,7 +159,9 @@ module Teapot
 					metadata = current_metadata(package)
 					
 					lock_store.transaction do |store|
-						if store[package.name][:commit] != metadata[:commit]
+						store_metadata = store[package.name]
+						
+						if store_metadata.nil? or store_metadata[:commit] != metadata[:commit]
 							log("Updating lockfile for package #{package.name}: #{metadata[:commit]}...")
 							store[package.name] = metadata
 						end
