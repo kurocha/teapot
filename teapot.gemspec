@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
 	
 	spec.required_ruby_version = '>= 2.1'
 	
-	spec.add_dependency "rainbow", "~> 2.0.0"
+	spec.add_dependency "rainbow", "~> 2.0"
 	spec.add_dependency "system", "~> 0.1.3"
 	
 	spec.add_dependency "graphviz", "~> 0.3.0"
@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build", "~> 1.0.7"
 	spec.add_dependency "build-files", "~> 1.0.4"
 	
-	spec.add_dependency "flopp", "~> 1.0.0"
+	spec.add_dependency "flopp", "~> 1.0.1"
 	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
