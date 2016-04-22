@@ -29,11 +29,11 @@ require_relative 'controller/visualize'
 
 require_relative 'repository'
 
-require_relative '../flop'
+require 'flopp'
 
 module Teapot
 	module Command
-		class Create < Flop::Command
+		class Create < Flopp::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
@@ -58,7 +58,7 @@ module Teapot
 			end
 		end
 
-		class Generate < Flop::Command
+		class Generate < Flopp::Command
 			self.description = "Run a generator to create files in your project."
 			
 			options do
@@ -75,7 +75,7 @@ module Teapot
 			end
 		end
 
-		class Fetch < Flop::Command
+		class Fetch < Flopp::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
 			# 3 typical use cases:
@@ -93,7 +93,7 @@ module Teapot
 			end
 		end
 
-		class List < Flop::Command
+		class List < Flopp::Command
 			self.description = "List provisions and dependencies of the specified package."
 			
 			many :packages, "Limit the listing to only these packages, or all packages if none specified."
@@ -107,7 +107,7 @@ module Teapot
 			end
 		end
 
-		class Build < Flop::Command
+		class Build < Flopp::Command
 			self.description = "Build the specified target."
 			
 			options do
@@ -127,7 +127,7 @@ module Teapot
 			end
 		end
 
-		class Clean < Flop::Command
+		class Clean < Flopp::Command
 			self.description = "Delete everything in the teapot directory."
 			
 			def invoke(parent)
@@ -135,7 +135,7 @@ module Teapot
 			end
 		end
 		
-		class Top < Flop::Command
+		class Top < Flopp::Command
 			self.description = "A decentralised package manager and build tool."
 			#version "1.0.0"
 			
@@ -159,9 +159,9 @@ module Teapot
 				Teapot::Controller.new(root || @root || Dir.getwd, @options)
 			end
 			
-			def invoke(program_name: $PROGRAM_NAME)
+			def invoke(program_name: File.basename($0))
 				if @command.nil? or @options[:help]
-					self.class.usage(program_name)
+					print_usage(program_name)
 				elsif @options[:version]
 					puts "teapot v#{Teapot::VERSION}"
 				else

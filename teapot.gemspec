@@ -36,6 +36,8 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build", "~> 1.0.7"
 	spec.add_dependency "build-files", "~> 1.0.4"
 	
+	spec.add_dependency "flopp", "~> 1.0.0"
+	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
 	
