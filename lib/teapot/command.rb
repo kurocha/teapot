@@ -29,11 +29,11 @@ require_relative 'controller/visualize'
 
 require_relative 'repository'
 
-require 'flopp'
+require 'samovar'
 
 module Teapot
 	module Command
-		class Create < Flopp::Command
+		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
@@ -57,7 +57,7 @@ module Teapot
 			end
 		end
 
-		class Generate < Flopp::Command
+		class Generate < Samovar::Command
 			self.description = "Run a generator to create files in your project."
 			
 			options do
@@ -74,7 +74,7 @@ module Teapot
 			end
 		end
 
-		class Fetch < Flopp::Command
+		class Fetch < Samovar::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
 			# 3 typical use cases:
@@ -92,7 +92,7 @@ module Teapot
 			end
 		end
 
-		class List < Flopp::Command
+		class List < Samovar::Command
 			self.description = "List provisions and dependencies of the specified package."
 			
 			many :packages, "Limit the listing to only these packages, or all packages if none specified."
@@ -106,7 +106,7 @@ module Teapot
 			end
 		end
 
-		class Build < Flopp::Command
+		class Build < Samovar::Command
 			self.description = "Build the specified target."
 			
 			options do
@@ -126,7 +126,7 @@ module Teapot
 			end
 		end
 
-		class Clean < Flopp::Command
+		class Clean < Samovar::Command
 			self.description = "Delete everything in the teapot directory."
 			
 			def invoke(parent)
@@ -134,7 +134,7 @@ module Teapot
 			end
 		end
 		
-		class Top < Flopp::Command
+		class Top < Samovar::Command
 			self.description = "A decentralised package manager and build tool."
 			#version "1.0.0"
 			
