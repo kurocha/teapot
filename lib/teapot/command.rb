@@ -136,7 +136,6 @@ module Teapot
 		
 		class Top < Samovar::Command
 			self.description = "A decentralised package manager and build tool."
-			#version "1.0.0"
 			
 			options do
 				option '-c/--configuration <name>', "Specify a specific build configuration.", default: ENV['TEAPOT_CONFIGURATION']
