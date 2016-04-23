@@ -23,52 +23,38 @@
 require 'teapot/command'
 require 'time'
 
-def track_time
-	start_time = Time.now
-	
-	yield
-ensure
-	end_time = Time.now
-	elapsed_time = end_time - start_time
-	
-	$stdout.flush
-	$stderr.puts Rainbow("Elapsed Time: %0.3fs" % elapsed_time).magenta
-end
-
 options = Teapot::Command::Top.parse(ARGV)
 
-track_time do
-	begin
-		options.invoke
-	rescue Teapot::IncompatibleTeapotError => error
-		$stderr.puts error.message.color(:red)
-		$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
-		
-		exit 1
-	rescue Teapot::Dependency::UnresolvedDependencyError => error
-		$stderr.puts "Unresolved dependencies:"
+begin
+	options.invoke
+rescue Teapot::IncompatibleTeapotError => error
+	$stderr.puts error.message.color(:red)
+	$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
+	
+	exit 1
+rescue Teapot::Dependency::UnresolvedDependencyError => error
+	$stderr.puts "Unresolved dependencies:"
 
-		error.chain.unresolved.each do |(name, parent)|
-			$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
-		
-			conflicts = error.chain.conflicts[name]
-		
-			if conflicts
-				conflicts.each do |conflict|
-					$stderr.puts " - provided by #{conflict.name}".color(:red)
-				end
+	error.chain.unresolved.each do |(name, parent)|
+		$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
+	
+		conflicts = error.chain.conflicts[name]
+	
+		if conflicts
+			conflicts.each do |conflict|
+				$stderr.puts " - provided by #{conflict.name}".color(:red)
 			end
 		end
-	
-		$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
-		
-		exit 2
-	rescue StandardError => error
-		$stderr.puts error.message.color(:red)
-		
-		# Could be nice to have some improved error reporting.
-		$stderr.puts error.backtrace
-		
-		exit 3
 	end
+
+	$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
+	
+	exit 2
+rescue StandardError => error
+	$stderr.puts error.message.color(:red)
+	
+	# Could be nice to have some improved error reporting.
+	$stderr.puts error.backtrace
+	
+	exit 3
 end
