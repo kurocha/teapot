@@ -21,7 +21,6 @@
 # THE SOFTWARE.
 
 require 'teapot/command'
-require 'time'
 
 options = Teapot::Command::Top.parse(ARGV)
 

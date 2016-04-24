@@ -161,18 +161,6 @@ module Teapot
 				Teapot::Controller.new(root || self.root, @options)
 			end
 			
-			def track_time
-				start_time = Time.now
-				
-				yield
-			ensure
-				end_time = Time.now
-				elapsed_time = end_time - start_time
-				
-				$stdout.flush
-				$stderr.puts Rainbow("Elapsed Time: %0.3fs" % elapsed_time).magenta
-			end
-			
 			def invoke(program_name: File.basename($0))
 				if @options[:version]
 					puts "teapot v#{Teapot::VERSION}"

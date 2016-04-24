@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build", "~> 1.0.8"
 	spec.add_dependency "build-files", "~> 1.0.4"
 	
-	spec.add_dependency "samovar", "~> 1.0.0"
+	spec.add_dependency "samovar", "~> 1.1.0"
 	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"
