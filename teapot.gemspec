@@ -1,7 +1,5 @@
-# -*- encoding: utf-8 -*-
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'teapot/version'
+
+require_relative 'lib/teapot/version'
 
 Gem::Specification.new do |spec|
 	spec.name          = "teapot"
@@ -33,7 +31,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "graphviz", "~> 0.3.0"
 	
-	spec.add_dependency "build", "~> 1.0.7"
+	spec.add_dependency "build", "~> 1.0.8"
 	spec.add_dependency "build-files", "~> 1.0.4"
 	
 	spec.add_dependency "samovar", "~> 1.0.0"
