@@ -31,8 +31,8 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "graphviz", "~> 0.3.0"
 	
-	spec.add_dependency "build", "~> 1.0.8"
-	spec.add_dependency "build-files", "~> 1.0.4"
+	spec.add_dependency "build", "~> 1.0.9"
+	spec.add_dependency "build-files", "~> 1.0.5"
 	
 	spec.add_dependency "samovar", "~> 1.1.0"
 	
