@@ -34,7 +34,7 @@ module Teapot
 			@root = Pathname(root)
 			@options = options
 			
-			@log_output = @options.fetch(:log, $stdout)
+			@log_output = @options.fetch(:log, $stderr)
 			@logging = @options[:logging] 
 		end
 		
