@@ -154,11 +154,11 @@ module Teapot
 				'clean' => Clean
 			
 			def root
-				@options[:root] || Dir.getwd
+				@options[:root]
 			end
 			
 			def controller(root = nil, **options)
-				Teapot::Controller.new(root || self.root, @options)
+				Teapot::Controller.new(root || self.root || Dir.getwd, @options)
 			end
 			
 			def invoke(program_name: File.basename($0))
