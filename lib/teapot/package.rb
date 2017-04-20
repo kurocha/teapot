@@ -20,7 +20,6 @@
 
 require 'build/files'
 
-require_relative 'context'
 require_relative 'definition'
 
 module Teapot

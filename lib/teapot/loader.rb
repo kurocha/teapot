@@ -27,9 +27,6 @@ require 'build/rule'
 require 'build/name'
 require 'build/files'
 
-# Required for CPU count, etc.
-require 'system'
-
 module Teapot
 	# Cannot load packages newer than this:
 	LOADER_VERSION = "1.1"

@@ -24,7 +24,6 @@ require 'set'
 require 'yaml/store'
 
 require_relative 'identity_set'
-require_relative 'context'
 require_relative 'definition'
 
 module Teapot
