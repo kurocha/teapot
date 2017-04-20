@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
 	
 	spec.has_rdoc = 'yard'
 	
-	spec.required_ruby_version = '>= 2.2.3'
+	spec.required_ruby_version = '>= 2.1.0'
 	
 	spec.add_dependency "rainbow", "~> 2.0"
 	
