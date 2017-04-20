@@ -28,7 +28,7 @@ module Teapot
 			def self.run(*args, &block)
 				options = Hash === args.last ? args.pop : {}
 				
-				args = args.flatten.collect &:to_s
+				args = args.flatten.collect(&:to_s)
 				
 				puts args.join(' ').color(:blue) + " in #{options[:chdir] || Dir.getwd}"
 				

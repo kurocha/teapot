@@ -48,8 +48,6 @@ module Teapot::WaitSpec
 			end
 			
 			controller.update
-			
-			puts $log
 		end
 	end
 end

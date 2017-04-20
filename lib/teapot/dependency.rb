@@ -41,7 +41,7 @@ module Teapot
 		end
 		
 		def priority
-			@priority || 0
+			@priority ||= 0
 		end
 		
 		def provides?(name)

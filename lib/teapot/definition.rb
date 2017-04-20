@@ -50,7 +50,7 @@ module Teapot
 		attr :name
 		
 		# A textual description of the definition, possibly in markdown format:
-		attr :description, true
+		attr :description
 		
 		def description=(text)
 			if text =~ /^(\t+)/

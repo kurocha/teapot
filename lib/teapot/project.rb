@@ -42,10 +42,10 @@ module Teapot
 			super
 		end
 		
-		attr :summary, true
-		attr :license, true
-		attr :website, true
-		attr :version, true
+		attr_accessor :summary
+		attr_accessor :license
+		attr_accessor :website
+		attr_accessor :version
 		
 		attr :authors
 		
