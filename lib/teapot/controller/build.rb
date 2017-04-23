@@ -71,7 +71,7 @@ module Teapot
 				ordered.each do |resolution|
 					target = resolution.provider
 					
-					environment = target.environment(context.configuration)
+					environment = target.environment(context.configuration, chain)
 					
 					if target.build
 						controller.add_target(target, environment.flatten)

@@ -40,7 +40,7 @@ module Teapot::TargetSpec
 			expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
 			expect(chain.ordered[2].provider).to be == target
 			
-			environment = target.environment(context.configuration)
+			environment = target.environment(context.configuration, chain)
 			# Environment#to_hash flattens the environment and evaluates all values:
 			hash = environment.to_hash
 			

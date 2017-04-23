@@ -49,17 +49,9 @@ module Teapot
 			super
 		end
 		
-		# Given a configuration, compute the dependency chain for this target.
-		def provision_chain(configuration)
-			# Reduce the number of keystrokes for good health:
-			context = configuration.context
-			
-			chain = Dependency::chain(context.selection, self.dependencies, context.targets.values)
-		end
-		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
-		def environment(configuration)
-			chain = provision_chain(configuration)
+		def environment(configuration, chain)
+			chain = chain.partial(self.targets)
 			
 			environments = []
 			

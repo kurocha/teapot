@@ -30,79 +30,13 @@ module Teapot
 			
 			chain = context.dependency_chain(dependency_names, context.configuration)
 			
-			g = Graphviz::Graph.new
-			g.attributes[:ratio] = :auto
+			visualization = Build::Dependency::Visualization.new
 			
-			base_attributes = {
-				:shape => 'box',
-			}
+			graph = visualization.generate(chain)
 			
-			provision_attributes = base_attributes.dup
+			Graphviz::output(graph, :path => "graph.svg")
 			
-			alias_attributes = {
-				:shape => 'box',
-				:color => 'grey',
-			}
-			
-			chain.ordered.each do |resolution|
-				provider = resolution.provider
-				name = resolution.name
-				
-				# Provider is the target that provides the dependency referred to by name.
-				node = g.add_node(name.to_s, base_attributes.dup)
-				
-				if chain.dependencies.include?(name)
-					node.attributes[:color] = 'blue'
-					node.attributes[:penwidth] = 2.0
-				elsif chain.selection.include?(provider.name)
-					node.attributes[:color] = 'brown'
-				end
-				
-				# A provision has dependencies...
-				provider.dependencies.each do |dependency|
-					dependency_node = g.nodes[dependency.to_s]
-					
-					node.connect(dependency_node) if dependency_node
-				end
-				
-				# A provision provides other provisions...
-				provider.provisions.each do |(provision_name, provision)|
-					next if name == provision_name
-					
-					provides_node = g.nodes[provision_name.to_s] || g.add_node(provision_name.to_s, provision_attributes)
-					
-					if Dependency::Alias === provision
-						provides_node.attributes = alias_attributes
-					end
-					
-					unless provides_node.connected?(node)
-						edge = provides_node.connect(node)
-					end
-				end
-			end
-			
-			# Put all dependencies at the same level so as to not make the graph too confusing.
-			done = Set.new
-			chain.ordered.each do |resolution|
-				provider = resolution.provider
-				name = resolution.name
-				
-				p = g.graphs[provider.name] || g.add_subgraph(provider.name, :rank => :same)
-				
-				provider.dependencies.each do |dependency|
-					next if done.include? dependency
-					
-					done << dependency
-					
-					dependency_node = g.nodes[dependency.to_s]
-					
-					p.add_node(dependency_node.name)
-				end
-			end
-			
-			Graphviz::output(g, :path => "graph.pdf")
-			
-			puts g.to_dot
+			puts graph.to_dot
 		end
 	end
 end

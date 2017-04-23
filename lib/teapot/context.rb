@@ -104,7 +104,7 @@ module Teapot
 			
 			select(dependency_names)
 			
-			Dependency::chain(@selection, @dependencies, @targets.values)
+			Dependency::Chain.expand(@dependencies, @targets.values, @selection)
 		end
 
 		def direct_targets(ordered)
