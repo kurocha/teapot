@@ -71,7 +71,7 @@ module Teapot
 			end
 		end
 		
-		# Legacy method name.
+		# TODO Remove legacy method name.
 		alias environment_for_configuration environment
 		
 		def build(&block)
