@@ -50,6 +50,18 @@ module Teapot
 		attr :path
 	end
 	
+	# This is a quick hack so that we can avoid using the system gem.. it's used in build-make package.
+	# TODO Remove this and also the dependency on facets, or fix facets.
+	module System
+		module CPU
+			def self.count
+				require 'etc'
+				
+				Etc.nprocessors rescue 4
+			end
+		end
+	end
+	
 	class Loader
 		Files = Build::Files
 		Rule = Build::Rule
