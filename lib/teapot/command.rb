@@ -129,6 +129,21 @@ module Teapot
 			end
 		end
 
+		class Visualize < Samovar::Command
+			self.description = "Generate a picture of the dependency graph."
+			
+			options do
+				option '-o/--output <path>', "The output path", default: "dependency.svg"
+				option '-t/--target <name>', "Show the partial chain for the given target"
+			end
+			
+			many :targets, "Visualize these targets, or use them to help the dependency resolution process."
+			
+			def invoke(parent)
+				parent.controller.visualize(@targets, **@options)
+			end
+		end
+
 		class Clean < Samovar::Command
 			self.description = "Delete everything in the teapot directory."
 			
@@ -154,6 +169,7 @@ module Teapot
 				'fetch' => Fetch,
 				'list' => List,
 				'build' => Build,
+				'visualize' => Visualize,
 				'clean' => Clean
 			
 			def root

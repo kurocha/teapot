@@ -25,18 +25,24 @@ require 'yaml'
 
 module Teapot
 	class Controller
-		def visualize(dependency_names = [])
+		def visualize(dependency_names = [], output: nil, target: nil)
 			configuration = context.configuration
 			
 			chain = context.dependency_chain(dependency_names, context.configuration)
+			
+			if target
+				chain = chain.partial([target])
+			end
 			
 			visualization = Build::Dependency::Visualization.new
 			
 			graph = visualization.generate(chain)
 			
-			Graphviz::output(graph, :path => "graph.svg")
+			if output
+				Graphviz::output(graph, :path => output)
+			end
 			
-			puts graph.to_dot
+			return graph
 		end
 	end
 end
