@@ -29,6 +29,9 @@ require_relative 'controller/visualize'
 
 require_relative 'repository'
 
+# For IncompatibleTeapotError
+require_relative 'loader'
+
 require 'samovar'
 
 module Teapot
