@@ -21,7 +21,6 @@
 require_relative '../controller'
 
 require 'graphviz'
-require 'yaml'
 
 module Teapot
 	class Controller
@@ -31,7 +30,10 @@ module Teapot
 			chain = context.dependency_chain(dependency_names, context.configuration)
 			
 			if target
-				chain = chain.partial([target])
+				provider = context.targets[target]
+				
+				# TODO The visualisation generated isn't quite right. It's introspecting too much from the packages and not reflecting #ordered and #provisions.
+				chain = chain.partial(provider)
 			end
 			
 			visualization = Build::Dependency::Visualization.new

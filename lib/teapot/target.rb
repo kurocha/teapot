@@ -25,6 +25,8 @@ require_relative 'definition'
 require 'build/environment'
 require 'build/rulebook'
 
+require 'pry'
+
 module Teapot
 	class BuildError < StandardError
 	end
@@ -51,12 +53,10 @@ module Teapot
 		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
 		def environment(configuration, chain)
-			chain = chain.partial(self.targets)
-			
-			environments = []
+			chain = chain.partial(self)
 			
 			# Calculate the dependency chain's ordered environments:
-			environments += chain.provisions.collect do |provision|
+			environments = chain.provisions.collect do |provision|
 				Build::Environment.new(&provision.value)
 			end
 			
@@ -70,9 +70,6 @@ module Teapot
 				default platforms_path configuration.platforms_path
 			end
 		end
-		
-		# TODO Remove legacy method name.
-		alias environment_for_configuration environment
 		
 		def build(&block)
 			if block_given?
