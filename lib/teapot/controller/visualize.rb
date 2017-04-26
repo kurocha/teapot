@@ -24,13 +24,13 @@ require 'graphviz'
 
 module Teapot
 	class Controller
-		def visualize(dependency_names = [], output: nil, target: nil)
+		def visualize(dependency_names = [], output_path: nil, dependency_name: nil)
 			configuration = context.configuration
 			
 			chain = context.dependency_chain(dependency_names, context.configuration)
 			
-			if target
-				provider = context.targets[target]
+			if dependency_name
+				provider = context.dependencies[dependency_name]
 				
 				# TODO The visualisation generated isn't quite right. It's introspecting too much from the packages and not reflecting #ordered and #provisions.
 				chain = chain.partial(provider)

@@ -28,10 +28,11 @@ require 'build/name'
 require 'build/files'
 
 module Teapot
-	# Cannot load packages newer than this:
-	LOADER_VERSION = "1.1"
+	# Cannot load packages newer than this.
+	# Version 1.3: Added support for build-dependency library which allows options for `#depends`. The primary use case is private dependencies.
+	LOADER_VERSION = "1.3"
 	
-	# Cannot load packages older than this:
+	# Cannot load packages older than this.
 	MINIMUM_LOADER_VERSION = "1.0"
 	
 	class IncompatibleTeapotError < StandardError

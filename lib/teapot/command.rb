@@ -133,8 +133,8 @@ module Teapot
 			self.description = "Generate a picture of the dependency graph."
 			
 			options do
-				option '-o/--output <path>', "The output path", default: "dependency.svg"
-				option '-t/--target <name>', "Show the partial chain for the given target"
+				option '-o/--output-path <path>', "The output path for the visualization.", default: "dependency.svg"
+				option '-d/--dependency-name <name>', "Show the partial chain for the given named dependency."
 			end
 			
 			many :targets, "Visualize these targets, or use them to help the dependency resolution process."
