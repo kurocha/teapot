@@ -149,19 +149,21 @@ To only see things exported by your current project, you can run:
 
 The new project doesn't define any targets so we can do that now. Add the following to `teapot.rb`:
 
-	# Build Targets
-	
-	define_target "my-project-tests" do |target|
-		target.build do
-			run tests: 'UnitTest', source_files: target.package.path.glob("test/MyProject/**/*.cpp")
-		end
-		
-		target.depends :platform
-		target.depends "Language/C++11"
-		target.depends "Library/UnitTest"
-		
-		target.provides "Test/MyProject"
+```ruby
+# Build Targets
+
+define_target "my-project-tests" do |target|
+	target.build do
+		run tests: 'UnitTest', source_files: target.package.path.glob("test/MyProject/**/*.cpp")
 	end
+	
+	target.depends :platform
+	target.depends "Language/C++11"
+	target.depends "Library/UnitTest"
+	
+	target.provides "Test/MyProject"
+end
+```
 
 We can now build and run unit tests (althoght there aren't any yet):
 
