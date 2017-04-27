@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 require 'build/files'
+require 'build/uri'
 
 require_relative 'definition'
 
@@ -64,30 +65,35 @@ module Teapot
 		attr :uri
 		attr_accessor :options
 
+		def local
+			@options[:local].to_s
+		end
+
 		def local?
-			@options.key? :local
+			@options.include?(:local)
 		end
 
 		def external?
-			@options.key? :source
+			@options.include?(:source)
 		end
 
-		def source
-			@options[:source].to_s + '/'
+		# The source uri from which this package would be cloned. Might be relative, in which case it's relative to the root of the context.
+		def source_uri
+			Build::URI[@options[:source]]
 		end
 
-		def external_url(relative_root)
-			base_uri = URI(source)
-
-			if base_uri.scheme == nil || base_uri.scheme == 'file'
-				base_uri = URI "file://" + File.expand_path(base_uri.path, relative_root) + "/"
-			end
-
-			return relative_url(base_uri)
+		def external_url(root_path = nil)
+			Build::URI[root_path] + source_uri + Build::URI[@uri]
 		end
 
 		def to_s
-			"#<#{self.class} #{@name.dump} path=#{path}>"
+			if self.local?
+				"links #{@name} from #{self.local}"
+			elsif self.external?
+				"clones #{@name} from #{self.external_url}"
+			else
+				"references #{@name} from #{@path}"
+			end
 		end
 		
 		# Package may be used as hash key / in a set:
@@ -98,23 +104,6 @@ module Teapot
 		
 		def eql?(other)
 			@path.eql?(other.path)
-		end
-		
-		private
-		
-		def relative_url(base_uri)
-			source_uri = URI(@uri)
-
-			unless source_uri.absolute?
-				source_uri = base_uri + source_uri
-			end
-	
-			# Git can't handle the default formatting that Ruby uses for file URIs.
-			if source_uri.scheme == "file"
-				source_uri = "file://" + source_uri.path
-			end
-
-			return source_uri
 		end
 	end
 end

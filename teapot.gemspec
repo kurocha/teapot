@@ -28,11 +28,12 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "rainbow", "~> 2.0"
 	
-	spec.add_dependency "graphviz", "~> 0.3"
+	spec.add_dependency "graphviz", "~> 0.4"
 	
 	spec.add_dependency "build", "~> 1.0"
 	spec.add_dependency "build-files", "~> 1.0"
 	spec.add_dependency "build-dependency", "~> 1.0"
+	spec.add_dependency "build-uri", "~> 1.0"
 	
 	spec.add_dependency "facets", "~> 3.1"
 	spec.add_dependency "samovar", "~> 1.2"
