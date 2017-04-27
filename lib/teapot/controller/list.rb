@@ -52,28 +52,18 @@ module Teapot
 								log "\t\t- Author: #{author.name}" + contact_text
 							end
 						when Target
-							definition.dependencies.each do |name|
-								log "\t\t- depends on #{name.inspect}".color(:red)
+							definition.dependencies.each do |dependency|
+								log "\t\t- #{dependency}".color(:red)
 							end
 			
-							definition.provisions.each do |(name, provision)|
-								if Dependency::Alias === provision
-									log "\t\t- provides #{name.inspect} => #{provision.dependencies.inspect}".color(:green)
-								else
-									log "\t\t- provides #{name.inspect}".color(:green)
-								end
+							definition.provisions.each do |name, provision|
+								log "\t\t- #{provision}".color(:green)
 							end
 						when Configuration
 							definition.materialize
 						
 							definition.packages.each do |package|
-								if package.local?
-									log "\t\t- links #{package.name} from #{package.options[:local]}".color(:green)
-								elsif package.external?
-									log "\t\t- clones #{package.name} from #{package.external_url(context.root)}".color(:green)
-								else
-									log "\t\t- references #{package.name} from #{package.path}".color(:green)
-								end
+								log "\t\t- #{package}".color(:green)
 							end
 						
 							definition.imports.select(&:explicit).each do |import|
