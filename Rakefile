@@ -1,8 +1,19 @@
 require "bundler/gem_tasks"
 require "rspec/core/rake_task"
 
-RSpec::Core::RakeTask.new(:spec) do |task|
-	task.rspec_opts = ["--require", "simplecov"] if ENV['COVERAGE']
+# Load all rake tasks:
+import(*Dir.glob('tasks/**/*.rake'))
+
+RSpec::Core::RakeTask.new(:test)
+
+task :environment do
+	$LOAD_PATH.unshift File.expand_path('lib', __dir__)
 end
 
-task :default => :spec
+task :console => :environment do
+	require 'pry'
+	
+	Pry.start
+end
+
+task :default => :test
