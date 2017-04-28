@@ -6,7 +6,7 @@ gemspec
 group :development do
 	gem 'pry'
 	gem 'pry-coolline'
-	gem 'pry-byebug'
+	gem 'pry-byebug', platform: :mri
 end
 
 group :test do
