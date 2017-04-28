@@ -25,8 +25,6 @@ require_relative 'definition'
 require 'build/environment'
 require 'build/rulebook'
 
-require 'pry'
-
 module Teapot
 	class BuildError < StandardError
 	end
