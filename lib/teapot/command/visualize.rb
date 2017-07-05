@@ -55,12 +55,12 @@ module Teapot
 					chain = chain.partial(provider)
 				end
 
-				visualization = Build::Dependency::Visualization.new
+				visualization = ::Build::Dependency::Visualization.new
 
 				graph = visualization.generate(chain)
 
-				if output
-					Graphviz::output(graph, :path => @options[:output_path])
+				if output_path = @options[:output_path]
+					Graphviz::output(graph, :path => output_path)
 				end
 
 				return graph
