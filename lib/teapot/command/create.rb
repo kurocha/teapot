@@ -35,8 +35,9 @@ module Teapot
 			def invoke(parent)
 				logger = parent.logger
 				
-				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
-				root = ::Build::Files::Path.expand(project_path.to_s)
+				project_path = parent.options[:root] || project_name.gsub(/\s+/, '-').downcase
+				root = ::Build::Files::Path.expand(project_path)
+				parent.options[:root] = root
 				
 				if root.exist?
 					raise ArgumentError.new("#{root} already exists!")
@@ -44,7 +45,6 @@ module Teapot
 				
 				# Create and set the project root:
 				root.create
-				parent.options[:root] = root
 				
 				Teapot::Repository.new(root).init!
 				
@@ -57,7 +57,7 @@ module Teapot
 				Fetch[].invoke(parent)
 				
 				# Generate the default project if it is possible to do so:
-				if context.generators.include?(@project_name)
+				if context.generators.include?('project')
 					Generate['--force', 'project', project_name].invoke(parent)
 				end
 				
