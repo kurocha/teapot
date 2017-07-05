@@ -1,4 +1,4 @@
-# Copyright, 2016, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,9 +19,7 @@
 # THE SOFTWARE.
 
 require 'samovar'
-
-require_relative '../controller'
-require_relative '../controller/generate'
+require_relative '../repository'
 
 module Teapot
 	module Command
@@ -36,9 +34,27 @@ module Teapot
 			many :arguments, "The arguments that will be passed to the generator."
 			
 			def invoke(parent)
-				generator_name, *arguments = @arguments
+				context = parent.context
+				logger = parent.logger
 				
-				parent.controller.generate(@generator_name, @arguments, @options[:force])
+				context.configuration.load_all
+				
+				unless @options[:force]
+					# Check dirty status of local repository:
+					if Repository.new(context.root).status.size != 0
+						abort "You have unstaged changes/unadded files. Please stash/commit them before running the generator.".color(:red)
+					end
+				end
+				
+				name, *arguments = @arguments
+				generator = context.generators[name]
+				
+				unless generator
+					abort "Could not find generator with name #{name.inspect}".color(:red)
+				end
+				
+				logger.info "Generating #{name.inspect} with arguments #{arguments.inspect}".color(:cyan)
+				generator.generate!(*arguments)
 			end
 		end
 	end

@@ -20,10 +20,13 @@
 
 require 'samovar'
 
-require_relative '../controller/build'
+require 'build/controller'
 
 module Teapot
 	module Command
+		class BuildFailedError < StandardError
+		end
+		
 		class Build < Samovar::Command
 			self.description = "Build the specified target."
 			
@@ -37,10 +40,86 @@ module Teapot
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
 			def invoke(parent)
+				context = parent.context
+				
 				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
 				ARGV.replace(@argv) if @argv
 				
-				parent.controller.build(@targets)
+				chain = context.dependency_chain(@targets, context.configuration)
+				
+				ordered = chain.ordered
+				
+				if @options[:only]
+					ordered = context.direct_targets(ordered)
+				end
+				
+				controller = ::Build::Controller.new(logger: parent.logger, limit: @options[:limit]) do |controller|
+					ordered.each do |resolution|
+						target = resolution.provider
+						
+						environment = target.environment(context.configuration, chain)
+						
+						if target.build
+							controller.add_target(target, environment.flatten)
+						end
+					end
+				end
+				
+				walker = nil
+				
+				# We need to catch interrupt here, and exit with the correct exit code:
+				begin
+					controller.run do |walker|
+						# show_dependencies(walker)
+						
+						# Only run once is asked:
+						unless @options[:continuous]
+							if walker.failed?
+								raise BuildFailedError.new("Failed to build all nodes successfully!")
+							end
+						
+							break
+						end
+					end
+				rescue Interrupt
+					if walker && walker.failed?
+						raise BuildFailedError.new("Failed to build all nodes successfully!")
+					end
+				end
+				
+				return chain, ordered
+			end
+			
+			def show_dependencies(walker)
+				outputs = {}
+				
+				walker.tasks.each do |node, task|
+					# puts "Task #{task} (#{node}) outputs:"
+					
+					task.outputs.each do |path|
+						path = path.to_s
+						
+						# puts "\t#{path}"
+						
+						outputs[path] = task
+					end
+				end
+				
+				walker.tasks.each do |node, task|
+					dependencies = {}
+					task.inputs.each do |path|
+						path = path.to_s
+						
+						if generating_task = outputs[path]
+							dependencies[path] = generating_task
+						end
+					end
+					
+					puts "Task #{task.inspect} has #{dependencies.count} dependencies."
+					dependencies.each do |path, task|
+						puts "\t#{task.inspect}: #{path}"
+					end
+				end
 			end
 		end
 	end

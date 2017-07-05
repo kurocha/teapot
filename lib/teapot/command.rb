@@ -28,6 +28,17 @@ require_relative 'command/generate'
 require_relative 'command/list'
 require_relative 'command/visualize'
 
+require_relative 'context'
+require_relative 'configuration'
+require_relative 'version'
+
+require 'uri'
+require 'rainbow'
+require 'rainbow/ext/string'
+require 'fileutils'
+
+require 'build/logger'
+
 module Teapot
 	module Command
 		def self.parse(*args)
@@ -55,11 +66,46 @@ module Teapot
 				'clean' => Clean
 			
 			def root
-				@options[:root]
+				@options[:root] || Dir.getwd
 			end
 			
-			def controller(root = nil, **options)
-				Teapot::Controller.new(root || self.root || Dir.getwd, @options)
+			def verbose?
+				@logging == :verbose
+			end
+			
+			def quiet?
+				@logging == :quiet
+			end
+			
+			def log_output
+				@options.fetch(:log, $stderr)
+			end
+			
+			def logger
+				@logger ||= Logger.new(log_output).tap do |logger|
+					logger.formatter = ::Build::CompactFormatter.new(verbose: verbose?)
+					
+					if verbose?
+						logger.level = Logger::DEBUG
+					elsif quiet?
+						logger.level = Logger::WARN
+					else
+						logger.level = Logger::INFO
+					end
+				end
+			end
+			
+			def configuration
+				@options[:configuration]
+			end
+			
+			def context(root = self.root)
+				@context ||= Context.new(root, configuration: configuration)
+			end
+			
+			# Reload the current context, e.g. if it's been modified by a generator.
+			def reload!
+				@context = nil
 			end
 			
 			def invoke(program_name: File.basename($0))

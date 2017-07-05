@@ -19,9 +19,7 @@
 # THE SOFTWARE.
 
 require 'samovar'
-
-require_relative '../controller'
-require_relative '../controller/visualize'
+require 'graphviz'
 
 module Teapot
 	module Command
@@ -35,8 +33,37 @@ module Teapot
 			
 			many :targets, "Visualize these targets, or use them to help the dependency resolution process."
 			
+			def dependency_names
+				@targets || []
+			end
+			
+			def dependency_name
+				@options[:dependency_name]
+			end
+			
 			def invoke(parent)
-				parent.controller.visualize(@targets, **@options)
+				context = parent.context
+				
+				configuration = context.configuration
+
+				chain = context.dependency_chain(dependency_names, context.configuration)
+
+				if dependency_name
+					provider = context.dependencies[dependency_name]
+					
+					# TODO The visualisation generated isn't quite right. It's introspecting too much from the packages and not reflecting #ordered and #provisions.
+					chain = chain.partial(provider)
+				end
+
+				visualization = Build::Dependency::Visualization.new
+
+				graph = visualization.generate(chain)
+
+				if output
+					Graphviz::output(graph, :path => @options[:output_path])
+				end
+
+				return graph
 			end
 		end
 	end

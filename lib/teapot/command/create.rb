@@ -19,9 +19,9 @@
 # THE SOFTWARE.
 
 require 'samovar'
+require 'build/name'
 
-require_relative '../controller'
-require_relative '../controller/create'
+require_relative 'fetch'
 
 module Teapot
 	module Command
@@ -33,19 +33,62 @@ module Teapot
 			many :packages, "Any additional packages you'd like to include in the project."
 			
 			def invoke(parent)
+				logger = parent.logger
+				
 				project_path = parent.root || project_name.gsub(/\s+/, '-').downcase
-				root = ::Build::Files::Path.expand(project_path)
+				root = ::Build::Files::Path.expand(project_path.to_s)
 				
 				if root.exist?
 					raise ArgumentError.new("#{root} already exists!")
 				end
 				
-				# Make the path:
+				# Create and set the project root:
 				root.create
+				parent.options[:root] = root
 				
 				Teapot::Repository.new(root).init!
 				
-				parent.controller(root).create(@project_name, @source, @packages)
+				logger.info "Creating project named #{project_name} at path #{root}...".color(:cyan)
+				generate_project(root, @project_name, @source, @packages)
+				
+				context = parent.context
+				
+				# Fetch the initial packages:
+				Fetch[].invoke(parent)
+				
+				# Generate the default project if it is possible to do so:
+				if context.generators.include?(@project_name)
+					Generate['--force', 'project', project_name].invoke(parent)
+				end
+				
+				parent.reload!
+				
+				# Fetch any additional packages:
+				Fetch[].invoke(parent)
+			end
+			
+			def generate_project(root, project_name, source, packages)
+				name = ::Build::Name.new(project_name)
+				
+				File.open(root + TEAPOT_FILE, "w") do |output|
+					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''
+				
+					output.puts "required_version #{LOADER_VERSION.dump}", ''
+				
+					output.puts "\# Build Targets", ''
+				
+					output.puts "\# Configurations", ''
+				
+					output.puts "define_configuration #{name.target.dump} do |configuration|"
+					
+					output.puts "\tconfiguration[:source] = #{source.dump}", ''
+				
+					packages.each do |name|
+						output.puts "\tconfiguration.require #{name.dump}"
+					end
+				
+					output.puts "end", ''
+				end
 			end
 		end
 	end
