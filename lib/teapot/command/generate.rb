@@ -46,15 +46,14 @@ module Teapot
 					end
 				end
 				
-				name, *arguments = @arguments
-				generator = context.generators[name]
+				generator = context.generators[@generator_name]
 				
 				unless generator
 					abort "Could not find generator with name #{name.inspect}".color(:red)
 				end
 				
-				logger.info "Generating #{name.inspect} with arguments #{arguments.inspect}".color(:cyan)
-				generator.generate!(*arguments)
+				logger.info "Generating #{@generator_name.inspect} with arguments #{@arguments.inspect}".color(:cyan)
+				generator.generate!(*@arguments)
 			end
 		end
 	end
