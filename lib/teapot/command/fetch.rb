@@ -1,17 +1,15 @@
-#!/usr/bin/env ruby
-
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
-# 
+# Copyright, 2016, by Samuel G. D. Williams. <http://www.codeotaku.com>
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,40 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/command'
+require 'samovar'
 
-options = Teapot::Command.parse(ARGV)
+require_relative '../controller'
+require_relative '../controller/fetch'
 
-begin
-	options.invoke
-rescue Teapot::IncompatibleTeapotError => error
-	$stderr.puts error.message.color(:red)
-	$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
-	
-	exit 1
-rescue Teapot::Dependency::UnresolvedDependencyError => error
-	$stderr.puts "Unresolved dependencies:"
-
-	error.chain.unresolved.each do |(name, parent)|
-		$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
-	
-		conflicts = error.chain.conflicts[name]
-	
-		if conflicts
-			conflicts.each do |conflict|
-				$stderr.puts " - provided by #{conflict.name}".color(:red)
+module Teapot
+	module Command
+		class Fetch < Samovar::Command
+			self.description = "Fetch remote packages according to the specified configuration."
+			
+			# 3 typical use cases:
+			# - fetch current packages according to lockfile
+			# - write current pacakges into lockfile
+			# - update packages and update lockfile
+			
+			options do
+				option '--update', "Update dependencies to the latest versions."
+				option '--local', "Don't update from source, assume updated local packages."
+			end
+			
+			def invoke(parent)
+				parent.controller.fetch(**@options)
 			end
 		end
 	end
-
-	$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
-	
-	exit 2
-rescue StandardError => error
-	$stderr.puts error.message.color(:red)
-	
-	# Could be nice to have some improved error reporting.
-	$stderr.puts error.backtrace
-	
-	exit 3
 end
