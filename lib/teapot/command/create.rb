@@ -35,9 +35,8 @@ module Teapot
 			def invoke(parent)
 				logger = parent.logger
 				
-				project_path = parent.options[:root] || project_name.gsub(/\s+/, '-').downcase
-				root = ::Build::Files::Path.expand(project_path)
-				parent.options[:root] = root
+				nested = parent['--root', parent.options[:root] || project_name.gsub(/\s+/, '-').downcase]
+				root = nested.root
 				
 				if root.exist?
 					raise ArgumentError.new("#{root} already exists!")
@@ -51,20 +50,18 @@ module Teapot
 				logger.info "Creating project named #{project_name} at path #{root}...".color(:cyan)
 				generate_project(root, @project_name, @source, @packages)
 				
-				context = parent.context
-				
 				# Fetch the initial packages:
-				Fetch[].invoke(parent)
+				Fetch[].invoke(nested)
+				
+				context = nested.context
 				
 				# Generate the default project if it is possible to do so:
 				if context.generators.include?('project')
-					Generate['--force', 'project', project_name].invoke(parent)
+					Generate['--force', 'project', project_name].invoke(nested)
 				end
 				
-				parent.reload!
-				
 				# Fetch any additional packages:
-				Fetch[].invoke(parent)
+				Fetch[].invoke(nested)
 			end
 			
 			def generate_project(root, project_name, source, packages)

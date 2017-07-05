@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "facets", "~> 3.1"
 	spec.add_dependency "samovar", "~> 1.4"
+	spec.add_dependency "samovar", "~> 1.5"
 	
 	# This could be a good option in the future for teapot fetch:
 	#spec.add_dependency "rugged"

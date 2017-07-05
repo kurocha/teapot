@@ -66,7 +66,7 @@ module Teapot
 				'clean' => Clean
 			
 			def root
-				@options[:root] || Dir.getwd
+				::Build::Files::Path.expand(@options[:root] || Dir.getwd)
 			end
 			
 			def verbose?
@@ -100,12 +100,7 @@ module Teapot
 			end
 			
 			def context(root = self.root)
-				@context ||= Context.new(root, configuration: configuration)
-			end
-			
-			# Reload the current context, e.g. if it's been modified by a generator.
-			def reload!
-				@context = nil
+				Context.new(root, configuration: configuration)
 			end
 			
 			def invoke(program_name: File.basename($0))

@@ -52,7 +52,8 @@ module Teapot
 					abort "Could not find generator with name #{name.inspect}".color(:red)
 				end
 				
-				logger.info "Generating #{@generator_name.inspect} with arguments #{@arguments.inspect}".color(:cyan)
+				logger.info "Generating #{@generator_name.inspect} with arguments #{@arguments.inspect} in #{parent.root}".color(:cyan)
+				
 				generator.generate!(*@arguments)
 			end
 		end
