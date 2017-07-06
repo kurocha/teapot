@@ -31,7 +31,7 @@ rescue Teapot::IncompatibleTeapotError => error
 	$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
 	
 	exit 1
-rescue Teapot::Dependency::UnresolvedDependencyError => error
+rescue Build::Dependency::UnresolvedDependencyError => error
 	$stderr.puts "Unresolved dependencies:"
 
 	error.chain.unresolved.each do |name, parent|
