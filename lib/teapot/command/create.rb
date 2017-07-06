@@ -30,7 +30,7 @@ module Teapot
 			self.description = "Create a new teapot package using the specified repository."
 			
 			options do
-				option "-t/--target-name <name>", "The target to use to create the project", default: 'project'
+				option "-t/--target-name <name>", "The target to use to create the project", default: 'Generate/Project/Initial'
 			end
 			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
@@ -64,23 +64,20 @@ module Teapot
 				
 				context = nested.context
 				
-				# Generate the default project if it is possible to do so:
-				if context.targets.include?(target_name)
-					Build[target_name, '--', project_name].invoke(nested)
-					
-					# Fetch any additional packages:
-					Fetch[].invoke(nested)
-					
-					index = repository.index
-					index.add_all
-					
-					Rugged::Commit.create(repository,
-						tree: index.write_tree(repository),
-						message: "Initial project files.",
-						parents: repository.empty? ? [] : [repository.head.target].compact,
-						update_ref: 'HEAD'
-					)
-				end
+				Build[target_name, *@packages, '--', project_name].invoke(nested)
+				
+				# Fetch any additional packages:
+				Fetch[].invoke(nested)
+				
+				index = repository.index
+				index.add_all
+				
+				Rugged::Commit.create(repository,
+					tree: index.write_tree(repository),
+					message: "Initial project files.",
+					parents: repository.empty? ? [] : [repository.head.target].compact,
+					update_ref: 'HEAD'
+				)
 			end
 			
 			def generate_project(root, project_name, source, packages)

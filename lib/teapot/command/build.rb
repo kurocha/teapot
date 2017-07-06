@@ -32,7 +32,7 @@ module Teapot
 			
 			options do
 				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes."
-				option '--only', "Only compile direct dependencies."
+				option '--only', "Only build direct dependencies."
 				option '-c/--continuous', "Run the build graph continually (experimental)."
 			end
 			

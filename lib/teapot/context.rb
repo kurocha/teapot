@@ -23,6 +23,7 @@ require_relative 'package'
 
 require 'build/rulebook'
 require 'build/text/substitutions'
+require 'build/text/merge'
 
 module Teapot
 	TEAPOT_FILE = 'teapot.rb'.freeze

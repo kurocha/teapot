@@ -50,7 +50,7 @@ module Teapot
 			
 			options do
 				option '-c/--configuration <name>', "Specify a specific build configuration.", default: ENV['TEAPOT_CONFIGURATION']
-				option '--root <path>', "Work in the given root directory."
+				option '--root <path>', "Work in the given root directory.", default: Dir.getwd
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
 				option '-h/--help', "Print out help information."
 				option '-v/--version', "Print out the application version."
@@ -63,10 +63,11 @@ module Teapot
 				'status' => Status,
 				'build' => Build,
 				'visualize' => Visualize,
-				'clean' => Clean
+				'clean' => Clean,
+				default: 'build'
 			
 			def root
-				::Build::Files::Path.expand(@options[:root] || Dir.getwd)
+				::Build::Files::Path.expand(@options[:root])
 			end
 			
 			def verbose?
@@ -77,12 +78,8 @@ module Teapot
 				@logging == :quiet
 			end
 			
-			def log_output
-				@options.fetch(:log, $stderr)
-			end
-			
 			def logger
-				@logger ||= Logger.new(log_output).tap do |logger|
+				@logger ||= Logger.new($stderr).tap do |logger|
 					logger.formatter = ::Build::CompactFormatter.new(verbose: verbose?)
 					
 					if verbose?
