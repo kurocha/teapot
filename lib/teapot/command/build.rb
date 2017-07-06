@@ -55,9 +55,9 @@ module Teapot
 						target = resolution.provider
 						
 						if target.build
-							environment = target.environment(context.configuration, chain, @argv)
+							environment = target.environment(context.configuration, chain)
 							
-							controller.add_target(target, environment.flatten)
+							controller.add_target(target, environment.flatten, @argv)
 						end
 					end
 				end
