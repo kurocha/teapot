@@ -111,6 +111,10 @@ module Teapot
 
 			@defined << configuration
 		end
+		
+		def define_generator(*args)
+			warn "define_generator(#{args.inspect}) is deprecated and will have no effect. Please use define_target."
+		end
 
 		# Checks the host patterns and executes the block if they match.
 		def host(*args, &block)
