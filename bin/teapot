@@ -34,7 +34,7 @@ rescue Teapot::IncompatibleTeapotError => error
 rescue Teapot::Dependency::UnresolvedDependencyError => error
 	$stderr.puts "Unresolved dependencies:"
 
-	error.chain.unresolved.each do |(name, parent)|
+	error.chain.unresolved.each do |name, parent|
 		$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
 	
 		conflicts = error.chain.conflicts[name]

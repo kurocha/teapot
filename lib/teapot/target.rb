@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'pathname'
-require_relative 'dependency'
+require 'build/dependency'
 require_relative 'definition'
 
 require 'build/environment'
@@ -30,7 +30,7 @@ module Teapot
 	end
 	
 	class Target < Definition
-		include Dependency
+		include Build::Dependency
 		
 		def initialize(context, package, name)
 			super context, package, name
@@ -50,7 +50,7 @@ module Teapot
 		end
 		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
-		def environment(configuration, chain)
+		def environment(configuration, chain, argv = nil)
 			chain = chain.partial(self)
 			
 			# Calculate the dependency chain's ordered environments:
@@ -66,6 +66,11 @@ module Teapot
 			
 			environment.merge do
 				default platforms_path configuration.platforms_path
+				
+				# If the target was explicitly selected, pass along the arguments:
+				if chain.dependencies.include?(self.name)
+					arguments argv
+				end
 			end
 		end
 		

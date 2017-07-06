@@ -24,7 +24,6 @@ require_relative 'command/build'
 require_relative 'command/clean'
 require_relative 'command/create'
 require_relative 'command/fetch'
-require_relative 'command/generate'
 require_relative 'command/list'
 require_relative 'command/status'
 require_relative 'command/visualize'
@@ -51,7 +50,7 @@ module Teapot
 			
 			options do
 				option '-c/--configuration <name>', "Specify a specific build configuration.", default: ENV['TEAPOT_CONFIGURATION']
-				option '-i/--in/--root <path>', "Work in the given root directory."
+				option '--root <path>', "Work in the given root directory."
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
 				option '-h/--help', "Print out help information."
 				option '-v/--version', "Print out the application version."
@@ -59,7 +58,6 @@ module Teapot
 			
 			nested '<command>',
 				'create' => Create,
-				'generate' => Generate,
 				'fetch' => Fetch,
 				'list' => List,
 				'status' => Status,

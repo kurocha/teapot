@@ -20,7 +20,6 @@
 
 require_relative 'project'
 require_relative 'target'
-require_relative 'generator'
 require_relative 'configuration'
 
 require 'build/rule'
@@ -30,8 +29,8 @@ require 'build/files'
 module Teapot
 	# Cannot load packages newer than this.
 	# Version 1.3: Added support for build-dependency library which allows options for `#depends`. The primary use case is private dependencies.
-	# Version 1.4: Removed facets, added Rugged, changed create behaviour to do initial commit.
-	LOADER_VERSION = "1.4"
+	# Version 2.0: Generators removed and refactored into build.
+	LOADER_VERSION = "2.0"
 	
 	# Cannot load packages older than this.
 	MINIMUM_LOADER_VERSION = "1.0"
@@ -50,18 +49,6 @@ module Teapot
 		end
 		
 		attr :path
-	end
-	
-	# This is a quick hack so that we can avoid using the system gem.. it's used in build-make package.
-	# TODO Remove this and also the dependency on facets, or fix facets.
-	module System
-		module CPU
-			def self.count
-				require 'etc'
-				
-				Etc.nprocessors rescue 4
-			end
-		end
 	end
 	
 	class Loader
@@ -113,14 +100,6 @@ module Teapot
 			yield target
 
 			@defined << target
-		end
-
-		def define_generator(*args)
-			generator = Generator.new(@context, @package, *args)
-
-			yield generator
-
-			@defined << generator
 		end
 
 		def define_configuration(*args)

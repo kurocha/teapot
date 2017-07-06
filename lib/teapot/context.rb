@@ -22,6 +22,7 @@ require_relative 'loader'
 require_relative 'package'
 
 require 'build/rulebook'
+require 'build/text/substitutions'
 
 module Teapot
 	TEAPOT_FILE = 'teapot.rb'.freeze
@@ -47,7 +48,6 @@ module Teapot
 			@options = options
 
 			@targets = {}
-			@generators = {}
 			@configurations = {}
 			@projects = {}
 			@rules = Build::Rulebook.new
@@ -66,7 +66,6 @@ module Teapot
 		attr :options
 
 		attr :targets
-		attr :generators
 		attr :projects
 
 		# Context metadata
@@ -90,6 +89,25 @@ module Teapot
 			@repository ||= Rugged::Repository.new(@root.to_s)
 		end
 
+		def substitutions
+			substitutions = Build::Text::Substitutions.new
+
+			if @project
+				substitutions['PROJECT_NAME'] = @project.name
+				substitutions['LICENSE'] = @project.license
+			end
+
+			# The user's current name:
+			substitutions['AUTHOR_NAME'] = repository.config['user.name']
+			substitutions['AUTHOR_EMAIL'] = repository.config['user.email']
+
+			current_date = Time.new
+			substitutions['DATE'] = current_date.strftime("%-d/%-m/%Y")
+			substitutions['YEAR'] = current_date.strftime("%Y")
+
+			return substitutions
+		end
+
 		def select(names)
 			names.each do |name|
 				if @targets.key? name
@@ -105,7 +123,7 @@ module Teapot
 			
 			select(dependency_names)
 			
-			Dependency::Chain.expand(@dependencies, @targets.values, @selection)
+			Build::Dependency::Chain.expand(@dependencies, @targets.values, @selection)
 		end
 
 		def direct_targets(ordered)
@@ -121,10 +139,6 @@ module Teapot
 				AlreadyDefinedError.check(definition, @targets)
 
 				@targets[definition.name] = definition
-			when Generator
-				AlreadyDefinedError.check(definition, @generators)
-
-				@generators[definition.name] = definition
 			when Configuration
 				# We define configurations in two cases, if they are public, or if they are part of the root package of this context.
 				if definition.public? or definition.package == @root_package

@@ -30,15 +30,15 @@ module Teapot
 			self.description = "Create a new teapot package using the specified repository."
 			
 			options do
-				option "-g/--generator-name <name>", "The generator to use to create the project", default: 'project'
+				option "-t/--target-name <name>", "The target to use to create the project", default: 'project'
 			end
 			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
 			many :packages, "Any additional packages you'd like to include in the project."
 			
-			def generator_name
-				@options[:generator_name]
+			def target_name
+				@options[:target_name]
 			end
 			
 			def invoke(parent)
@@ -65,8 +65,8 @@ module Teapot
 				context = nested.context
 				
 				# Generate the default project if it is possible to do so:
-				if context.generators.include?(generator_name)
-					Generate['--force', generator_name, project_name].invoke(nested)
+				if context.targets.include?(target_name)
+					Build[target_name, '--', project_name].invoke(nested)
 					
 					# Fetch any additional packages:
 					Fetch[].invoke(nested)
@@ -76,7 +76,7 @@ module Teapot
 					
 					Rugged::Commit.create(repository,
 						tree: index.write_tree(repository),
-						message: "Generating ",
+						message: "Initial project files.",
 						parents: repository.empty? ? [] : [repository.head.target].compact,
 						update_ref: 'HEAD'
 					)
@@ -85,6 +85,10 @@ module Teapot
 			
 			def generate_project(root, project_name, source, packages)
 				name = ::Build::Name.new(project_name)
+				
+				File.open(root + ".gitignore", "w") do |output|
+					output.puts "teapot/"
+				end
 				
 				File.open(root + TEAPOT_FILE, "w") do |output|
 					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''

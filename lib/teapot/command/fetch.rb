@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'samovar'
-require_relative '../repository'
+require 'rugged'
 
 module Teapot
 	module Command
@@ -140,8 +140,10 @@ module Teapot
 			
 					begin
 						external_url = package.external_url(context.root)
-
-						Repository.new(destination_path).clone!(external_url, branch, commit)
+						
+						repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch)
+						repository.checkout(commit) if commit
+						# Repository.new().clone!(external_url, branch, commit)
 					rescue
 						logger.info "Failed to clone #{external_url}...".color(:red)
 
@@ -151,7 +153,8 @@ module Teapot
 					logger.info "Updating package at path #{destination_path} ...".color(:cyan)
 
 					commit = package_lock ? package_lock[:commit] : nil
-					Repository.new(destination_path).update(branch, commit)
+					Rugged::Repository.new(destination_path.to_s).checkout(commit)
+					# Repository.new(destination_path).update(branch, commit)
 				end
 			end
 

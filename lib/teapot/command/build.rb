@@ -42,9 +42,6 @@ module Teapot
 			def invoke(parent)
 				context = parent.context
 				
-				# TODO: This is a bit of a hack, figure out a way to pass it directly through to build subsystem.
-				ARGV.replace(@argv) if @argv
-				
 				chain = context.dependency_chain(@targets, context.configuration)
 				
 				ordered = chain.ordered
@@ -57,9 +54,9 @@ module Teapot
 					ordered.each do |resolution|
 						target = resolution.provider
 						
-						environment = target.environment(context.configuration, chain)
-						
 						if target.build
+							environment = target.environment(context.configuration, chain, @argv)
+							
 							controller.add_target(target, environment.flatten)
 						end
 					end
