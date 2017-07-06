@@ -26,6 +26,7 @@ require_relative 'command/create'
 require_relative 'command/fetch'
 require_relative 'command/generate'
 require_relative 'command/list'
+require_relative 'command/status'
 require_relative 'command/visualize'
 
 require_relative 'context'
@@ -61,6 +62,7 @@ module Teapot
 				'generate' => Generate,
 				'fetch' => Fetch,
 				'list' => List,
+				'status' => Status,
 				'build' => Build,
 				'visualize' => Visualize,
 				'clean' => Clean
