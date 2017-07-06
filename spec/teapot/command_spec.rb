@@ -24,12 +24,13 @@ RSpec.describe Teapot::Command do
 	let(:source) {Build::Files::Path.new(__dir__) + "../../../../kurocha"}
 	# let(:source) {"https://github.com/kurocha"}
 	let(:root) {Build::Files::Path.new(__dir__) + "command_spec"}
+	let(:project_name) {"Test Project"}
 	let(:project_path) {root + 'test-project'}
 	
 	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
 	
 	context Teapot::Command::Create do
-		subject {top["create", "test-project", source.to_s, "project"]}
+		subject {top["create", project_name, source.to_s, "project"]}
 	
 		before do
 			root.mkpath
