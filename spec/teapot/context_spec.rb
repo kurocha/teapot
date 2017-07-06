@@ -20,22 +20,19 @@
 
 require 'teapot/context'
 
-module Teapot::ContextSpec
-	ROOT = Build::Files::Path.new(__dir__) + "context_spec"
+RSpec.describe Teapot::Context do
+	let(:root) {Build::Files::Path.new(__dir__) + "context_spec"}
+	let(:context) {Teapot::Context.new(root)}
 	
-	describe Teapot::Context do
-		it "should load teapot.rb file" do
-			context = Teapot::Context.new(ROOT)
-		
-			# There is one configuration:
-			expect(context.configurations.count).to be == 1
-		
-			expect(context.targets.count).to be == 1
-		
-			default_configuration = context.configuration
-		
-			# 13 defined packages + 1 implicit package.
-			expect(default_configuration.packages.count).to be == 14
-		end
+	it "should load teapot.rb file" do
+		# There is one configuration:
+		expect(context.configurations.count).to be == 1
+	
+		expect(context.targets.count).to be == 1
+	
+		default_configuration = context.configuration
+	
+		# 13 defined packages + 1 implicit package.
+		expect(default_configuration.packages.count).to be == 14
 	end
 end

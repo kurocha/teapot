@@ -30,7 +30,8 @@ require 'build/files'
 module Teapot
 	# Cannot load packages newer than this.
 	# Version 1.3: Added support for build-dependency library which allows options for `#depends`. The primary use case is private dependencies.
-	LOADER_VERSION = "1.3"
+	# Version 1.4: Removed facets, added Rugged, changed create behaviour to do initial commit.
+	LOADER_VERSION = "1.4"
 	
 	# Cannot load packages older than this.
 	MINIMUM_LOADER_VERSION = "1.0"

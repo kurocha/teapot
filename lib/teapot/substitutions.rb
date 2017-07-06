@@ -242,11 +242,13 @@ module Teapot
 			substitutions = self.new
 
 			# The user's current name:
-			substitutions['AUTHOR_NAME'] = context.metadata.user.name
-			substitutions['AUTHOR_EMAIL'] = context.metadata.user.email
+			substitutions['AUTHOR_NAME'] = context.repository.config['user.name']
+			substitutions['AUTHOR_EMAIL'] = context.repository.config['user.email']
 
-			substitutions['PROJECT_NAME'] = context.project.name
-			substitutions['LICENSE'] = context.project.license
+			if project = context.project
+				substitutions['PROJECT_NAME'] = project.name
+				substitutions['LICENSE'] = project.license
+			end
 
 			current_date = Time.new
 			substitutions['DATE'] = current_date.strftime("%-d/%-m/%Y")

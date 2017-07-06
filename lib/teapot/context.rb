@@ -20,7 +20,6 @@
 
 require_relative 'loader'
 require_relative 'package'
-require_relative 'metadata'
 
 require 'build/rulebook'
 
@@ -46,8 +45,6 @@ module Teapot
 		def initialize(root, options = {})
 			@root = Path[root]
 			@options = options
-
-			@metadata = Metadata.new(self)
 
 			@targets = {}
 			@generators = {}
@@ -88,6 +85,10 @@ module Teapot
 
 		attr :dependencies
 		attr :selection
+
+		def repository
+			@repository ||= Rugged::Repository.new(@root.to_s)
+		end
 
 		def select(names)
 			names.each do |name|
@@ -202,7 +203,7 @@ module Teapot
 			end
 			
 			if @configuration.nil?
-				raise ArgumentError.new("Could not load configuration: #{configuration_name}")
+				raise ArgumentError.new("Could not load configuration: #{configuration_name.inspect}")
 			end
 			
 			# Materialize the configuration:

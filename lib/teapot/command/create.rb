@@ -29,9 +29,17 @@ module Teapot
 		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
+			options do
+				option "-g/--generator-name <name>", "The generator to use to create the project", default: 'project'
+			end
+			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
 			many :packages, "Any additional packages you'd like to include in the project."
+			
+			def generator_name
+				@options[:generator_name]
+			end
 			
 			def invoke(parent)
 				logger = parent.logger
@@ -57,12 +65,22 @@ module Teapot
 				context = nested.context
 				
 				# Generate the default project if it is possible to do so:
-				if context.generators.include?('project')
-					Generate['--force', 'project', project_name].invoke(nested)
+				if context.generators.include?(generator_name)
+					Generate['--force', generator_name, project_name].invoke(nested)
+					
+					# Fetch any additional packages:
+					Fetch[].invoke(nested)
+					
+					index = repository.index
+					index.add_all
+					
+					Rugged::Commit.create(repository,
+						tree: index.write_tree(repository),
+						message: "Generating ",
+						parents: repository.empty? ? [] : [repository.head.target].compact,
+						update_ref: 'HEAD'
+					)
 				end
-				
-				# Fetch any additional packages:
-				Fetch[].invoke(nested)
 			end
 			
 			def generate_project(root, project_name, source, packages)
