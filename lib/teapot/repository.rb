@@ -55,10 +55,6 @@ module Teapot
 				@options = options
 			end
 
-			def init!
-				run!("init", @root)
-			end
-
 			def clone!(remote_url, branch = nil, commit = nil)
 				branch_args = branch ? ["--branch", branch] : []
 

@@ -22,6 +22,7 @@ require 'samovar'
 require 'build/name'
 
 require_relative 'fetch'
+require 'rugged'
 
 module Teapot
 	module Command
@@ -45,7 +46,7 @@ module Teapot
 				# Create and set the project root:
 				root.create
 				
-				Teapot::Repository.new(root).init!
+				repository = Rugged::Repository.init_at(root.to_s)
 				
 				logger.info "Creating project named #{project_name} at path #{root}...".color(:cyan)
 				generate_project(root, @project_name, @source, @packages)
