@@ -125,22 +125,33 @@ module Teapot
 				if package_lock
 					logger.info "Package locked to commit: #{package_lock[:branch]}/#{package_lock[:commit]}"
 
-					branch = package_lock[:branch]
+					branch_name = package_lock[:branch]
+					commit_id = package_lock[:commit]
 				end
-
-				commit = package_lock ? package_lock[:commit] : nil
 
 				if destination_path.exist?
 					logger.info "Updating package at path #{destination_path}...".color(:cyan)
 
 					repository = Rugged::Repository.new(destination_path.to_s)
-					repository.checkout(commit || 'origin/master')
+					repository.fetch('origin')
 				else
 					logger.info "Cloning package at path #{destination_path}...".color(:cyan)
 					
 					external_url = package.external_url(context.root)
-					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch)
-					repository.checkout(commit) if commit
+					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch_name)
+				end
+				
+				if package_lock
+					branch = repository.branches[branch_name].resolve
+					repository.references.update(branch, commit_id)
+					repository.checkout(branch.name)
+				else
+					branch = repository.branches[repository.head.name]
+					
+					repository.references.update(branch, branch.upstream.target_id)
+					
+					# Checkout latest:
+					repository.checkout(branch.name)
 				end
 			end
 
