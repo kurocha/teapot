@@ -142,15 +142,18 @@ module Teapot
 				end
 				
 				if package_lock
+					# Lookup the named branch:
 					branch = repository.branches[branch_name].resolve
+					# Update it to point at the specified commit:
 					repository.references.update(branch, commit_id)
+					# Check out the files:
 					repository.checkout(branch.name)
 				else
+					# Lookup the current branch:
 					branch = repository.branches[repository.head.name]
-					
+					# Update the branch to point to the upstream commit:
 					repository.references.update(branch, branch.upstream.target_id)
-					
-					# Checkout latest:
+					# Checkout the current branch (with updated commit):
 					repository.checkout(branch.name)
 				end
 			end
