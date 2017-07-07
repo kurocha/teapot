@@ -83,10 +83,12 @@ module Teapot
 			def generate_project(root, project_name, source, packages)
 				name = ::Build::Name.new(project_name)
 				
+				# Otherwise the initial commit will try to include teapot/
 				File.open(root + ".gitignore", "w") do |output|
 					output.puts "teapot/"
 				end
 				
+				# A very basic teapot file to pull in the initial dependencies.
 				File.open(root + TEAPOT_FILE, "w") do |output|
 					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''
 				

@@ -50,7 +50,7 @@ module Teapot
 			
 			options do
 				option '-c/--configuration <name>', "Specify a specific build configuration.", default: ENV['TEAPOT_CONFIGURATION']
-				option '--root <path>', "Work in the given root directory.", default: Dir.getwd
+				option '--root <path>', "Work in the given root directory."
 				option '--verbose | --quiet', "Verbosity of output for debugging.", key: :logging
 				option '-h/--help', "Print out help information."
 				option '-v/--version', "Print out the application version."
