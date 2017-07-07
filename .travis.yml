@@ -14,6 +14,12 @@ rvm:
   - jruby-head
   - ruby-head
 matrix:
+  global:
+    env: CC=clang-4.0 CXX=clang++-4.0
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
+addons:
+  apt:
+    sources: ["llvm-toolchain-trusty-4.0"]
+    packages: ["clang-4.0"]
