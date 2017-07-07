@@ -67,7 +67,7 @@ module Teapot
 				default: 'build'
 			
 			def root
-				::Build::Files::Path.expand(@options[:root])
+				::Build::Files::Path.expand(@options[:root] || Dir.getwd)
 			end
 			
 			def verbose?
