@@ -92,20 +92,32 @@ module Teapot
 
 		def substitutions
 			substitutions = Build::Text::Substitutions.new
-
+			
+			substitutions['TEAPOT_VERSION'] = Teapot::VERSION
+			
 			if @project
-				substitutions['PROJECT_NAME'] = @project.name
+				Build::Name.new(@project.name)
+				
+				# e.g. Foo Bar, typically used as a title, directory, etc.
+				substitutions['PROJECT_NAME'] = name.text
+				
+				# e.g. FooBar, typically used as a namespace
+				substitutions['PROJECT_IDENTIFIER'] = name.identifier
+				
+				# e.g. foo-bar, typically used for targets, executables
+				substitutions['PROJECT_TARGET_NAME'] = name.target
+				
 				substitutions['LICENSE'] = @project.license
 			end
-
+			
 			# The user's current name:
 			substitutions['AUTHOR_NAME'] = repository.config['user.name']
 			substitutions['AUTHOR_EMAIL'] = repository.config['user.email']
-
+			
 			current_date = Time.new
 			substitutions['DATE'] = current_date.strftime("%-d/%-m/%Y")
 			substitutions['YEAR'] = current_date.strftime("%Y")
-
+			
 			return substitutions
 		end
 
