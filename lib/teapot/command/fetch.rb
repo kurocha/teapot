@@ -77,23 +77,13 @@ module Teapot
 			end
 			
 			private
-
-			def current_commit(package)
-				IO.popen(['git', '--git-dir', (package.path + '.git').to_s, 'rev-parse', '--verify', 'HEAD']) do |io|
-					io.read.chomp!
-				end
-			end
-			
-			def current_branch(package)
-				IO.popen(['git', '--git-dir', (package.path + '.git').to_s, 'rev-parse', '--abbrev-ref', 'HEAD']) do |io|
-					io.read.chomp!
-				end		
-			end
 			
 			def current_metadata(package)
-				{
-					branch: current_branch(package),
-					commit: current_commit(package)
+				repository = Rugged::Repository.new(package.path.to_s)
+				
+				return {
+					commit: repository.head.target.oid,
+					branch: repository.head.name.sub(/^refs\/heads\//, '')
 				}
 			end
 			
