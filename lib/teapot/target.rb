@@ -58,9 +58,6 @@ module Teapot
 				Build::Environment.new(&provision.value)
 			end
 			
-			# Per-configuration package package environment:
-			environments << @package.options[:environment]
-			
 			# Merge all the environments together:
 			environment = Build::Environment.combine(*environments)
 			
