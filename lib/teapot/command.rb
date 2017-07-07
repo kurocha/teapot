@@ -71,11 +71,11 @@ module Teapot
 			end
 			
 			def verbose?
-				@logging == :verbose
+				@options[:logging] == :verbose
 			end
 			
 			def quiet?
-				@logging == :quiet
+				@options[:logging] == :quiet
 			end
 			
 			def logger
