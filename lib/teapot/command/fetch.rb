@@ -36,6 +36,8 @@ module Teapot
 				option '--local', "Don't update from source, assume updated local packages."
 			end
 			
+			many :packages, "Only update the specified packages, or all packages if none specified."
+			
 			def invoke(parent)
 				logger = parent.logger
 				context = parent.context
@@ -47,9 +49,12 @@ module Teapot
 				while true
 					configuration.packages.each do |package|
 						next if resolved.include? package
-					
-						fetch_package(context, configuration, package, logger, **@options)
-					
+						
+						# If specific packages were listed, limit updates to them.
+						if @packages.empty? || @packages.include?(package.name)
+							fetch_package(context, configuration, package, logger, **@options)
+						end
+						
 						# We are done with this package, don't try to process it again:
 						resolved << package
 					end
@@ -126,12 +131,12 @@ module Teapot
 				commit = package_lock ? package_lock[:commit] : nil
 
 				if destination_path.exist?
-					logger.info "Updating package at path #{destination_path} ...".color(:cyan)
+					logger.info "Updating package at path #{destination_path}...".color(:cyan)
 
 					repository = Rugged::Repository.new(destination_path.to_s)
 					repository.checkout(commit || 'origin/master')
 				else
-					logger.info "Cloning package at path #{destination_path} ...".color(:cyan)
+					logger.info "Cloning package at path #{destination_path}...".color(:cyan)
 					
 					external_url = package.external_url(context.root)
 					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch)
