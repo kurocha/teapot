@@ -20,26 +20,30 @@
 
 require 'teapot/command'
 
-RSpec.describe Teapot::Command do
-	# let(:source) {Build::Files::Path.new(__dir__) + "../../../../kurocha"}
-	let(:source) {"https://github.com/kurocha"}
-	let(:root) {Build::Files::Path.new(__dir__) + "command_spec"}
-	let(:project_name) {"Test Project"}
-	let(:project_path) {root + 'test-project'}
+RSpec.describe Teapot::Command, order: :defined do
+	let!(:source) {"https://github.com/kurocha"}
+	let!(:root) {Build::Files::Path.new(__dir__) + "command_spec"}
+	let!(:project_name) {"Test Project"}
+	let!(:project_path) {root + 'test-project'}
 	
 	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
 	
 	context Teapot::Command::Create do
 		subject {top["create", project_name, source.to_s, "project"]}
-	
-		before do
-			root.mkpath
-			project_path.delete
-		end
 		
 		it "should create a new project" do
+			root.delete
+			
 			expect{subject.invoke}.to_not raise_error
 			expect(project_path + "teapot.rb").to be_exist
+		end
+	end
+	
+	context Teapot::Command::Build do
+		subject {top["build", "Run/TestProject"]}
+	
+		it "should build project" do
+			expect{subject.invoke}.to_not raise_error
 		end
 	end
 end
