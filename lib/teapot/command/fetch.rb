@@ -104,7 +104,7 @@ module Teapot
 			end
 
 			def clone_or_pull_package(context, configuration, package, package_lock, logger)
-				logger.info "Fetching #{package}...".color(:cyan)
+				logger.info "Processing #{package}...".color(:cyan)
 
 				# Where we are going to put the package:
 				destination_path = package.path
@@ -125,26 +125,17 @@ module Teapot
 
 				commit = package_lock ? package_lock[:commit] : nil
 
-				unless destination_path.exist?
-					logger.info "Cloning package at path #{destination_path} ...".color(:cyan)
-			
-					begin
-						external_url = package.external_url(context.root)
-						
-						repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch)
-						repository.checkout(commit) if commit
-						# Repository.new().clone!(external_url, branch, commit)
-					rescue
-						logger.info "Failed to clone #{external_url}...".color(:red)
-
-						raise
-					end
-				else
+				if destination_path.exist?
 					logger.info "Updating package at path #{destination_path} ...".color(:cyan)
 
-					commit = package_lock ? package_lock[:commit] : nil
-					Rugged::Repository.new(destination_path.to_s).checkout(commit)
-					# Repository.new(destination_path).update(branch, commit)
+					repository = Rugged::Repository.new(destination_path.to_s)
+					repository.checkout(commit || 'origin/master')
+				else
+					logger.info "Cloning package at path #{destination_path} ...".color(:cyan)
+					
+					external_url = package.external_url(context.root)
+					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch)
+					repository.checkout(commit) if commit
 				end
 			end
 
