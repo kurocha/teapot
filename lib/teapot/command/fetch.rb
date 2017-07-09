@@ -130,7 +130,7 @@ module Teapot
 					base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
 				end
 
-				branch = package.options.fetch(:branch, 'master')
+				branch_name = package.options.fetch(:branch, 'master')
 
 				if package_lock
 					logger.info "Package locked to commit: #{package_lock[:branch]}/#{package_lock[:commit]}"
@@ -143,35 +143,42 @@ module Teapot
 					logger.info "Updating package at path #{destination_path}...".color(:cyan)
 
 					repository = Rugged::Repository.new(destination_path.to_s)
+
+					# Are there uncommitted changes in the work tree?
+					if repository.to_enum(:status).any?
+						raise FetchError.new(package, "Uncommited local modifications")
+					end
+
 					repository.fetch('origin')
+					
+					repository.checkout(branch_name)
+					
+					# Essentially implement git pull:
+					if commit_id
+						# Lookup the named branch:
+						branch = repository.branches[branch_name].resolve
+						# Update it to point at the specified commit:
+						repository.references.update(branch, commit_id)
+						# Check out the files:
+						repository.checkout(branch.name)
+					else
+						# Lookup the current branch:
+						branch = repository.branches[repository.head.name]
+						# Update the branch to point to the upstream commit:
+						repository.references.update(branch, branch.upstream.target_id)
+						# Checkout the current branch (with updated commit):
+						repository.checkout(branch.name)
+					end
 				else
 					logger.info "Cloning package at path #{destination_path}...".color(:cyan)
 					
 					external_url = package.external_url(context.root)
+					
+					# Clone the repository with the specified branch:
 					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch_name)
-				end
-				
-				# Are there uncommitted changes in the work tree?
-				if repository.to_enum(:status).any?
-					raise FetchError.new(package, "Uncommited local modifications")
-				end
-				
-				# There is one other case - if you've made local commits but haven't pushed them, the code below may clobber them - however they would still be available in the reflog.
-				
-				if package_lock
-					# Lookup the named branch:
-					branch = repository.branches[branch_name].resolve
-					# Update it to point at the specified commit:
-					repository.references.update(branch, commit_id)
-					# Check out the files:
-					repository.checkout(branch.name)
-				else
-					# Lookup the current branch:
-					branch = repository.branches[repository.head.name]
-					# Update the branch to point to the upstream commit:
-					repository.references.update(branch, branch.upstream.target_id)
-					# Checkout the current branch (with updated commit):
-					repository.checkout(branch.name)
+					
+					# Reset it to the requested commit if required:
+					repository.reset(commit_id, :hard) if commit_id
 				end
 				
 				# Rugged currently doesn't have good (any?) support for submodules, so we diretly invoke git here:
