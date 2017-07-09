@@ -148,27 +148,22 @@ module Teapot
 					if repository.to_enum(:status).any?
 						raise FetchError.new(package, "Uncommited local modifications")
 					end
-
-					repository.fetch('origin')
 					
+					repository.fetch('origin')
 					repository.checkout(branch_name)
 					
 					# Essentially implement git pull:
 					if commit_id
 						# Lookup the named branch:
 						branch = repository.branches[branch_name].resolve
-						# Update it to point at the specified commit:
-						repository.references.update(branch, commit_id)
-						# Check out the files:
-						repository.checkout(branch.name)
 					else
-						# Lookup the current branch:
+						# Lookup the current branch and upstream commit:
 						branch = repository.branches[repository.head.name]
-						# Update the branch to point to the upstream commit:
-						repository.references.update(branch, branch.upstream.target_id)
-						# Checkout the current branch (with updated commit):
-						repository.checkout(branch.name)
+						commit_id = branch.upstream.target_id
 					end
+					
+					# Reset it to the requested commit if required:
+					repository.reset(commit_id, :hard)
 				else
 					logger.info "Cloning package at path #{destination_path}...".color(:cyan)
 					

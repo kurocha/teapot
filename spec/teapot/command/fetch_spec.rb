@@ -24,6 +24,8 @@ require 'teapot/command'
 RSpec.describe Teapot::Command::Fetch, order: :defined do
 	let(:root) {Build::Files::Path.new(__dir__) + "fetch_spec"}
 	let(:project_path) {root + 'test-project'}
+	let(:thing_path) {root + "repositories/thing"}
+	let(:thing_package_path) {project_path + "teapot/packages/test/thing"}
 	
 	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
 	
@@ -35,8 +37,6 @@ RSpec.describe Teapot::Command::Fetch, order: :defined do
 			
 			expect(File).to_not be_exist(root + "test-project/teapot/packages/test")
 		end
-		
-		let(:thing_path) {root + "repositories/thing"}
 		
 		it "can create thing repository" do
 			(thing_path + ".git").delete
@@ -85,6 +85,23 @@ RSpec.describe Teapot::Command::Fetch, order: :defined do
 		
 		it "can't fetch with local modifications" do
 			expect{subject.invoke}.to raise_error(Teapot::Command::FetchError, /local modifications/)
+			
+			path.delete
+		end
+	end
+	
+	context "fetch with upstream changes" do
+		subject {top['fetch', '--update']}
+		
+		it "can commit upstream changes" do
+			system("git", "add", "README.md", chdir: thing_path)
+			system("git", "commit", "-m", "Add documentation", chdir: thing_path)
+		end
+		
+		it "can fetch changes" do
+			expect{subject.invoke}.to_not raise_error
+			
+			expect(File).to be_exist(thing_package_path + "README.md")
 		end
 	end
 end
