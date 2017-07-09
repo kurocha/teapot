@@ -20,5 +20,7 @@
 
 require "teapot/version"
 
+require "teapot/context"
+
 module Teapot
 end

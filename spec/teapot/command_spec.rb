@@ -48,4 +48,12 @@ RSpec.describe Teapot::Command, order: :defined do
 			expect{subject.invoke}.to_not raise_error
 		end
 	end
+	
+	context Teapot::Command::Fetch do
+		subject {top["fetch"]}
+		
+		it "should fetch any changes" do
+			expect{subject.invoke}.to_not raise_error
+		end
+	end
 end

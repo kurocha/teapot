@@ -19,6 +19,11 @@ end
 require "bundler/setup"
 require "teapot"
 
+RSpec.shared_context Teapot::Context do
+	let(:root) {Build::Files::Path[__dir__] + 'context'}
+	let(:context) {Teapot::Context.new(root, load_root: false)}
+end
+
 RSpec.configure do |config|
 	# Enable flags like --only-failures and --next-failure
 	config.example_status_persistence_file_path = ".rspec_status"

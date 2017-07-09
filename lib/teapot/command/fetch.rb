@@ -19,10 +19,20 @@
 # THE SOFTWARE.
 
 require 'samovar'
+
 require 'rugged'
 
 module Teapot
 	module Command
+		class FetchError < StandardError
+			def initialize(package, message)
+				super(message)
+				@package = package
+			end
+			
+			attr :package
+		end
+		
 		class Fetch < Samovar::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
@@ -51,7 +61,7 @@ module Teapot
 						next if resolved.include? package
 						
 						# If specific packages were listed, limit updates to them.
-						if @packages.empty? || @packages.include?(package.name)
+						if @packages.nil? || @packages.empty? || @packages.include?(package.name)
 							fetch_package(context, configuration, package, logger, **@options)
 						end
 						
@@ -141,6 +151,13 @@ module Teapot
 					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch_name)
 				end
 				
+				# Are there uncommitted changes in the work tree?
+				if repository.to_enum(:status).any?
+					raise FetchError.new(package, "Uncommited local modifications")
+				end
+				
+				# There is one other case - if you've made local commits but haven't pushed them, the code below may clobber them - however they would still be available in the reflog.
+				
 				if package_lock
 					# Lookup the named branch:
 					branch = repository.branches[branch_name].resolve
@@ -155,6 +172,11 @@ module Teapot
 					repository.references.update(branch, branch.upstream.target_id)
 					# Checkout the current branch (with updated commit):
 					repository.checkout(branch.name)
+				end
+				
+				# Rugged currently doesn't have good (any?) support for submodules, so we diretly invoke git here:
+				if repository.submodules.any?
+					system("git", "submodule", "update", "--init", "--recursive", chdir: package.path)
 				end
 			end
 

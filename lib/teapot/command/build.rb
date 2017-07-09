@@ -66,7 +66,7 @@ module Teapot
 						if target.build
 							environment = target.environment(context.configuration, chain)
 							
-							controller.add_target(target, environment.flatten, @argv)
+							controller.add_target(target, environment.flatten, self.argv)
 						end
 					end
 				end

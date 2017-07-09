@@ -22,9 +22,8 @@ require 'teapot/context'
 require 'teapot/configuration'
 
 RSpec.describe Teapot::Configuration do
-	let(:root) {Build::Files::Path[__dir__] + 'configuration_spec'}
+	include_context Teapot::Context
 	
-	let(:context) {Teapot::Context.new(root, load_root: false)}
 	let(:master) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'master', 'master'), 'master')}
 	let(:embedded) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'embedded', 'embedded'), 'embedded')}
 	
