@@ -21,8 +21,8 @@
 require 'teapot/command'
 
 RSpec.describe Teapot::Command, order: :defined do
-	# let(:source) {"https://github.com/kurocha"}
-	let(:source) {File.expand_path("../../../../kurocha", __dir__)}
+	let(:source) {"https://github.com/kurocha"}
+	# let(:source) {File.expand_path("../../../../kurocha", __dir__)}
 	let(:root) {Build::Files::Path.new(__dir__) + "command_spec"}
 	let(:project_name) {"Test Project"}
 	let(:project_path) {root + 'test-project'}
