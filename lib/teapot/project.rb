@@ -31,7 +31,12 @@ module Teapot
 			@authors = []
 		end
 		
+		def name
+			Build::Name.from_target(@name)
+		end
+		
 		def freeze
+			@title.freeze
 			@summary.freeze
 			@license.freeze
 			@website.freeze
@@ -42,6 +47,7 @@ module Teapot
 			super
 		end
 		
+		attr_accessor :title
 		attr_accessor :summary
 		attr_accessor :license
 		attr_accessor :website

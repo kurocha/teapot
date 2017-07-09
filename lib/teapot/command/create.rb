@@ -61,7 +61,7 @@ module Teapot
 				
 				if target_names.any?
 					# Generate the initial project files:
-					Build[*target_names, '--', project_name].invoke(nested)
+					Build[*target_names].invoke(nested)
 					
 					# Fetch any additional packages:
 					Fetch[].invoke(nested)
@@ -93,19 +93,20 @@ module Teapot
 					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''
 				
 					output.puts "required_version #{LOADER_VERSION.dump}", ''
+					
+					output.puts "define_project #{name.target.dump} do |project|"
+					output.puts "\tproject.title = #{name.text.dump}"
+					output.puts "end", ''
 				
 					output.puts "\# Build Targets", ''
 				
 					output.puts "\# Configurations", ''
 				
 					output.puts "define_configuration #{name.target.dump} do |configuration|"
-					
 					output.puts "\tconfiguration[:source] = #{source.dump}", ''
-				
 					packages.each do |name|
 						output.puts "\tconfiguration.require #{name.dump}"
 					end
-				
 					output.puts "end", ''
 				end
 			end

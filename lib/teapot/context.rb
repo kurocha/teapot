@@ -94,7 +94,7 @@ module Teapot
 			substitutions['TEAPOT_VERSION'] = Teapot::VERSION
 			
 			if @project
-				name = Build::Name.new(@project.name)
+				name = @project.name
 				
 				# e.g. Foo Bar, typically used as a title, directory, etc.
 				substitutions['PROJECT_NAME'] = name.text
