@@ -18,33 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/command'
+require 'teapot/context'
+require 'teapot/configuration'
 
-RSpec.describe Teapot::Command, order: :defined do
-	let(:source) {"https://github.com/kurocha"}
-	# let(:source) {File.expand_path("../../../../kurocha", __dir__)}
-	let(:root) {Build::Files::Path.new(__dir__) + "command_spec"}
-	let(:project_name) {"Test Project"}
-	let(:project_path) {root + 'test-project'}
+RSpec.describe Teapot::Configuration do
+	let(:root) {Build::Files::Path[__dir__] + 'configuration_spec'}
 	
-	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
+	let(:context) {Teapot::Context.new(root, load_root: false)}
+	let(:master) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'master', 'master'), 'master')}
+	let(:embedded) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'embedded', 'embedded'), 'embedded')}
 	
-	context Teapot::Command::Create do
-		subject {top["create", project_name, source.to_s, "generate-project"]}
-		
-		it "should create a new project" do
-			root.delete
-			
-			expect{subject.invoke}.to_not raise_error
-			expect(project_path + "teapot.rb").to be_exist
+	context "with create targets" do
+		before(:each) do
+			master.targets[:create] << "hello"
+			embedded.targets[:create] << "world"
 		end
-	end
-	
-	context Teapot::Command::Build do
-		subject {top["build", "Run/TestProject"]}
-	
-		it "should build project" do
-			expect{subject.invoke}.to_not raise_error
+		
+		it "can merge packages" do
+			expect(master.update(embedded, {})).to be_truthy
+			
+			expect(master.targets[:create]).to be == ["hello", "world"]
 		end
 	end
 end

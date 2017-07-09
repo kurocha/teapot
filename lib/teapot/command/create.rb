@@ -29,17 +29,9 @@ module Teapot
 		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			options do
-				option "-t/--target-name <name>", "The target to use to create the project", default: 'Generate/Project/Initial'
-			end
-			
 			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
 			many :packages, "Any additional packages you'd like to include in the project."
-			
-			def target_name
-				@options[:target_name]
-			end
 			
 			def invoke(parent)
 				logger = parent.logger
@@ -64,14 +56,22 @@ module Teapot
 				
 				context = nested.context
 				
-				Build[target_name, *@packages, '--', project_name].invoke(nested)
+				# The targets to build to create the initial project:
+				target_names = context.configuration.targets[:create]
 				
-				# Fetch any additional packages:
-				Fetch[].invoke(nested)
+				if target_names.any?
+					# Generate the initial project files:
+					Build[*target_names, '--', project_name].invoke(nested)
+					
+					# Fetch any additional packages:
+					Fetch[].invoke(nested)
+				end
 				
+				# Stage all files:
 				index = repository.index
 				index.add_all
 				
+				# Commit the initial project files:
 				Rugged::Commit.create(repository,
 					tree: index.write_tree(repository),
 					message: "Initial project files.",

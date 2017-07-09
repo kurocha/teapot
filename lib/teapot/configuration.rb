@@ -48,6 +48,9 @@ module Teapot
 			@imports = IdentitySet.new
 
 			@visibility = :private
+			
+			# A list of named targets for specific purposes:
+			@targets = Hash.new{|hash,key| hash[key] = Array.new}
 		end
 
 		def freeze
@@ -55,6 +58,8 @@ module Teapot
 			@packages.freeze
 			@imports.freeze
 			@visibility.freeze
+			
+			@targets.freeze
 			
 			super
 		end
@@ -69,6 +74,9 @@ module Teapot
 		def public!
 			@visibility = :public
 		end
+
+		# A table of named targets for specific purposes.
+		attr :targets
 
 		# Options used to bind packages to this configuration.
 		attr :options
@@ -178,7 +186,7 @@ module Teapot
 						# Mark this as resolved
 						imported << import
 						
-						updated = self.merge(named_configuration, import.options) || updated
+						updated = self.update(named_configuration, import.options) || updated
 					else
 						# It couldn't be resolved and hasn't already been resolved...
 						@imports << import
@@ -190,7 +198,7 @@ module Teapot
 		end
 		
 		# Merge an external configuration into this configuration. We won't override already defined packages.
-		def merge(configuration, options)
+		def update(configuration, options)
 			updated = false
 			
 			configuration.packages.each do |external_package|
@@ -212,6 +220,12 @@ module Teapot
 					
 					updated = true
 				end
+			end
+			
+			configuration.targets.each do |key, value|
+				@targets[key] += value
+				
+				updated = true
 			end
 			
 			return updated

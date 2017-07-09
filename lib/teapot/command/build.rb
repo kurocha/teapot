@@ -39,10 +39,19 @@ module Teapot
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
+			# The targets to build:
+			def dependency_names(context)
+				if @targets.any?
+					@targets
+				else
+					context.configuration.targets[:build]
+				end
+			end
+			
 			def invoke(parent)
 				context = parent.context
 				
-				chain = context.dependency_chain(@targets, context.configuration)
+				chain = context.dependency_chain(dependency_names(context), context.configuration)
 				
 				ordered = chain.ordered
 				
