@@ -32,7 +32,13 @@ module Teapot
 		end
 		
 		def name
-			Build::Name.from_target(@name)
+			if @title
+				# Prefer title, it retains case.
+				Build::Name.new(@title)
+			else
+				# Otherwise, if we don't have title, use the target name.
+				Build::Name.from_target(@name)
+			end
 		end
 		
 		def freeze
