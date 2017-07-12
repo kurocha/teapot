@@ -117,6 +117,11 @@ module Teapot
 					destination_path.make_symlink(local_path)
 				end
 			end
+			
+			def credentials(url, username, types)
+				# We should prompt for username/password if required...
+				return Rugged::Credentials::SshKeyFromAgent.new(username: username)
+			end
 
 			def clone_or_pull_package(context, configuration, package, package_lock, logger)
 				logger.info "Processing #{package}...".color(:cyan)
@@ -149,7 +154,7 @@ module Teapot
 						raise FetchError.new(package, "Uncommited local modifications")
 					end
 					
-					repository.fetch('origin')
+					repository.fetch('origin', credentials: self.method(:credentials))
 					repository.checkout(branch_name)
 					
 					# Essentially implement git pull:
@@ -170,7 +175,7 @@ module Teapot
 					external_url = package.external_url(context.root)
 					
 					# Clone the repository with the specified branch:
-					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch_name)
+					repository = Rugged::Repository.clone_at(external_url.to_s, destination_path.to_s, checkout_branch: branch_name, credentials: self.method(:credentials))
 					
 					# Reset it to the requested commit if required:
 					repository.reset(commit_id, :hard) if commit_id
