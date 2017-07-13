@@ -1,11 +1,14 @@
+# Setup the environment:
 language: ruby
 sudo: false
 dist: trusty
 cache: bundler
+
 before_install:
   # For testing purposes:
   - git config --global user.email "samuel@oriontransfer.net"
   - git config --global user.name "Samuel Williams"
+
 rvm:
   - 2.1
   - 2.2
@@ -13,12 +16,21 @@ rvm:
   - 2.4
   - jruby-head
   - ruby-head
+
+# Setup the compilers:
 matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
-env: CC=clang-4.0 CXX=clang++-4.0
+
 addons:
   apt:
-    sources: ["llvm-toolchain-trusty-4.0"]
-    packages: ["clang-4.0"]
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-4.0
+    packages:
+      - clang-4.0
+      - libc++-dev
+      - libc++abi-dev
+env:
+  - CC=clang-4.0 CXX=clang++-4.0
