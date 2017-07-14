@@ -31,7 +31,7 @@ module Teapot
 			self.description = "Build the specified target."
 			
 			options do
-				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes."
+				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes.", type: Integer
 				option '--only', "Only build direct dependencies."
 				option '-c/--continuous', "Run the build graph continually (experimental)."
 			end
