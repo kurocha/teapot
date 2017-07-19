@@ -34,6 +34,9 @@ module Teapot
 			many :packages, "Any additional packages you'd like to include in the project."
 			
 			def invoke(parent)
+				raise ArgumentError, "project_name is required" unless @project_name
+				raise ArgumentError, "source is required" unless @source
+				
 				logger = parent.logger
 				
 				nested = parent['--root', parent.options[:root] || project_name.gsub(/\s+/, '-').downcase]
