@@ -108,13 +108,13 @@ module Teapot
 					output.puts "define_configuration 'development' do |configuration|"
 					output.puts "\tconfiguration[:source] = #{source.dump}"
 					output.puts "\tconfiguration.import #{name.target.dump}"
+					packages.each do |name|
+						output.puts "\tconfiguration.require #{name.dump}"
+					end
 					output.puts "end", ''
 					
 					output.puts "define_configuration #{name.target.dump} do |configuration|"
 					output.puts "\tconfiguration.public!"
-					packages.each do |name|
-						output.puts "\tconfiguration.require #{name.dump}"
-					end
 					output.puts "end"
 				end
 			end
