@@ -101,9 +101,15 @@ module Teapot
 					output.puts "\# Build Targets", ''
 				
 					output.puts "\# Configurations", ''
-				
-					output.puts "define_configuration #{name.target.dump} do |configuration|"
+					
+					output.puts "define_configuration 'development' do |configuration|"
 					output.puts "\tconfiguration[:source] = #{source.dump}", ''
+					output.puts "\tconfiguration.import #{target.name.dump}", ''
+					output.puts "end", ''
+					
+					output.puts "\#"
+					output.puts "define_configuration #{name.target.dump} do |configuration|"
+					output.puts "\tconfiguration.public!", ''
 					packages.each do |name|
 						output.puts "\tconfiguration.require #{name.dump}"
 					end
