@@ -1,4 +1,4 @@
-# ![Teapot](materials/teapot.png?raw=true)
+# ![Teapot](materials/teapot.svg)
 
 Teapot is a decentralised build tool for managing complex cross-platform projects. It has many goals but it is primarily designed to improve the experience for developers trying to make cross-platform applications and libraries with a minimum of overhead.
 
