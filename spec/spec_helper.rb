@@ -18,6 +18,7 @@ end
 
 require "bundler/setup"
 require "teapot"
+require 'pry'
 
 RSpec.shared_context Teapot::Context do
 	let(:root) {Build::Files::Path[__dir__] + 'context'}

@@ -23,6 +23,7 @@ require 'samovar'
 require_relative 'command/build'
 require_relative 'command/clean'
 require_relative 'command/create'
+require_relative 'command/clone'
 require_relative 'command/fetch'
 require_relative 'command/list'
 require_relative 'command/status'
@@ -58,6 +59,7 @@ module Teapot
 			
 			nested '<command>',
 				'create' => Create,
+				'clone' => Clone,
 				'fetch' => Fetch,
 				'list' => List,
 				'status' => Status,

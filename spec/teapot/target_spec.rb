@@ -20,34 +20,43 @@
 
 require 'teapot/context'
 
-module Teapot::TargetSpec
-	ROOT = Build::Files::Path.new(__dir__) + "target_spec"
+RSpec.describe Teapot::Target do
+	let(:root) {Build::Files::Path.new(__dir__) + "target_spec"}
 	
-	describe Teapot::Target do
-		it "should generate environment for configuration" do
-			context = Teapot::Context.new(ROOT)
-			
-			target = context.targets['target_spec']
-			expect(target).to_not be == nil
-			
-			chain = context.dependency_chain(["Test/TargetSpec"])
-			expect(chain.providers.size).to be == 4
-			expect(chain.providers).to include target
-			
-			expect(chain.ordered.size).to be == 3
-			expect(chain.ordered[0].name).to be == 'Variant/debug'
-			expect(chain.ordered[1].name).to be == 'Platform/generic'
-			expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
-			expect(chain.ordered[2].provider).to be == target
-			
-			environment = target.environment(context.configuration, chain)
-			# Environment#to_hash flattens the environment and evaluates all values:
-			hash = environment.to_hash
-			
-			expect(hash[:variant]).to be == 'debug'
-			expect(hash[:platform_name]).to be == 'generic'
-			
-			expect(hash).to include(:buildflags, :linkflags, :build_prefix, :install_prefix, :platforms_path)
-		end
+	it "should generate environment for configuration" do
+		context = Teapot::Context.new(root)
+		
+		target = context.targets['target_spec']
+		expect(target).to_not be == nil
+		
+		chain = context.dependency_chain(["Test/TargetSpec"])
+		expect(chain.providers.size).to be == 4
+		expect(chain.providers).to include target
+		
+		expect(chain.ordered.size).to be == 3
+		expect(chain.ordered[0].name).to be == 'Variant/debug'
+		expect(chain.ordered[1].name).to be == 'Platform/generic'
+		expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
+		expect(chain.ordered[2].provider).to be == target
+		
+		environment = target.environment(context.configuration, chain)
+		# Environment#to_hash flattens the environment and evaluates all values:
+		hash = environment.to_hash
+		
+		expect(hash[:variant]).to be == 'debug'
+		expect(hash[:platform_name]).to be == 'generic'
+		
+		expect(hash).to include(:buildflags, :linkflags, :build_prefix, :install_prefix, :platforms_path)
+	end
+	
+	it "should match wildcard packages" do
+		context = Teapot::Context.new(root)
+		
+		target = context.targets['target_spec']
+		expect(target).to_not be == nil
+		
+		chain = context.dependency_chain(["Test/*"])
+		expect(chain.providers.size).to be == 4
+		expect(chain.providers).to include target
 	end
 end
