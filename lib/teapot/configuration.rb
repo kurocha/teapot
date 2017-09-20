@@ -35,30 +35,29 @@ module Teapot
 			:import => true
 		}.freeze
 		
-		def initialize(context, package, name, packages = [], options = nil)
+		def initialize(context, package, name, packages = [], **options)
 			super context, package, name
 
-			if options
-				@options = options
-			else
-				@options = DEFAULT_OPTIONS.dup
-			end
+			@options = DEFAULT_OPTIONS.merge(options)
 
 			@packages = IdentitySet.new(packages)
 			@imports = IdentitySet.new
 
 			@visibility = :private
-			
+
 			# A list of named targets for specific purposes:
 			@targets = Hash.new{|hash,key| hash[key] = Array.new}
 		end
 
 		def freeze
+			return if frozen?
+			
 			@options.freeze
 			@packages.freeze
 			@imports.freeze
 			@visibility.freeze
 			
+			@targets.default = [].freeze
 			@targets.freeze
 			
 			super
@@ -88,8 +87,8 @@ module Teapot
 		attr :imports
 
 		# Specifies that this configuration depends on an external package of some sort.
-		def require(name, options = nil)
-			options = options ? @options.merge(options) : @options.dup
+		def require(name, **options)
+			options = @options.merge(options)
 			
 			@packages << Package.new(packages_path + name.to_s, name, options)
 			
@@ -139,100 +138,55 @@ module Teapot
 		end
 
 		def lock_store
-			@lock_store ||= YAML::Store.new(lock_path.to_s)
+			YAML::Store.new(lock_path.to_s)
 		end
 
-		# Load all packages defined by this configuration.
-		def load_all
-			@packages.each do |package|
-				@context.load(package)
-			end
-		end
-		
-		# Conceptually, a configuration belongs to a package. Primarily, a configuration lists dependent packages, but this also includes itself as the dependencies are purely target based, e.g. this configuration has access to any targets exposed by its own package.
-		def top!
-			@packages << @package
+		def to_s
+			"#<#{self.class} #{@name.dump} visibility=#{@visibility}>"
 		end
 
 		# Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.
-		def materialize
-			# Potentially no materialization is required:
-			return false if @imports.count == 0
+		def traverse(configurations, imported = IdentitySet.new, &block)
+			yield self # Whatever happens here, should ensure that...
 			
-			# Avoid loops in the dependency chain:
-			imported = IdentitySet.new
-			
-			# Enumerate all imports and attempt to resolve the packages:
-			begin
-				updated = false
+			@imports.each do |import|
+				# So we don't get into some crazy cycle:
+				next if imported.include?(import)
 				
-				# Before trying to materialize, we should load all possible packages:
-				@packages.each do |package|
-					@context.load(package) rescue nil
+				# Mark it as being imported:
+				imported << import
+				
+				# ... by here, the configuration is available:
+				if configuration = configurations[import.name]
+					configuration.traverse(configurations, imported, &block)
 				end
-				
-				imports = @imports
-				@imports = IdentitySet.new
-				
-				imports.each do |import|
-					named_configuration = @context.configurations[import.name]
-
-					# So we don't get into some crazy cycle:
-					next if imported.include? import
-					
-					# It would be nice if we could detect cycles and issue an error to the user. However, sometimes the case above is not hit at the point where the cycle begins - it isn't clear at what point the user explicitly created a cycle, and what configuration actually ends up being imported a second time.
-					
-					if named_configuration && named_configuration != self
-						# Mark this as resolved
-						imported << import
-						
-						updated = self.update(named_configuration, import.options) || updated
-					else
-						# It couldn't be resolved and hasn't already been resolved...
-						@imports << import
-					end
-				end
-			end while updated
-			
-			return true
+			end
 		end
 		
 		# Merge an external configuration into this configuration. We won't override already defined packages.
-		def update(configuration, options)
-			updated = false
-			
-			configuration.packages.each do |external_package|
+		def merge(configuration)
+			configuration.packages.each do |package|
 				# The top level configuration will override packages that are defined by imported configurations. This is desirable behaviour, as it allows us to flatten the configuration but provide overrides if required.
-				unless @packages.include? external_package
-					options = options.merge(external_package.options)
+				unless @packages.include? package
+					package = Package.new(packages_path + package.name, package.name, @options.merge(package.options))
 					
-					@packages << Package.new(packages_path + external_package.name, external_package.name, options)
+					@packages << package
 					
-					updated = true
+					yield package
 				end
 			end
 			
-			configuration.imports.each do |external_import|
-				unless @imports.include? external_import
-					options = options.merge(external_import.options)
-					
-					@imports << Import.new(external_import.name, external_import.explicit, options)
-					
-					updated = true
+			configuration.imports.each do |import|
+				unless @imports.include? import
+					@imports << Import.new(import.name, import.explicit, @options.merge(import.options))
 				end
 			end
 			
 			configuration.targets.each do |key, value|
 				@targets[key] += value
-				
-				updated = true
 			end
 			
-			return updated
-		end
-		
-		def to_s
-			"#<#{self.class} #{@name.dump} visibility=#{@visibility}>"
+			return self
 		end
 	end
 end

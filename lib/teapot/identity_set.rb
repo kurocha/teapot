@@ -33,6 +33,8 @@ module Teapot
 			end
 		end
 		
+		attr :table
+		
 		def freeze
 			@table.freeze
 			
@@ -46,8 +48,6 @@ module Teapot
 		def identity(object)
 			object.name
 		end
-		
-		attr :table
 		
 		def add(object)
 			@table[identity(object)] = object
@@ -65,6 +65,10 @@ module Teapot
 		
 		def each(&block)
 			@table.each_value(&block)
+		end
+		
+		def slice(names)
+			names.collect{|name| @table[name]}
 		end
 		
 		extend Forwardable

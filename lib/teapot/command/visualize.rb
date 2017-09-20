@@ -43,13 +43,11 @@ module Teapot
 			
 			def invoke(parent)
 				context = parent.context
-				
-				configuration = context.configuration
-
-				chain = context.dependency_chain(dependency_names, context.configuration)
+				selection = context.select(dependency_names)
+				chain = selection.chain
 
 				if dependency_name
-					provider = context.dependencies[dependency_name]
+					provider = selection.dependencies[dependency_name]
 					
 					# TODO The visualisation generated isn't quite right. It's introspecting too much from the packages and not reflecting #ordered and #provisions.
 					chain = chain.partial(provider)

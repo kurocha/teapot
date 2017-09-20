@@ -25,11 +25,12 @@ RSpec.describe Teapot::Target do
 	
 	it "should generate environment for configuration" do
 		context = Teapot::Context.new(root)
+		selection = context.select(["Test/TargetSpec"])
 		
-		target = context.targets['target_spec']
+		target = selection.targets['target_spec']
 		expect(target).to_not be == nil
 		
-		chain = context.dependency_chain(["Test/TargetSpec"])
+		chain = selection.chain
 		expect(chain.providers.size).to be == 4
 		expect(chain.providers).to include target
 		
@@ -39,7 +40,7 @@ RSpec.describe Teapot::Target do
 		expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
 		expect(chain.ordered[2].provider).to be == target
 		
-		environment = target.environment(context.configuration, chain)
+		environment = target.environment(selection.configuration, chain)
 		# Environment#to_hash flattens the environment and evaluates all values:
 		hash = environment.to_hash
 		
@@ -51,11 +52,12 @@ RSpec.describe Teapot::Target do
 	
 	it "should match wildcard packages" do
 		context = Teapot::Context.new(root)
+		selection = context.select(["Test/*"])
 		
-		target = context.targets['target_spec']
+		target = selection.targets['target_spec']
 		expect(target).to_not be == nil
 		
-		chain = context.dependency_chain(["Test/*"])
+		chain = selection.chain
 		expect(chain.providers.size).to be == 4
 		expect(chain.providers).to include target
 	end

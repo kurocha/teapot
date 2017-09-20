@@ -35,6 +35,9 @@ module Teapot
 	# Cannot load packages older than this.
 	MINIMUM_LOADER_VERSION = "1.0"
 	
+	# The package relative path to the file to load:
+	TEAPOT_FILE = 'teapot.rb'.freeze
+	
 	class IncompatibleTeapotError < StandardError
 		def initialize(package, version)
 			super "Unsupported teapot_version #{version} in #{package.path}!"
@@ -51,29 +54,32 @@ module Teapot
 		attr :path
 	end
 	
-	class Loader
+	# The DSL exposed to the `teapot.rb` file.
+	class Script
 		Files = Build::Files
 		Rule = Build::Rule
 		
-		class Definitions < Array
-			def default_configuration
-				find{|definition| Configuration === definition}
-			end
-		end
-		
-		def initialize(context, package)
+		def initialize(context, package, path = TEAPOT_FILE)
 			@context = context
 			@package = package
-
-			@defined = Definitions.new
+			
+			@defined = []
 			@version = nil
+			
+			@default_project = nil
+			@default_configuration = nil
+			
+			@mtime = nil
 		end
-
+		
 		attr :context
 		attr :package
 		attr :defined
 		attr :version
-
+		
+		attr :default_project
+		attr :default_configuration
+		
 		def teapot_version(version)
 			version = version[0..2]
 			
@@ -83,17 +89,18 @@ module Teapot
 				raise IncompatibleTeapotError.new(package, version)
 			end
 		end
-
+		
 		alias required_version teapot_version
-
+		
 		def define_project(*args)
 			project = Project.new(@context, @package, *args)
 			
 			yield project
 			
+			@default_project = project
 			@defined << project
 		end
-
+		
 		def define_target(*args)
 			target = Target.new(@context, @package, *args)
 
@@ -101,21 +108,16 @@ module Teapot
 
 			@defined << target
 		end
-
+		
 		def define_configuration(*args)
 			configuration = Configuration.new(@context, @package, *args)
 
-			configuration.top!
-
 			yield configuration
 
+			@default_configuration ||= configuration
 			@defined << configuration
 		end
 		
-		def define_generator(*args)
-			warn "define_generator(#{args.inspect}) is deprecated and will have no effect. Please use define_target."
-		end
-
 		# Checks the host patterns and executes the block if they match.
 		def host(*args, &block)
 			name = @context.options[:host_platform] || RUBY_PLATFORM
@@ -128,18 +130,50 @@ module Teapot
 				name
 			end
 		end
-
+	end
+	
+	# Loads the teapot.rb script and can reload it if it was changed.
+	class Loader
+		def initialize(context, package, path = TEAPOT_FILE)
+			@context = context
+			@package = package
+			
+			@path = path
+			@mtime = nil
+			
+			@script, @mtime = load!
+		end
+		
+		attr :script
+		
+		def teapot_path
+			@package.path + @path
+		end
+		
+		def changed?
+			File.mtime(teapot_path) > @mtime
+		end
+		
+		def reload
+			self.class.new(@context, @package, @path)
+		end
+		
+		private
+		
 		# Load a teapot.rb file relative to the root of the @package.
-		def load(path)
-			absolute_path = @package.path + path
+		def load!(path = teapot_path)
+			raise NonexistantTeapotError.new(path) unless File.exist?(path)
 			
-			raise NonexistantTeapotError.new(absolute_path) unless File.exist?(absolute_path)
+			script = Script.new(@context, @package)
 			
-			self.instance_eval(absolute_path.read, absolute_path.to_s)
+			mtime = File.mtime(path)
+			script.instance_eval(path.read, path.to_s)
 			
-			if @version == nil
+			if script.version == nil
 				raise IncompatibleTeapotError.new(@package, "<unspecified>")
 			end
+			
+			return script, mtime
 		end
 	end
 end

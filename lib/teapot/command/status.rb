@@ -38,7 +38,6 @@ module Teapot
 				context = parent.context
 				logger = parent.logger
 				
-				# Should this somehow consider context.root_package?
 				context.configuration.packages.each do |package|
 					# The root package is the local package for this context:
 					next unless only == nil or only.include?(package.name)

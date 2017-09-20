@@ -22,21 +22,12 @@ require 'teapot/context'
 require 'teapot/configuration'
 
 RSpec.describe Teapot::Configuration do
-	include_context Teapot::Context
+	let(:root) {Build::Files::Path.new(__dir__) + "configuration_spec"}
+	let(:context) {Teapot::Context.new(root)}
 	
-	let(:master) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'master', 'master'), 'master')}
-	let(:embedded) {Teapot::Configuration.new(context, Teapot::Package.new(root + 'embedded', 'embedded'), 'embedded')}
-	
-	context "with create targets" do
-		before(:each) do
-			master.targets[:create] << "hello"
-			embedded.targets[:create] << "world"
-		end
+	it "merged targets" do
+		selection = context.select
 		
-		it "can merge packages" do
-			expect(master.update(embedded, {})).to be_truthy
-			
-			expect(master.targets[:create]).to be == ["hello", "world"]
-		end
+		expect(selection.configuration.targets[:build]).to be == ["Bar", "Foo"]
 	end
 end

@@ -24,15 +24,20 @@ RSpec.describe Teapot::Context do
 	let(:root) {Build::Files::Path.new(__dir__) + "context_spec"}
 	let(:context) {Teapot::Context.new(root)}
 	
-	it "should load teapot.rb file" do
-		# There is one configuration:
-		expect(context.configurations.count).to be == 1
-	
-		expect(context.targets.count).to be == 1
-	
+	it "should specify correct number of packages" do
 		default_configuration = context.configuration
+		
+		expect(default_configuration.packages.count).to be == 13
+	end
 	
-		# 13 defined packages + 1 implicit package.
-		expect(default_configuration.packages.count).to be == 14
+	it "should load teapot.rb file" do
+		selection = context.select
+		
+		# There is one configuration:
+		expect(selection.configurations.count).to be == 1
+		expect(selection.targets.count).to be == 1
+		
+		# We didn't expect any of them to actually load...
+		expect(selection.unresolved.count).to be > 0
 	end
 end

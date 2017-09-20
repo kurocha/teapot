@@ -52,38 +52,34 @@ module Teapot
 				logger = parent.logger
 				context = parent.context
 				
-				resolved = Set.new
-				configuration = context.configuration
-				unresolved = context.unresolved(configuration.packages)
+				updated = Set.new
+				selection = context.select
 				
-				while true
-					configuration.packages.each do |package|
-						next if resolved.include? package
-						
-						# If specific packages were listed, limit updates to them.
-						if @packages.nil? || @packages.empty? || @packages.include?(package.name)
-							fetch_package(context, configuration, package, logger, **@options)
-						end
-						
-						# We are done with this package, don't try to process it again:
-						resolved << package
+				packages = selection.configuration.packages
+				
+				if @packages.any?
+					packages = packages.slice(@packages)
+				end
+				
+				# If no additional packages were resolved, we have reached a fixed point:
+				while packages.any?
+					packages.each do |package|
+						fetch_package(context, selection.configuration, package, logger, **@options)
 					end
-				
-					# Resolve any/all imports:
-					configuration.materialize
-				
-					previously_unresolved = unresolved
-					unresolved = context.unresolved(configuration.packages)
-				
-					# No additional packages were resolved, we have reached a fixed point:
-					if previously_unresolved == unresolved || unresolved.count == 0
+					
+					selection = context.select
+					
+					# If there are no unresolved packages, we are done.
+					if selection.unresolved.empty?
 						break
 					end
+					
+					packages = selection.unresolved
 				end
 			
-				if unresolved.count > 0
+				if selection.unresolved.count > 0
 					logger.error "Could not fetch all packages!".color(:red)
-					unresolved.each do |package|
+					selection.unresolved.each do |package|
 						logger.error "\t#{package}".color(:red)
 					end
 				else

@@ -35,9 +35,9 @@ module Teapot
 			
 			def invoke(parent)
 				context = parent.context
+				
 				logger = parent.logger
 				
-				# Should this somehow consider context.root_package?
 				context.configuration.packages.each do |package|
 					# The root package is the local package for this context:
 					next unless only == nil or only.include?(package.name)
@@ -45,7 +45,8 @@ module Teapot
 					logger.info "Package #{package.name} (from #{package.path}):".bright
 				
 					begin
-						definitions = context.load(package)
+						script = context.load(package)
+						definitions = script.defined
 					
 						definitions.each do |definition|
 							logger.info "\t#{definition}"
@@ -74,14 +75,12 @@ module Teapot
 									logger.info "\t\t- #{provision}".color(:green)
 								end
 							when Configuration
-								definition.materialize
-							
 								definition.packages.each do |package|
 									logger.info "\t\t- #{package}".color(:green)
 								end
 							
 								definition.imports.select(&:explicit).each do |import|
-									logger.info "\t\t- unmaterialised import #{import.name}".color(:red)
+									logger.info "\t\t- import #{import.name}".color(:red)
 								end
 							end
 						end

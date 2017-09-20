@@ -58,9 +58,8 @@ module Teapot
 				Fetch[].invoke(nested)
 				
 				context = nested.context
-				
-				# The targets to build to create the initial project:
-				target_names = context.configuration.targets[:create]
+				selection = context.select
+				target_names =  selection.configuration.targets[:create]
 				
 				if target_names.any?
 					# Generate the initial project files:

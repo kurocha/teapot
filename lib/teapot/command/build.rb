@@ -39,24 +39,22 @@ module Teapot
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
-			# The targets to build:
-			def dependency_names(context)
-				if @targets.any?
-					@targets
-				else
-					context.configuration.targets[:build]
-				end
-			end
-			
 			def invoke(parent)
 				context = parent.context
 				
-				chain = context.dependency_chain(dependency_names(context), context.configuration)
+				# The targets to build:
+				if @targets.any?
+					selection = context.select(@targets)
+				else
+					selection = context.select(context.configuration.targets[:build])
+				end
+				
+				chain = selection.chain
 				
 				ordered = chain.ordered
 				
 				if @options[:only]
-					ordered = context.direct_targets(ordered)
+					ordered = selection.direct_targets(ordered)
 				end
 				
 				controller = ::Build::Controller.new(logger: parent.logger, limit: @options[:limit]) do |controller|
@@ -64,7 +62,7 @@ module Teapot
 						target = resolution.provider
 						
 						if target.build
-							environment = target.environment(context.configuration, chain)
+							environment = target.environment(selection.configuration, chain)
 							
 							controller.add_target(target, environment.flatten, self.argv)
 						end

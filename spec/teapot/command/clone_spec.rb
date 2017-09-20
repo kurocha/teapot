@@ -39,8 +39,10 @@ RSpec.describe Teapot::Command::Clone, order: :defined do
 			
 			expect(File).to be_exist(root + "teapot.rb")
 			
+			selection = top.context.select
+			
 			# Check that we actually fetched some remote targets.
-			expect(top.context.targets).to include(
+			expect(selection.targets).to include(
 				"tagged-format-library",
 				"tagged-format-executable",
 				"tagged-format-tests",
