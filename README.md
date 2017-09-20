@@ -98,19 +98,29 @@ Provided you are using an environment that supports sanitizers, you can test mor
 
 	$ teapot "Test/*" variant-sanitize
 
-### Build Project
+### Run Project
 
-We can now build and run unit tests (althoght there aren't any yet):
+We can now build and run the project executable:
 
-	$ teapot build Test/MyProject
-	... snip ...
-	[Summary] 0 passed out of 0 total
+	$ teapot Run/MyProject
+	I'm a little teapot,
+	Short and stout,
+	Here is my handle (one hand on hip),
+	Here is my spout (other arm out with elbow and wrist bent).
+	When I get all steamed up,
+	Hear me shout,
+	Tip me over and pour me out! (lean over toward spout)
 
-When you build, you need to specify dependencies. If you haven't specified all dependencies, they will be suggested to you.
+	                              ~
+	                   ___^___   __
+	               .- /       \./ /
+	              /  /          _/
+	              \__|         |
+	                  \_______/
 
 The resulting executables and libraries will be framework dependent, but are typically located in:
 
-	$ cd teapot/$PROJECT_NAME/platforms/$PLATFORM_NAME/bin/
+	$ cd teapot/platforms/development/$PLATFORM-debug/bin
 	$ ./$PROJECT_NAME
 
 ### Cloning Project
