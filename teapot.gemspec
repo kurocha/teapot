@@ -16,19 +16,17 @@ Gem::Specification.new do |spec|
 	spec.summary       = %q{Teapot is a tool for managing complex cross-platform builds.}
 	spec.homepage      = "http://www.teapot.nz"
 	spec.license       = "MIT"
-
+	
 	spec.files         = `git ls-files`.split($/)
 	spec.executables   = spec.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
 	spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
 	spec.require_paths = ["lib"]
 	
-	spec.has_rdoc = 'yard'
-	
 	spec.required_ruby_version = '>= 2.1.0'
 	
 	spec.add_dependency "rainbow", "~> 2.0"
 	
-	spec.add_dependency "graphviz", "~> 0.4"
+	spec.add_dependency "graphviz", "~> 1.0"
 	
 	spec.add_dependency "rugged"
 	
