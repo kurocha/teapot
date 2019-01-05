@@ -1,27 +1,30 @@
-# Setup the environment:
 language: ruby
-sudo: false
-dist: trusty
+dist: xenial
 cache: bundler
 
 before_install:
+  - gem update --system
+  - gem install bundler
   # For testing purposes:
   - git config --global user.email "samuel@oriontransfer.net"
   - git config --global user.name "Samuel Williams"
 
-rvm:
-  - 2.1
-  - 2.2
-  - 2.3
-  - 2.4
-  - jruby-head
-  - ruby-head
-
-# Setup the compilers:
 matrix:
+  include:
+    - rvm: 2.3
+    - rvm: 2.4
+    - rvm: 2.5
+    - rvm: 2.6
+    - rvm: truffleruby
+    - rvm: jruby-head
+      env: JRUBY_OPTS="--debug -X+O"
+    - rvm: ruby-head
+    - rvm: rbx-3
   allow_failures:
     - rvm: ruby-head
+    - rvm: truffleruby
     - rvm: jruby-head
+    - rvm: rbx-3
 
 addons:
   apt:
