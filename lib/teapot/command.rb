@@ -57,16 +57,16 @@ module Teapot
 				option '-v/--version', "Print out the application version."
 			end
 			
-			nested '<command>',
-				'create' => Create,
-				'clone' => Clone,
-				'fetch' => Fetch,
-				'list' => List,
-				'status' => Status,
-				'build' => Build,
-				'visualize' => Visualize,
-				'clean' => Clean,
-				default: 'build'
+			nested '<command>', {
+				"create" => Create,
+				"clone" => Clone,
+				"fetch" => Fetch,
+				"list" => List,
+				"status" => Status,
+				"build" => Build,
+				"visualize" => Visualize,
+				"clean" => Clean,
+			}, default: 'build'
 			
 			def root
 				::Build::Files::Path.expand(@options[:root] || Dir.getwd)
