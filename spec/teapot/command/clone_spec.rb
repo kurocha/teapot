@@ -23,7 +23,7 @@ require 'teapot/command'
 
 RSpec.describe Teapot::Command::Clone, order: :defined do
 	let(:root) {Build::Files::Path.new(__dir__) + "clone_spec"}
-	let(:source) {'http://github.com/kurocha/tagged-format'}
+	let(:source) {'https://github.com/kurocha/tagged-format'}
 	
 	let(:top) {Teapot::Command::Top["--root", root.to_s]}
 	
