@@ -10,6 +10,7 @@ Teapot is a decentralised build tool for managing complex cross-platform project
 [![Build Status](https://secure.travis-ci.org/kurocha/teapot.svg)](http://travis-ci.org/kurocha/teapot)
 [![Code Climate](https://codeclimate.com/github/kurocha/teapot.svg)](https://codeclimate.com/github/kurocha/teapot)
 [![Coverage Status](https://coveralls.io/repos/kurocha/teapot/badge.svg)](https://coveralls.io/r/kurocha/teapot)
+[![Gitter Chat](https://badges.gitter.im/kurocha/community.svg)](https://gitter.im/kurocha/community)
 
 ## Installation
 
