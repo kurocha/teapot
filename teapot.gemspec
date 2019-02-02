@@ -38,9 +38,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "samovar", "~> 1.7"
 	
-	# This could be a good option in the future for teapot fetch:
-	#spec.add_dependency "rugged"
-	
+	spec.add_development_dependency "covered"
 	spec.add_development_dependency "bundler"
 	spec.add_development_dependency "rspec", "~> 3.6"
 	spec.add_development_dependency "rake"

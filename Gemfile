@@ -8,8 +8,3 @@ group :development do
 	gem 'pry-coolline'
 	gem 'pry-byebug', platform: :mri
 end
-
-group :test do
-	gem 'simplecov'
-	gem 'coveralls', require: false
-end
