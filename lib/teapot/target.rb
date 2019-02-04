@@ -32,21 +32,26 @@ module Teapot
 	class Target < Definition
 		include Build::Dependency
 		
-		def initialize(context, package, name)
-			super context, package, name
+		def initialize(*)
+			super
 			
 			@build = nil
-			
-			@rulebook = Build::Rulebook.new
 		end
 		
-		attr :rulebook
-		
 		def freeze
+			return self if frozen?
+			
 			@build.freeze
-			@rulebook.freeze
 			
 			super
+		end
+		
+		def build(&block)
+			if block_given?
+				@build = block
+			end
+			
+			return @build
 		end
 		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
@@ -62,16 +67,11 @@ module Teapot
 			environment = Build::Environment.combine(*environments)
 			
 			environment.merge do
+				default build_path configuration.build_path
+				
+				# TODO deprecated - remove in 3.0
 				default platforms_path configuration.platforms_path
 			end
-		end
-		
-		def build(&block)
-			if block_given?
-				@build = block
-			end
-			
-			return @build
 		end
 	end
 end

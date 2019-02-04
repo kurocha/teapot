@@ -30,7 +30,8 @@ module Teapot
 	# Cannot load packages newer than this.
 	# Version 1.3: Added support for build-dependency library which allows options for `#depends`. The primary use case is private dependencies.
 	# Version 2.0: Generators removed and refactored into build.
-	LOADER_VERSION = "2.0"
+	# Version 2.3: Rework install_prefix -> build_prefix.
+	LOADER_VERSION = "2.3"
 	
 	# Cannot load packages older than this.
 	MINIMUM_LOADER_VERSION = "1.0"
@@ -103,9 +104,9 @@ module Teapot
 		
 		def define_target(*args)
 			target = Target.new(@context, @package, *args)
-
+			
 			yield target
-
+			
 			@defined << target
 		end
 		

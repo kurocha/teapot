@@ -50,7 +50,7 @@ module Teapot
 		end
 
 		def freeze
-			return if frozen?
+			return self if frozen?
 			
 			@options.freeze
 			@packages.freeze
@@ -128,10 +128,12 @@ module Teapot
 			context.root + "teapot/packages/#{name}"
 		end
 
-		# The path where built products will be installed.
-		def platforms_path
-			context.root + "teapot/platforms/#{name}"
+		# The path where built products will be placed.
+		def build_path
+			context.root + "teapot/build/#{name}"
 		end
+
+		alias platforms_path build_path
 
 		def lock_path
 			context.root + "#{@name}-lock.yml"
