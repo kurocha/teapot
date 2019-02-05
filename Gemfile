@@ -5,6 +5,8 @@ gemspec
 
 group :development do
 	gem 'pry'
-	gem 'pry-coolline'
-	gem 'pry-byebug', platform: :mri
 end
+
+# group :test do
+# 	gem 'rugged', git: 'git://github.com/libgit2/rugged.git', submodules: true
+# end
