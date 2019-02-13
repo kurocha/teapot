@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
 	
 	spec.add_dependency "rugged"
 	
-	spec.add_dependency "build", "~> 1.1"
+	spec.add_dependency "build", "~> 2.0"
 	spec.add_dependency "build-files", "~> 1.3"
 	spec.add_dependency "build-dependency", "~> 1.1"
 	spec.add_dependency "build-uri", "~> 1.0"

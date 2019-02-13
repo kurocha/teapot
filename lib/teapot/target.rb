@@ -63,15 +63,21 @@ module Teapot
 				Build::Environment.new(&provision.value)
 			end
 			
-			# Merge all the environments together:
-			environment = Build::Environment.combine(*environments)
+			return nil if environments.empty? and @build.nil?
 			
-			environment.merge do
-				default build_path configuration.build_path
-				
-				# TODO deprecated - remove in 3.0
-				default platforms_path configuration.platforms_path
+			paths = Build::Environment.new do
+				build_path configuration.build_path
+				platforms_path configuration.build_path
 			end
+			
+			# Merge all the environments together:
+			environment = Build::Environment.combine(paths, *environments)
+			
+			if @build
+				environment = Build::Environment.new(environment, &@build)
+			end
+			
+			return environment
 		end
 	end
 end
