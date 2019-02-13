@@ -55,17 +55,17 @@ module Teapot
 		end
 		
 		# Given a specific configuration, generate the build environment based on this target and it's provision chain.
-		def environment(configuration, chain)
+		def environment(configuration, chain, resolution)
 			chain = chain.partial(self)
 			
 			# Calculate the dependency chain's ordered environments:
 			environments = chain.provisions.collect do |provision|
-				Build::Environment.new(&provision.value)
+				Build::Environment.new(name: provision.name, &provision.value)
 			end
 			
 			return nil if environments.empty? and @build.nil?
 			
-			paths = Build::Environment.new do
+			paths = Build::Environment.new(name: configuration.name) do
 				build_path configuration.build_path
 				platforms_path configuration.build_path
 			end
@@ -74,7 +74,11 @@ module Teapot
 			environment = Build::Environment.combine(paths, *environments)
 			
 			if @build
-				environment = Build::Environment.new(environment, &@build)
+				environment = Build::Environment.new(environment, name: self.name, &@build)
+			end
+			
+			if value = resolution.provision.value
+				environment = Build::Environment.new(environment, name: resolution.provision.name, &value)
 			end
 			
 			return environment

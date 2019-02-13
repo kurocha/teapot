@@ -61,7 +61,7 @@ module Teapot
 					ordered.each do |resolution|
 						target = resolution.provider
 						
-						if environment = target.environment(selection.configuration, chain)
+						if environment = target.environment(selection.configuration, chain, resolution)
 							controller.add_environment(environment, self.argv)
 						end
 					end
