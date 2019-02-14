@@ -23,7 +23,7 @@ require 'teapot/context'
 RSpec.describe Teapot::Target do
 	let(:root) {Build::Files::Path.new(__dir__) + "target_spec"}
 	
-	it "should generate environment for configuration" do
+	it "should generate correct chain for configuration" do
 		context = Teapot::Context.new(root)
 		selection = context.select(["Test/TargetSpec"])
 		
@@ -39,15 +39,6 @@ RSpec.describe Teapot::Target do
 		expect(chain.ordered[1].name).to be == 'Platform/generic'
 		expect(chain.ordered[2].name).to be == 'Test/TargetSpec'
 		expect(chain.ordered[2].provider).to be == target
-		
-		environment = target.environment(selection.configuration, chain)
-		# Environment#to_hash flattens the environment and evaluates all values:
-		hash = environment.to_hash
-		
-		expect(hash[:variant]).to be == 'debug'
-		expect(hash[:platform_name]).to be == 'generic'
-		
-		expect(hash).to include(:buildflags, :linkflags, :build_prefix, :install_prefix, :platforms_path)
 	end
 	
 	it "should match wildcard packages" do
