@@ -63,6 +63,15 @@ module Teapot
 			super
 		end
 
+		def environment
+			configuration = self
+			
+			Build::Environment.new(name: self.name) do
+				default build_path configuration.build_path
+				default platforms_path configuration.build_path
+			end
+		end
+
 		# Controls how the configuration is exposed in the context.
 		attr :visibility
 

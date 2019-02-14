@@ -32,7 +32,6 @@ module Teapot
 			
 			options do
 				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes.", type: Integer
-				option '--only', "Only build direct dependencies."
 				option '-c/--continuous', "Run the build graph continually (experimental)."
 			end
 			
@@ -50,21 +49,11 @@ module Teapot
 				end
 				
 				chain = selection.chain
-				
-				ordered = chain.ordered
-				
-				if @options[:only]
-					ordered = selection.direct_targets(ordered)
-				end
+				environment = context.configuration.environment
 				
 				controller = ::Build::Controller.new(logger: parent.logger, limit: @options[:limit]) do |controller|
-					ordered.each do |resolution|
-						target = resolution.provider
-						
-						if environment = target.environment(selection.configuration, chain, resolution)
-							controller.add_environment(environment, self.argv)
-						end
-					end
+					
+					controller.add_chain(chain, self.argv, environment)
 				end
 				
 				walker = nil
@@ -89,7 +78,7 @@ module Teapot
 					end
 				end
 				
-				return chain, ordered
+				return chain
 			end
 			
 			def show_dependencies(walker)

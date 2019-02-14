@@ -32,7 +32,7 @@ module Teapot
 
 			@loaded = {}
 
-			load_root_package(options) unless options[:load_root] == false
+			load_root_package(**options)
 		end
 
 		attr :root
@@ -102,7 +102,7 @@ module Teapot
 		
 		private
 		
-		def load_root_package(options)
+		def load_root_package(**options)
 			# Load the root package:
 			script = load(root_package)
 

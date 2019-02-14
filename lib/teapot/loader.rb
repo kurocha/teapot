@@ -107,6 +107,8 @@ module Teapot
 			
 			yield target
 			
+			target.update_environments!
+			
 			@defined << target
 		end
 		
