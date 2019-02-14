@@ -23,7 +23,7 @@ require 'set'
 
 require 'yaml/store'
 
-require_relative 'identity_set'
+require 'build/dependency/set'
 require_relative 'definition'
 
 module Teapot
@@ -40,8 +40,8 @@ module Teapot
 
 			@options = DEFAULT_OPTIONS.merge(options)
 
-			@packages = IdentitySet.new(packages)
-			@imports = IdentitySet.new
+			@packages = Build::Dependency::Set.new(packages)
+			@imports = Build::Dependency::Set.new
 
 			@visibility = :private
 
@@ -157,7 +157,7 @@ module Teapot
 		end
 
 		# Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.
-		def traverse(configurations, imported = IdentitySet.new, &block)
+		def traverse(configurations, imported = Build::Dependency::Set.new, &block)
 			yield self # Whatever happens here, should ensure that...
 			
 			@imports.each do |import|
