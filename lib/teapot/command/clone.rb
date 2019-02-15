@@ -48,7 +48,7 @@ module Teapot
 				end
 				
 				logger.info "Cloning #{@source} to #{root}...".color(:cyan)
-				repository = Rugged::Repository.clone_at(@source, root.to_s, credentials: self.method(:credentials))
+				_repository = Rugged::Repository.clone_at(@source, root.to_s, credentials: self.method(:credentials))
 				
 				# Fetch the initial packages:
 				Fetch[].invoke(nested)

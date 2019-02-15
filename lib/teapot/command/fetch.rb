@@ -52,7 +52,6 @@ module Teapot
 				logger = parent.logger
 				context = parent.context
 				
-				updated = Set.new
 				selection = context.select
 				
 				packages = selection.configuration.packages
