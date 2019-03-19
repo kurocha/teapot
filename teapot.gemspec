@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "build-text", "~> 1.0"
 	
+	spec.add_dependency "event", "~> 1.1"
 	spec.add_dependency "samovar", "~> 1.7"
 	
 	spec.add_development_dependency "covered"

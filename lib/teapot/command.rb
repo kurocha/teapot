@@ -38,7 +38,7 @@ require 'rainbow'
 require 'rainbow/ext/string'
 require 'fileutils'
 
-require 'build/logger'
+require 'event/console'
 
 module Teapot
 	module Command
@@ -81,15 +81,13 @@ module Teapot
 			end
 			
 			def logger
-				@logger ||= Logger.new($stderr).tap do |logger|
-					logger.formatter = ::Build::CompactFormatter.new(verbose: verbose?)
-					
+				@logger ||= Event::Logger.new($stderr, verbose: self.verbose?).tap do |logger|
 					if verbose?
-						logger.level = Logger::DEBUG
+						logger.debug!
 					elsif quiet?
-						logger.level = Logger::WARN
+						logger.warn!
 					else
-						logger.level = Logger::INFO
+						logger.info!
 					end
 				end
 			end
