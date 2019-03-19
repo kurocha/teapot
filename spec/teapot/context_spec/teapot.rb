@@ -3,9 +3,16 @@
 #  This file is part of the "Teapot" project, and is released under the MIT license.
 #
 
-teapot_version "1.0.0"
+teapot_version "3.0.0"
 
-define_configuration 'test' do |configuration|
+define_target "context_spec" do |target|
+end
+
+define_configuration 'development' do |configuration|
+	configuration.import 'context_spec'
+end
+
+define_configuration 'context_spec' do |configuration|
 	configuration.public!
 	
 	configuration[:source] = "../kurocha"
@@ -30,7 +37,4 @@ define_configuration 'test' do |configuration|
 	configuration.require "tagged-format"
 
 	configuration.require "opencv"
-end
-
-define_target "context_spec" do |target|
 end

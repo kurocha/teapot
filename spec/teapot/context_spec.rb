@@ -27,14 +27,32 @@ RSpec.describe Teapot::Context do
 	it "should specify correct number of packages" do
 		default_configuration = context.configuration
 		
-		expect(default_configuration.packages.count).to be == 13
+		expect(default_configuration.packages.count).to be == 0
 	end
 	
-	it "should load teapot.rb file" do
+	it "should select configuration" do
+		expect(context.configuration.name).to be == 'development'
+	end
+	
+	context "with specific configuration" do
+		let(:context) {Teapot::Context.new(root, configuration: 'context_spec')}
+		
+		it "should select configuration" do
+			expect(context.configuration.name).to be == 'context_spec'
+		end
+		
+		it "should specify correct number of packages" do
+			default_configuration = context.configuration
+			
+			expect(default_configuration.packages.count).to be == 13
+		end
+	end
+	
+	it "should load teapot script" do
 		selection = context.select
 		
 		# There is one configuration:
-		expect(selection.configurations.count).to be == 1
+		expect(selection.configurations.count).to be == 2
 		expect(selection.targets.count).to be == 1
 		
 		# We didn't expect any of them to actually load...

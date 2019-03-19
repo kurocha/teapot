@@ -105,10 +105,10 @@ module Teapot
 		def load_root_package(**options)
 			# Load the root package:
 			script = load(root_package)
-
+			
 			# Find the default configuration, if it exists:
 			if configuration_name = options[:configuration]
-				@configuration = @configurations[configuration_name]
+				@configuration = script.configurations[configuration_name]
 			else
 				@configuration = script.default_configuration
 			end

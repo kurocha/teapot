@@ -67,6 +67,8 @@ module Teapot
 			@defined = []
 			@version = nil
 			
+			@configurations = Build::Dependency::Set.new
+			
 			@default_project = nil
 			@default_configuration = nil
 			
@@ -77,6 +79,8 @@ module Teapot
 		attr :package
 		attr :defined
 		attr :version
+		
+		attr :configurations
 		
 		attr :default_project
 		attr :default_configuration
@@ -119,6 +123,7 @@ module Teapot
 
 			@default_configuration ||= configuration
 			@defined << configuration
+			@configurations << configuration
 		end
 		
 		# Checks the host patterns and executes the block if they match.

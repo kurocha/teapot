@@ -47,7 +47,6 @@ module Teapot
 			@targets = {}
 			@configurations = {}
 			@projects = {}
-			@rules = Build::Rulebook.new
 			
 			@dependencies = []
 			@selection = Set.new
@@ -69,8 +68,6 @@ module Teapot
 		
 		# All public configurations.
 		attr :configurations
-
-		attr :rules
 		
 		attr :dependencies
 		attr :selection
@@ -103,9 +100,6 @@ module Teapot
 			when Project
 				AlreadyDefinedError.check(definition, @projects)
 				@projects[definition.name] = definition
-			when Rule
-				AlreadyDefinedError.check(definition, @rules)
-				@rules << definition
 			end
 		end
 		
