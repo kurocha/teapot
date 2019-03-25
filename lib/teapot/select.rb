@@ -50,7 +50,8 @@ module Teapot
 			
 			@dependencies = []
 			@selection = Set.new
-			@unresolved = Set.new
+			@resolved = Build::Dependency::Set.new
+			@unresolved = Build::Dependency::Set.new
 			
 			load!(configuration, names)
 			
@@ -71,6 +72,8 @@ module Teapot
 		
 		attr :dependencies
 		attr :selection
+		
+		attr :resolved
 		attr :unresolved
 		
 		def chain
@@ -111,7 +114,9 @@ module Teapot
 				script.defined.each do |definition|
 					append(definition)
 				end
-			rescue NonexistantTeapotError, IncompatibleTeapotError
+				
+				@resolved << package
+			rescue MissingTeapotError, IncompatibleTeapotError
 				# If the package doesn't exist or the teapot version is too old, it failed:
 				@unresolved << package
 			end

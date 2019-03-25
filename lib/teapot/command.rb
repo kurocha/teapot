@@ -57,7 +57,7 @@ module Teapot
 				option '-v/--version', "Print out the application version."
 			end
 			
-			nested '<command>', {
+			nested :command, {
 				"create" => Create,
 				"clone" => Clone,
 				"fetch" => Fetch,
@@ -81,7 +81,7 @@ module Teapot
 			end
 			
 			def logger
-				@logger ||= Event::Logger.new($stderr, verbose: self.verbose?).tap do |logger|
+				@logger ||= Event::Logger.new(Event::Console.logger, verbose: self.verbose?).tap do |logger|
 					if verbose?
 						logger.debug!
 					elsif quiet?
@@ -100,15 +100,13 @@ module Teapot
 				Context.new(root, configuration: configuration)
 			end
 			
-			def invoke(program_name: File.basename($0))
+			def invoke
 				if @options[:version]
 					puts "teapot v#{Teapot::VERSION}"
-				elsif @options[:help] or @command.nil?
-					print_usage(program_name)
+				elsif @options[:help]
+					print_usage(output: $stdout)
 				else
-					track_time do
-						@command.invoke(self)
-					end
+					@command.invoke
 				end
 			end
 		end

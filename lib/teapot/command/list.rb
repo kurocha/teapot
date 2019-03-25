@@ -19,75 +19,66 @@
 # THE SOFTWARE.
 
 require 'samovar'
+require 'event/terminal'
+
+require_relative 'selection'
 
 module Teapot
 	module Command
-		class List < Samovar::Command
+		class List < Selection
 			self.description = "List provisions and dependencies of the specified package."
 			
-			many :packages, "Limit the listing to only these packages, or all packages if none specified."
-			
-			def only
-				if @packages.any?
-					Set.new(@packages)
-				end
-			end
-			
-			def invoke(parent)
-				context = parent.context
+			def process(parent, selection)
+				context = selection.context
+				terminal = parent.terminal
 				
-				logger = parent.logger
-				
-				context.configuration.packages.each do |package|
-					# The root package is the local package for this context:
-					next unless only == nil or only.include?(package.name)
+				selection.resolved.each do |package|
+					terminal.puts "Package #{package.name} (from #{package.path}):"
 					
-					logger.info "Package #{package.name} (from #{package.path}):".bright
-				
 					begin
 						script = context.load(package)
 						definitions = script.defined
 					
 						definitions.each do |definition|
-							logger.info "\t#{definition}"
+							terminal.puts "\t#{definition}"
 					
 							definition.description.each_line do |line|
-								logger.info "\t\t#{line.chomp}".color(:cyan)
+								terminal.puts "\t\t#{line.chomp}", style: :description
 							end if definition.description
 					
 							case definition
 							when Project
-								logger.info "\t\t- Summary: #{definition.summary}" if definition.summary
-								logger.info "\t\t- License: #{definition.license}" if definition.license
-								logger.info "\t\t- Website: #{definition.website}" if definition.website
-								logger.info "\t\t- Version: #{definition.version}" if definition.version
+								terminal.puts "\t\t- Summary: #{definition.summary}" if definition.summary
+								terminal.puts "\t\t- License: #{definition.license}" if definition.license
+								terminal.puts "\t\t- Website: #{definition.website}" if definition.website
+								terminal.puts "\t\t- Version: #{definition.version}" if definition.version
 								
 								definition.authors.each do |author|
-									contact_text = [author.email, author.website].compact.collect{|text|" <#{text}>"}.join
-									logger.info "\t\t- Author: #{author.name}" + contact_text
+									contact_text = [author.email, author.website].compact.collect{|text| " <#{text}>"}.join
+									terminal.puts "\t\t- Author: #{author.name}" + contact_text
 								end
 							when Target
 								definition.dependencies.each do |dependency|
-									logger.info "\t\t- #{dependency}".color(:red)
+									terminal.puts "\t\t- #{dependency}", style: :dependency
 								end
 				
 								definition.provisions.each do |name, provision|
-									logger.info "\t\t- #{provision}".color(:green)
+									terminal.puts "\t\t- #{provision}", style: :provision
 								end
 							when Configuration
 								definition.packages.each do |package|
-									logger.info "\t\t- #{package}".color(:green)
+									terminal.puts "\t\t- #{package}", style: :package
 								end
 							
 								definition.imports.select(&:explicit).each do |import|
-									logger.info "\t\t- import #{import.name}".color(:red)
+									terminal.puts "\t\t- import #{import.name}", style: :import
 								end
 							end
 						end
-					rescue NonexistantTeapotError => error
-						logger.info "\t#{error.message}".color(:red)
+					rescue MissingTeapotError => error
+						terminal.puts "\t#{error.message}", style: :error
 					rescue IncompatibleTeapotError => error
-						logger.info "\t#{error.message}".color(:red)
+						terminal.puts "\t#{error.message}", style: :error
 					end
 				end
 			end

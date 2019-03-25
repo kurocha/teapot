@@ -19,54 +19,32 @@
 # THE SOFTWARE.
 
 require 'samovar'
-require 'rugged'
 
 module Teapot
 	module Command
-		class Status < Samovar::Command
-			self.description = "List the git status of the specified package(s)."
+		class Selection < Samovar::Command
+			options
 			
-			many :packages, "Limit the listing to only these packages, or all packages if none specified."
+			many :targets, "Only consider the specified targets, if any."
 			
-			def only
-				if @packages.any?
-					Set.new(@packages)
+			def targets
+				if @targets and @targets.any?
+					Set.new(@targets)
+				end
+			end
+			
+			def selection(context)
+				if targets = self.targets
+					context.select(targets)
+				else
+					context.select(context.configuration[:build])
 				end
 			end
 			
 			def invoke(parent)
 				context = parent.context
-				logger = parent.logger
 				
-				context.configuration.packages.each do |package|
-					# The root package is the local package for this context:
-					next unless only.nil? or only.include?(package.name)
-					
-					repository = Rugged::Repository.new(package.path.to_s)
-					
-					changes = {}
-					repository.status do |file, status|
-						unless status == [:ignored]
-							changes[file] = status
-						end
-					end
-					
-					next if changes.empty?
-					
-					logger.info "Package #{package.name} (from #{package.path}):".bright
-					
-					changes.each do |file, status|
-						if status == [:worktree_new]
-							logger.info "\t#{file}".color(:blue)
-						elsif status == [:worktree_modified]
-							logger.info "\t#{file}".color(:orange)
-						elsif status == [:worktree_deleted]
-							logger.info "\t#{file}".color(:red)
-						else
-							logger.info "\t#{file} #{status.inspect}"
-						end
-					end
-				end
+				self.process(parent, selection(parent.context))
 			end
 		end
 	end

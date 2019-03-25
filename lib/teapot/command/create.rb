@@ -29,17 +29,17 @@ module Teapot
 		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			one :project_name, "The name of the new project in title-case, e.g. 'My Project'."
+			one :name, "The name of the new project in title-case, e.g. 'My Project'."
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
 			many :packages, "Any additional packages you'd like to include in the project."
 			
 			def invoke(parent)
-				raise ArgumentError, "project_name is required" unless @project_name
+				raise ArgumentError, "name is required" unless @name
 				raise ArgumentError, "source is required" unless @source
 				
 				logger = parent.logger
 				
-				nested = parent['--root', parent.options[:root] || project_name.gsub(/\s+/, '-').downcase]
+				nested = parent['--root', parent.options[:root] || name.gsub(/\s+/, '-').downcase]
 				root = nested.root
 				
 				if root.exist?
@@ -51,8 +51,8 @@ module Teapot
 				
 				repository = Rugged::Repository.init_at(root.to_s)
 				
-				logger.info "Creating project named #{project_name} at path #{root}...".color(:cyan)
-				generate_project(root, @project_name, @source, @packages)
+				logger.info "Creating project named #{name} at path #{root}...".color(:cyan)
+				generate_project(root, @name, @source, @packages)
 				
 				# Fetch the initial packages:
 				Fetch[].invoke(nested)
@@ -82,8 +82,8 @@ module Teapot
 				)
 			end
 			
-			def generate_project(root, project_name, source, packages)
-				name = ::Build::Name.new(project_name)
+			def generate_project(root, name, source, packages)
+				name = ::Build::Name.new(name)
 				
 				# Otherwise the initial commit will try to include teapot/
 				File.open(root + ".gitignore", "w") do |output|

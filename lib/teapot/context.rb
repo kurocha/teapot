@@ -48,8 +48,8 @@ module Teapot
 			@repository ||= Rugged::Repository.new(@root.to_s)
 		end
 		
-		def select(names = [], configuration = @configuration)
-			Select.new(self, configuration, names)
+		def select(names = nil, configuration = @configuration)
+			Select.new(self, configuration, names || [])
 		end
 
 		def substitutions

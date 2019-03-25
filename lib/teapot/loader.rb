@@ -47,7 +47,7 @@ module Teapot
 		attr :version
 	end
 	
-	class NonexistantTeapotError < StandardError
+	class MissingTeapotError < StandardError
 		def initialize(path)
 			super "Could not read file at #{path}!"
 		end
@@ -170,7 +170,7 @@ module Teapot
 		
 		# Load a teapot.rb file relative to the root of the @package.
 		def load!(path = teapot_path)
-			raise NonexistantTeapotError.new(path) unless File.exist?(path)
+			raise MissingTeapotError.new(path) unless File.exist?(path)
 			
 			script = Script.new(@context, @package)
 			

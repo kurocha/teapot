@@ -30,8 +30,8 @@ module Teapot
 				logger = parent.logger
 				configuration = context.configuration
 				
-				logger.info "Removing #{configuration.platforms_path}...".color(:cyan)
-				FileUtils.rm_rf configuration.platforms_path
+				logger.info "Removing #{configuration.build_path}...".color(:cyan)
+				FileUtils.rm_rf configuration.build_path
 			
 				logger.info "Removing #{configuration.packages_path}...".color(:cyan)
 				FileUtils.rm_rf configuration.packages_path

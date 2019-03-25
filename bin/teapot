@@ -20,40 +20,42 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'teapot/command'
+require_relative '../lib/teapot/command'
 
-options = Teapot::Command.parse(ARGV)
+if command = Teapot::Command.parse(ARGV)
+	logger = command.logger
 
-begin
-	options.invoke
-rescue Teapot::IncompatibleTeapotError => error
-	$stderr.puts error.message.color(:red)
-	$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
-	
-	exit 1
-rescue Build::Dependency::UnresolvedDependencyError => error
-	$stderr.puts "Unresolved dependencies:"
-
-	error.chain.unresolved.each do |name, parent|
-		$stderr.puts "#{parent} depends on #{name.inspect}".color(:red)
-	
-		conflicts = error.chain.conflicts[name]
-	
-		if conflicts
-			conflicts.each do |conflict|
-				$stderr.puts " - provided by #{conflict.name}".color(:red)
-			end
+	begin
+		command.invoke
+	rescue Teapot::IncompatibleTeapotError => error
+		logger.error(command, error) do
+			"Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
 		end
-	end
+		
+		exit 1
+	rescue Build::Dependency::UnresolvedDependencyError => error
+		logger.error(command, error) do |buffer|
+			buffer.puts "Unresolved dependencies:"
 
-	$stderr.puts "Cannot continue due to unresolved dependencies!".color(:red)
-	
-	exit 2
-rescue StandardError => error
-	$stderr.puts error.message.color(:red)
-	
-	# Could be nice to have some improved error reporting.
-	$stderr.puts error.backtrace
-	
-	exit 3
+			error.chain.unresolved.each do |name, parent|
+				buffer.puts "#{parent} depends on #{name.inspect}"
+			
+				conflicts = error.chain.conflicts[name]
+			
+				if conflicts
+					conflicts.each do |conflict|
+						buffer.puts " - provided by #{conflict.name}"
+					end
+				end
+			end
+
+			buffer.puts "Cannot continue due to unresolved dependencies!".color(:red)
+		end
+		
+		exit 2
+	rescue StandardError => error
+		logger.error(command, error)
+		
+		exit 3
+	end
 end
