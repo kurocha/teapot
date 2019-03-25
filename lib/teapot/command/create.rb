@@ -31,7 +31,7 @@ module Teapot
 			
 			one :name, "The name of the new project in title-case, e.g. 'My Project'.", required: true
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha.", required: true
-			many :packages, "Any additional packages you'd like to include in the project."
+			many :packages, "Any packages you'd like to include in the project.", default: ["generate-project"]
 			
 			def invoke
 				logger = parent.logger
@@ -48,11 +48,11 @@ module Teapot
 				
 				repository = Rugged::Repository.init_at(root.to_s)
 				
-				logger.info "Creating project named #{name} at path #{root}...".color(:cyan)
+				logger.info "Creating project named #{name} at path #{root}..."
 				generate_project(root, @name, @source, @packages)
 				
 				# Fetch the initial packages:
-				Fetch[].invoke(nested)
+				Fetch[parent: nested].invoke
 				
 				context = nested.context
 				selection = context.select
@@ -60,10 +60,10 @@ module Teapot
 				
 				if target_names.any?
 					# Generate the initial project files:
-					Build[*target_names].invoke(nested)
+					Build[*target_names, parent: nested].invoke
 					
 					# Fetch any additional packages:
-					Fetch[].invoke(nested)
+					Fetch[parent: nested].invoke
 				end
 				
 				# Stage all files:

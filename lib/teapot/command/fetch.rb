@@ -48,31 +48,20 @@ module Teapot
 			
 			many :packages, "Only update the specified packages, or all packages if none specified."
 			
-			def terminal(output = $stdout)
-				Event::Terminal.for(output).tap do |terminal|
-					terminal[:success] = terminal.style(:green)
-					terminal[:error] = terminal.style(:red)
-				end
-			end
-			
 			def context
 				parent.context
 			end
 			
-			def required_packages
+			def invoke
 				selection = context.select
 				
 				packages = selection.configuration.packages
 				
-				if @packages.any?
+				if @packages&.any?
 					packages = packages.slice(@packages)
 				end
 				
-				return packages
-			end
-			
-			def invoke
-				packages = required_packages
+				logger = parent.logger
 				
 				# If no additional packages were resolved, we have reached a fixed point:
 				while packages.any?
@@ -91,12 +80,15 @@ module Teapot
 				end
 			
 				if selection.unresolved.count > 0
-					logger.error "Could not fetch all packages!".color(:red)
-					selection.unresolved.each do |package|
-						logger.error "\t#{package}".color(:red)
+					logger.error(self) do |buffer|
+						buffer.puts "Could not fetch all packages!"
+						
+						selection.unresolved.each do |package|
+							buffer.puts "\t#{package}"
+						end
 					end
 				else
-					logger.info "Completed fetch successfully.".color(:green)
+					logger.info "Completed fetch successfully."
 				end
 			end
 			
@@ -112,7 +104,7 @@ module Teapot
 			end
 			
 			def link_local_package(context, configuration, package, logger)
-				logger.info "Linking local #{package}...".color(:cyan)
+				logger.info "Linking local #{package}..." #.color(:cyan)
 		
 				local_path = context.root + package.options[:local]
 
@@ -133,7 +125,7 @@ module Teapot
 			end
 
 			def clone_or_pull_package(context, configuration, package, package_lock, logger)
-				logger.info "Processing #{package}...".color(:cyan)
+				logger.info "Processing #{package}..." #.color(:cyan)
 
 				# Where we are going to put the package:
 				destination_path = package.path
@@ -154,7 +146,7 @@ module Teapot
 				end
 
 				if destination_path.exist?
-					logger.info "Updating package at path #{destination_path}...".color(:cyan)
+					logger.info "Updating package at path #{destination_path}..." #.color(:cyan)
 
 					repository = Rugged::Repository.new(destination_path.to_s)
 
@@ -179,7 +171,7 @@ module Teapot
 					# Reset it to the requested commit if required:
 					repository.reset(commit_id, :hard)
 				else
-					logger.info "Cloning package at path #{destination_path}...".color(:cyan)
+					logger.info "Cloning package at path #{destination_path}..." #.color(:cyan)
 					
 					external_url = package.external_url(context.root)
 					

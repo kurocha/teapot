@@ -29,8 +29,8 @@ module Teapot
 			
 			def terminal(output = $stdout)
 				Event::Terminal.for(output).tap do |terminal|
-					terminal[:worktree_new] = terminal.style(:blue)
-					terminal[:worktree_modified] = terminal.style(:green)
+					terminal[:worktree_new] = terminal.style(:green)
+					terminal[:worktree_modified] = terminal.style(:yellow)
 					terminal[:worktree_deleted] = terminal.style(:red)
 				end
 			end
@@ -53,8 +53,8 @@ module Teapot
 					
 					terminal.puts "Package #{package.name} (from #{package.path}):"
 					
-					changes.each do |file, status|
-						terminal.puts "\t#{file} (#{status})", style: status
+					changes.each do |file, statuses|
+						terminal.puts "\t#{file} (#{statuses})", style: statuses.last
 					end
 				end
 			end
