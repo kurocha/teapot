@@ -33,9 +33,6 @@ require_relative 'context'
 require_relative 'configuration'
 require_relative 'version'
 
-require 'uri'
-require 'rainbow'
-require 'rainbow/ext/string'
 require 'fileutils'
 
 require 'event/console'

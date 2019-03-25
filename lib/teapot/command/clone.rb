@@ -31,11 +31,9 @@ module Teapot
 		class Clone < Samovar::Command
 			self.description = "Clone a remote repository and fetch all dependencies."
 			
-			one :source, "The source repository to clone."
+			one :source, "The source repository to clone.", required: true
 			
-			def invoke(parent)
-				raise ArgumentError, "source is required" unless @source
-				
+			def invoke
 				logger = parent.logger
 				
 				name = File.basename(::Build::URI[@source].path, ".git")
@@ -47,11 +45,11 @@ module Teapot
 					raise ArgumentError.new("#{root} already exists!")
 				end
 				
-				logger.info "Cloning #{@source} to #{root}...".color(:cyan)
+				logger.info "Cloning #{@source} to #{root}..."
 				_repository = Rugged::Repository.clone_at(@source, root.to_s, credentials: self.method(:credentials))
 				
 				# Fetch the initial packages:
-				Fetch[].invoke(nested)
+				Fetch[parent: nested].invoke
 			end
 			
 			def credentials(url, username, types)

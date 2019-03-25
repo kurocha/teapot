@@ -20,7 +20,6 @@
 
 require_relative 'selection'
 require 'rugged'
-require 'event/terminal'
 
 module Teapot
 	module Command
@@ -57,8 +56,8 @@ module Teapot
 				
 				packages = selection.configuration.packages
 				
-				if @packages&.any?
-					packages = packages.slice(@packages)
+				if packages = self.packages and packages&.any?
+					packages = packages.slice(packages)
 				end
 				
 				logger = parent.logger

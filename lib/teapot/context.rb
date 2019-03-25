@@ -69,6 +69,9 @@ module Teapot
 				# e.g. foo-bar, typically used for targets, executables
 				substitutions['PROJECT_TARGET_NAME'] = name.target
 				
+				# e.g. foo_bar, typically used for variables.
+				substitutions['PROJECT_VARIABLE_NAME'] = name.key
+				
 				substitutions['LICENSE'] = @project.license
 			end
 			
