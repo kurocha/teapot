@@ -29,14 +29,11 @@ module Teapot
 		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
-			one :name, "The name of the new project in title-case, e.g. 'My Project'."
-			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
+			one :name, "The name of the new project in title-case, e.g. 'My Project'.", required: true
+			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha.", required: true
 			many :packages, "Any additional packages you'd like to include in the project."
 			
-			def invoke(parent)
-				raise ArgumentError, "name is required" unless @name
-				raise ArgumentError, "source is required" unless @source
-				
+			def invoke
 				logger = parent.logger
 				
 				nested = parent['--root', parent.options[:root] || name.gsub(/\s+/, '-').downcase]

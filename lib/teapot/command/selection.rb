@@ -41,10 +41,10 @@ module Teapot
 				end
 			end
 			
-			def invoke(parent)
+			def invoke
 				context = parent.context
 				
-				self.process(parent, selection(parent.context))
+				self.process(selection(parent.context))
 			end
 		end
 	end

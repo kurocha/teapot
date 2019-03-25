@@ -18,20 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'samovar'
+require_relative 'selection'
 require 'graphviz'
 
 module Teapot
 	module Command
-		class Visualize < Samovar::Command
+		class Visualize < Selection
 			self.description = "Generate a picture of the dependency graph."
 			
 			options do
 				option '-o/--output-path <path>', "The output path for the visualization.", default: "dependency.svg"
 				option '-d/--dependency-name <name>', "Show the partial chain for the given named dependency."
 			end
-			
-			many :targets, "Visualize these targets, or use them to help the dependency resolution process."
 			
 			def dependency_names
 				@targets || []
@@ -41,15 +39,13 @@ module Teapot
 				@options[:dependency_name]
 			end
 			
-			def invoke(parent)
-				context = parent.context
-				selection = context.select(dependency_names)
+			def process(parent, selection)
+				context = selection.context
 				chain = selection.chain
 
 				if dependency_name
 					provider = selection.dependencies[dependency_name]
 					
-					# TODO The visualisation generated isn't quite right. It's introspecting too much from the packages and not reflecting #ordered and #provisions.
 					chain = chain.partial(provider)
 				end
 
@@ -58,7 +54,9 @@ module Teapot
 				graph = visualization.generate(chain)
 
 				if output_path = @options[:output_path]
-					Graphviz::output(graph, :path => output_path)
+					Graphviz.output(graph, path: output_path, format: :svg)
+				else
+					$stdout.puts graph.to_dot
 				end
 
 				return graph

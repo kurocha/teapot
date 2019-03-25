@@ -28,9 +28,20 @@ module Teapot
 		class List < Selection
 			self.description = "List provisions and dependencies of the specified package."
 			
-			def process(parent, selection)
+			def terminal(output = $stdout)
+				Event::Terminal.for(output).tap do |terminal|
+					terminal[:definition] = terminal.style(nil, nil, :bright)
+					terminal[:dependency] = terminal.style(:blue)
+					terminal[:provision] = terminal.style(:green)
+					terminal[:package] = terminal.style(:yellow)
+					terminal[:import] = terminal.style(:cyan)
+					terminal[:error] = terminal.style(:red)
+				end
+			end
+			
+			def process(selection)
 				context = selection.context
-				terminal = parent.terminal
+				terminal = self.terminal
 				
 				selection.resolved.each do |package|
 					terminal.puts "Package #{package.name} (from #{package.path}):"
@@ -40,7 +51,7 @@ module Teapot
 						definitions = script.defined
 					
 						definitions.each do |definition|
-							terminal.puts "\t#{definition}"
+							terminal.puts "\t#{definition}", style: :definition
 					
 							definition.description.each_line do |line|
 								terminal.puts "\t\t#{line.chomp}", style: :description

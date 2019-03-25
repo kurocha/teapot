@@ -25,7 +25,7 @@ module Teapot
 		class Clean < Samovar::Command
 			self.description = "Delete everything in the teapot directory."
 			
-			def invoke(parent)
+			def invoke
 				context = parent.context
 				logger = parent.logger
 				configuration = context.configuration

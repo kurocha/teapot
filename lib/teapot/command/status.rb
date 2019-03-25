@@ -18,30 +18,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'samovar'
+require_relative 'selection'
 require 'rugged'
+require 'event/terminal'
 
 module Teapot
 	module Command
-		class Status < Samovar::Command
+		class Status < Selection
 			self.description = "List the git status of the specified package(s)."
 			
-			many :packages, "Limit the listing to only these packages, or all packages if none specified."
-			
-			def only
-				if @packages.any?
-					Set.new(@packages)
+			def terminal(output = $stdout)
+				Event::Terminal.for(output).tap do |terminal|
+					terminal[:worktree_new] = terminal.style(:blue)
+					terminal[:worktree_modified] = terminal.style(:green)
+					terminal[:worktree_deleted] = terminal.style(:red)
 				end
 			end
 			
-			def invoke(parent)
-				context = parent.context
-				logger = parent.logger
+			def process(selection)
+				context = selection.context
+				terminal = self.terminal
 				
-				context.configuration.packages.each do |package|
-					# The root package is the local package for this context:
-					next unless only.nil? or only.include?(package.name)
-					
+				selection.resolved.each do |package|
 					repository = Rugged::Repository.new(package.path.to_s)
 					
 					changes = {}
@@ -53,18 +51,10 @@ module Teapot
 					
 					next if changes.empty?
 					
-					logger.info "Package #{package.name} (from #{package.path}):".bright
+					terminal.puts "Package #{package.name} (from #{package.path}):"
 					
 					changes.each do |file, status|
-						if status == [:worktree_new]
-							logger.info "\t#{file}".color(:blue)
-						elsif status == [:worktree_modified]
-							logger.info "\t#{file}".color(:orange)
-						elsif status == [:worktree_deleted]
-							logger.info "\t#{file}".color(:red)
-						else
-							logger.info "\t#{file} #{status.inspect}"
-						end
+						terminal.puts "\t#{file} (#{status})", style: status
 					end
 				end
 			end

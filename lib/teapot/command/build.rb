@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'samovar'
+require_relative 'selection'
 
 require 'build/controller'
 
@@ -27,7 +27,7 @@ module Teapot
 		class BuildFailedError < StandardError
 		end
 		
-		class Build < Samovar::Command
+		class Build < Selection
 			self.description = "Build the specified target."
 			
 			options do
@@ -38,7 +38,7 @@ module Teapot
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
-			def invoke(parent)
+			def invoke
 				context = parent.context
 				
 				# The targets to build:

@@ -18,9 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'samovar'
-
+require_relative 'selection'
 require 'rugged'
+require 'event/terminal'
 
 module Teapot
 	module Command
@@ -48,10 +48,18 @@ module Teapot
 			
 			many :packages, "Only update the specified packages, or all packages if none specified."
 			
-			def invoke(parent)
-				logger = parent.logger
-				context = parent.context
-				
+			def terminal(output = $stdout)
+				Event::Terminal.for(output).tap do |terminal|
+					terminal[:success] = terminal.style(:green)
+					terminal[:error] = terminal.style(:red)
+				end
+			end
+			
+			def context
+				parent.context
+			end
+			
+			def required_packages
 				selection = context.select
 				
 				packages = selection.configuration.packages
@@ -59,6 +67,12 @@ module Teapot
 				if @packages.any?
 					packages = packages.slice(@packages)
 				end
+				
+				return packages
+			end
+			
+			def invoke
+				packages = required_packages
 				
 				# If no additional packages were resolved, we have reached a fixed point:
 				while packages.any?
