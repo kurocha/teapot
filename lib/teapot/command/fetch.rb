@@ -56,8 +56,8 @@ module Teapot
 				
 				packages = selection.configuration.packages
 				
-				if packages = self.packages and packages&.any?
-					packages = packages.slice(packages)
+				if specified_packages = self.packages
+					packages = packages.slice(specified_packages)
 				end
 				
 				logger = parent.logger
