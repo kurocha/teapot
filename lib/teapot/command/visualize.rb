@@ -39,7 +39,7 @@ module Teapot
 				@options[:dependency_name]
 			end
 			
-			def process(parent, selection)
+			def process(selection)
 				context = selection.context
 				chain = selection.chain
 
