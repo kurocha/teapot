@@ -29,5 +29,5 @@ addons:
       - clang-4.0
       - libc++-dev
       - libc++abi-dev
-env:
-  - CC=clang-4.0 CXX=clang++-4.0
+# env:
+#   - CC=clang-4.0 CXX=clang++-4.0
