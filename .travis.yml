@@ -16,7 +16,7 @@ matrix:
     - rvm: 2.6
       os: osx
       before_install: brew install pkgconfig zlib curl openssl libssh2 libgit2
-      env: RUGGED_USE_SYSTEM_LIBRARIES=y
+      # env: RUGGED_USE_SYSTEM_LIBRARIES=y
     - rvm: 2.6
       env: COVERAGE=BriefSummary,Coveralls
 
