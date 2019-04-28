@@ -28,13 +28,13 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "rugged"
 	
 	spec.add_dependency "build", "~> 2.4"
-	spec.add_dependency "build-environment", "~> 1.8"
+	spec.add_dependency "build-environment", "~> 1.10.0"
 	spec.add_dependency "build-files", "~> 1.4"
 	spec.add_dependency "build-dependency", "~> 1.4"
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "build-text", "~> 1.0"
 	
-	spec.add_dependency "event", "~> 1.2"
+	spec.add_dependency "console", "~> 1.0"
 	spec.add_dependency "samovar", "~> 2.0"
 	
 	spec.add_development_dependency "covered"

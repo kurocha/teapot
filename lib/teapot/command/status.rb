@@ -20,7 +20,7 @@
 
 require_relative 'selection'
 require 'rugged'
-require 'event/terminal'
+require 'console/terminal'
 
 module Teapot
 	module Command
@@ -28,7 +28,7 @@ module Teapot
 			self.description = "List the git status of the specified package(s)."
 			
 			def terminal(output = $stdout)
-				Event::Terminal.for(output).tap do |terminal|
+				Console::Terminal.for(output).tap do |terminal|
 					terminal[:worktree_new] = terminal.style(:green)
 					terminal[:worktree_modified] = terminal.style(:yellow)
 					terminal[:worktree_deleted] = terminal.style(:red)

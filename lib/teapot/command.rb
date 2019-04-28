@@ -35,7 +35,7 @@ require_relative 'version'
 
 require 'fileutils'
 
-require 'event/console'
+require 'console'
 
 module Teapot
 	module Command
@@ -78,7 +78,7 @@ module Teapot
 			end
 			
 			def logger
-				@logger ||= Event::Logger.new(Event::Console.logger, verbose: self.verbose?).tap do |logger|
+				@logger ||= Console::Logger.new(Console.logger, verbose: self.verbose?).tap do |logger|
 					if verbose?
 						logger.debug!
 					elsif quiet?

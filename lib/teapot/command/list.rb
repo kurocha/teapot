@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 require 'samovar'
-require 'event/terminal'
+require 'console/terminal'
 
 require_relative 'selection'
 
@@ -29,7 +29,7 @@ module Teapot
 			self.description = "List provisions and dependencies of the specified package."
 			
 			def terminal(output = $stdout)
-				Event::Terminal.for(output).tap do |terminal|
+				Console::Terminal.for(output).tap do |terminal|
 					terminal[:definition] = terminal.style(nil, nil, :bright)
 					terminal[:dependency] = terminal.style(:blue)
 					terminal[:provision] = terminal.style(:green)
