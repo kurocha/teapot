@@ -25,10 +25,10 @@ Gem::Specification.new do |spec|
 	spec.required_ruby_version = '>= 2.1.0'
 	
 	spec.add_dependency "graphviz", "~> 1.0"
-	spec.add_dependency "rugged"
+	spec.add_dependency "rugged", "~> 0.27.0"
 	
 	spec.add_dependency "build", "~> 2.4"
-	spec.add_dependency "build-environment", "~> 1.10.0"
+	spec.add_dependency "build-environment", "~> 1.10"
 	spec.add_dependency "build-files", "~> 1.4"
 	spec.add_dependency "build-dependency", "~> 1.4"
 	spec.add_dependency "build-uri", "~> 1.0"
