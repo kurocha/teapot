@@ -49,7 +49,7 @@ if command = Teapot::Command.parse(ARGV)
 				end
 			end
 
-			buffer.puts "Cannot continue due to unresolved dependencies!".color(:red)
+			buffer.puts "Cannot continue due to unresolved dependencies!"
 		end
 		
 		exit 2
