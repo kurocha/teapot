@@ -52,7 +52,6 @@ module Teapot
 				environment = context.configuration.environment
 				
 				controller = ::Build::Controller.new(logger: parent.logger, limit: @options[:limit]) do |controller|
-					
 					controller.add_chain(chain, self.argv, environment)
 				end
 				
