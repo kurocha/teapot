@@ -41,7 +41,7 @@ module Teapot
 				end
 			end
 			
-			def invoke
+			def call
 				context = parent.context
 				
 				self.process(selection(parent.context))

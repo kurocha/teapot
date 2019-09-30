@@ -33,7 +33,7 @@ module Teapot
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha.", required: true
 			many :packages, "Any packages you'd like to include in the project.", default: ["generate-project"]
 			
-			def invoke
+			def call
 				logger = parent.logger
 				
 				nested = parent['--root', parent.options[:root] || name.gsub(/\s+/, '-').downcase]
@@ -52,7 +52,7 @@ module Teapot
 				generate_project(root, @name, @source, @packages)
 				
 				# Fetch the initial packages:
-				Fetch[parent: nested].invoke
+				Fetch[parent: nested].call
 				
 				context = nested.context
 				selection = context.select
@@ -60,10 +60,10 @@ module Teapot
 				
 				if target_names.any?
 					# Generate the initial project files:
-					Build[*target_names, parent: nested].invoke
+					Build[*target_names, parent: nested].call
 					
 					# Fetch any additional packages:
-					Fetch[parent: nested].invoke
+					Fetch[parent: nested].call
 				end
 				
 				# Stage all files:

@@ -39,10 +39,6 @@ require 'console'
 
 module Teapot
 	module Command
-		def self.parse(*args)
-			Top.parse(*args)
-		end
-		
 		class Top < Samovar::Command
 			self.description = "A decentralised package manager and build tool."
 			
@@ -97,14 +93,44 @@ module Teapot
 				Context.new(root, configuration: configuration)
 			end
 			
-			def invoke
+			def call
 				if @options[:version]
 					puts "teapot v#{Teapot::VERSION}"
 				elsif @options[:help]
 					print_usage(output: $stdout)
 				else
-					@command.invoke
+					@command.call
 				end
+			rescue Teapot::IncompatibleTeapotError => error
+				logger.error(command, error) do
+					"Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
+				end
+				
+				raise
+			rescue ::Build::Dependency::UnresolvedDependencyError => error
+				logger.error(command, error) do |buffer|
+					buffer.puts "Unresolved dependencies:"
+
+					error.chain.unresolved.each do |name, parent|
+						buffer.puts "#{parent} depends on #{name.inspect}"
+					
+						conflicts = error.chain.conflicts[name]
+					
+						if conflicts
+							conflicts.each do |conflict|
+								buffer.puts " - provided by #{conflict.name}"
+							end
+						end
+					end
+
+					buffer.puts "Cannot continue due to unresolved dependencies!"
+				end
+				
+				raise
+			rescue StandardError => error
+				logger.error(command, error)
+				
+				raise
 			end
 		end
 	end

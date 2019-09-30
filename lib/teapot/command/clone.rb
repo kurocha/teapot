@@ -33,7 +33,7 @@ module Teapot
 			
 			one :source, "The source repository to clone.", required: true
 			
-			def invoke
+			def call
 				logger = parent.logger
 				
 				name = File.basename(::Build::URI[@source].path, ".git")
@@ -49,7 +49,7 @@ module Teapot
 				_repository = Rugged::Repository.clone_at(@source, root.to_s, credentials: self.method(:credentials))
 				
 				# Fetch the initial packages:
-				Fetch[parent: nested].invoke
+				Fetch[parent: nested].call
 			end
 			
 			def credentials(url, username, types)

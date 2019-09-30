@@ -35,7 +35,7 @@ RSpec.describe Teapot::Command, order: :defined do
 		it "should create a new project" do
 			root.delete
 			
-			expect{subject.invoke}.to_not raise_error
+			expect{subject.call}.to_not raise_error
 			expect(project_path + "teapot.rb").to be_exist
 			expect(project_path + ".travis.yml").to be_exist
 		end
@@ -45,7 +45,7 @@ RSpec.describe Teapot::Command, order: :defined do
 		subject {top["build", "Run/TestProject"]}
 	
 		it "should build project" do
-			expect{subject.invoke}.to_not raise_error
+			expect{subject.call}.to_not raise_error
 		end
 	end
 	
@@ -53,7 +53,7 @@ RSpec.describe Teapot::Command, order: :defined do
 		subject {top["fetch"]}
 		
 		it "should fetch any changes" do
-			expect{subject.invoke}.to_not raise_error
+			expect{subject.call}.to_not raise_error
 		end
 	end
 end

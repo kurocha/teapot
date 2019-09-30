@@ -22,40 +22,4 @@
 
 require_relative '../lib/teapot/command'
 
-if command = Teapot::Command.parse(ARGV)
-	logger = command.logger
-
-	begin
-		command.invoke
-	rescue Teapot::IncompatibleTeapotError => error
-		logger.error(command, error) do
-			"Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."
-		end
-		
-		exit 1
-	rescue Build::Dependency::UnresolvedDependencyError => error
-		logger.error(command, error) do |buffer|
-			buffer.puts "Unresolved dependencies:"
-
-			error.chain.unresolved.each do |name, parent|
-				buffer.puts "#{parent} depends on #{name.inspect}"
-			
-				conflicts = error.chain.conflicts[name]
-			
-				if conflicts
-					conflicts.each do |conflict|
-						buffer.puts " - provided by #{conflict.name}"
-					end
-				end
-			end
-
-			buffer.puts "Cannot continue due to unresolved dependencies!"
-		end
-		
-		exit 2
-	rescue StandardError => error
-		logger.error(command, error)
-		
-		exit 3
-	end
-end
+Teapot::Command::Top.call

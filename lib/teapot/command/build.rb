@@ -38,7 +38,7 @@ module Teapot
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
-			def invoke
+			def call
 				context = parent.context
 				
 				# The targets to build:

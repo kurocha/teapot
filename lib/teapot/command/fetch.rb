@@ -51,7 +51,7 @@ module Teapot
 				parent.context
 			end
 			
-			def invoke
+			def call
 				selection = context.select
 				
 				packages = selection.configuration.packages
