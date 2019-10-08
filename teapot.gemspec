@@ -34,6 +34,8 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "build-text", "~> 1.0"
 	
+	spec.add_dependency "process-group", "~> 1.2"
+	
 	spec.add_dependency "console", "~> 1.0"
 	spec.add_dependency "samovar", "~> 2.0"
 	
