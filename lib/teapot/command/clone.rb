@@ -33,7 +33,7 @@ module Teapot
 			
 			one :source, "The source repository to clone."
 			
-			def invoke(parent)
+			def call(parent)
 				raise ArgumentError, "source is required" unless @source
 				
 				logger = parent.logger
@@ -51,7 +51,7 @@ module Teapot
 				repository = Rugged::Repository.clone_at(@source, root.to_s, credentials: self.method(:credentials))
 				
 				# Fetch the initial packages:
-				Fetch[].invoke(nested)
+				Fetch[].call(nested)
 			end
 			
 			def credentials(url, username, types)

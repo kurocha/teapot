@@ -57,7 +57,7 @@ module Teapot
 				option '-v/--version', "Print out the application version."
 			end
 			
-			nested '<command>', {
+			nested :command, {
 				"create" => Create,
 				"clone" => Clone,
 				"fetch" => Fetch,
@@ -102,15 +102,13 @@ module Teapot
 				Context.new(root, configuration: configuration)
 			end
 			
-			def invoke(program_name: File.basename($0))
+			def call(program_name: File.basename($0))
 				if @options[:version]
 					puts "teapot v#{Teapot::VERSION}"
 				elsif @options[:help] or @command.nil?
 					print_usage(program_name)
 				else
-					track_time do
-						@command.invoke(self)
-					end
+					@command.call(self)
 				end
 			end
 		end

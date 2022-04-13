@@ -48,7 +48,7 @@ module Teapot
 			
 			many :packages, "Only update the specified packages, or all packages if none specified."
 			
-			def invoke(parent)
+			def call(parent)
 				logger = parent.logger
 				context = parent.context
 				
@@ -57,7 +57,7 @@ module Teapot
 				
 				packages = selection.configuration.packages
 				
-				if @packages.any?
+				if @packages&.any?
 					packages = packages.slice(@packages)
 				end
 				

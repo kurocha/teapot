@@ -34,7 +34,7 @@ module Teapot
 				end
 			end
 			
-			def invoke(parent)
+			def call(parent)
 				context = parent.context
 				logger = parent.logger
 				

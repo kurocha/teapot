@@ -41,7 +41,7 @@ module Teapot
 				@options[:dependency_name]
 			end
 			
-			def invoke(parent)
+			def call(parent)
 				context = parent.context
 				selection = context.select(dependency_names)
 				chain = selection.chain

@@ -22,10 +22,10 @@
 
 require 'teapot/command'
 
-options = Teapot::Command.parse(ARGV)
+command = Teapot::Command.parse(ARGV)
 
 begin
-	options.invoke
+	command.call
 rescue Teapot::IncompatibleTeapotError => error
 	$stderr.puts error.message.color(:red)
 	$stderr.puts "Supported minimum version #{Teapot::MINIMUM_LOADER_VERSION.dump} to #{Teapot::LOADER_VERSION.dump}."

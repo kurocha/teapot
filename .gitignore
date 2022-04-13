@@ -16,3 +16,7 @@ test/tmp
 test/version_tmp
 tmp
 kurocha
+
+/spec/teapot/command/clone_spec/
+/spec/teapot/command/fetch_spec/
+/spec/teapot/command_spec/

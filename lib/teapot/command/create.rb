@@ -33,7 +33,7 @@ module Teapot
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha."
 			many :packages, "Any additional packages you'd like to include in the project."
 			
-			def invoke(parent)
+			def call(parent)
 				raise ArgumentError, "project_name is required" unless @project_name
 				raise ArgumentError, "source is required" unless @source
 				
@@ -55,7 +55,7 @@ module Teapot
 				generate_project(root, @project_name, @source, @packages)
 				
 				# Fetch the initial packages:
-				Fetch[].invoke(nested)
+				Fetch[].call(nested)
 				
 				context = nested.context
 				selection = context.select
@@ -63,10 +63,10 @@ module Teapot
 				
 				if target_names.any?
 					# Generate the initial project files:
-					Build[*target_names].invoke(nested)
+					Build[*target_names].call(nested)
 					
 					# Fetch any additional packages:
-					Fetch[].invoke(nested)
+					Fetch[].call(nested)
 				end
 				
 				# Stage all files:
