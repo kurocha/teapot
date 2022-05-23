@@ -4,7 +4,7 @@
 .config
 .yardoc
 .rspec_status
-Gemfile.lock
+/gems.locked
 InstalledFiles
 _yardoc
 coverage
@@ -19,3 +19,10 @@ tmp
 
 kurocha
 dependency.svg
+
+# Test fixtures:
+spec/teapot/command/clone_spec/
+spec/teapot/command/fetch_spec/test-project/merged-lock.yml
+spec/teapot/command/fetch_spec/test-project/teapot/
+spec/teapot/command/fetch_spec/test-project/test-lock.yml
+spec/teapot/command_spec/

@@ -97,8 +97,8 @@ module Teapot
 		
 		alias required_version teapot_version
 		
-		def define_project(*args)
-			project = Project.new(@context, @package, *args)
+		def define_project(*arguments, **options)
+			project = Project.new(@context, @package, *arguments, **options)
 			
 			yield project
 			
@@ -106,8 +106,8 @@ module Teapot
 			@defined << project
 		end
 		
-		def define_target(*args)
-			target = Target.new(@context, @package, *args)
+		def define_target(*arguments, **options)
+			target = Target.new(@context, @package, *arguments, **options)
 			
 			yield target
 			
@@ -116,8 +116,8 @@ module Teapot
 			@defined << target
 		end
 		
-		def define_configuration(*args)
-			configuration = Configuration.new(@context, @package, *args)
+		def define_configuration(*arguments, **options)
+			configuration = Configuration.new(@context, @package, *arguments, **options)
 
 			yield configuration
 
@@ -127,11 +127,11 @@ module Teapot
 		end
 		
 		# Checks the host patterns and executes the block if they match.
-		def host(*args, &block)
+		def host(*arguments, **options, &block)
 			name = @context.options[:host_platform] || RUBY_PLATFORM
 			
 			if block_given?
-				if args.find{|arg| arg === name}
+				if arguments.find{|argument| argument === name}
 					yield
 				end
 			else

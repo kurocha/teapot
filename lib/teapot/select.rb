@@ -42,7 +42,7 @@ module Teapot
 	class Select
 		def initialize(context, configuration, names = [])
 			@context = context
-			@configuration = Configuration.new(context, configuration.package, configuration.name, [], configuration.options)
+			@configuration = Configuration.new(context, configuration.package, configuration.name, [], **configuration.options)
 			
 			@targets = {}
 			@configurations = {}

@@ -49,14 +49,14 @@ module Teapot
 					begin
 						script = context.load(package)
 						definitions = script.defined
-					
+						
 						definitions.each do |definition|
 							terminal.puts "\t#{definition}", style: :definition
-					
+							
 							definition.description.each_line do |line|
 								terminal.puts "\t\t#{line.chomp}", style: :description
 							end if definition.description
-					
+							
 							case definition
 							when Project
 								terminal.puts "\t\t- Summary: #{definition.summary}" if definition.summary
@@ -72,7 +72,7 @@ module Teapot
 								definition.dependencies.each do |dependency|
 									terminal.puts "\t\t- #{dependency}", style: :dependency
 								end
-				
+								
 								definition.provisions.each do |name, provision|
 									terminal.puts "\t\t- #{provision}", style: :provision
 								end
@@ -80,7 +80,7 @@ module Teapot
 								definition.packages.each do |package|
 									terminal.puts "\t\t- #{package}", style: :package
 								end
-							
+								
 								definition.imports.select(&:explicit).each do |import|
 									terminal.puts "\t\t- import #{import.name}", style: :import
 								end
