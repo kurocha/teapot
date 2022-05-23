@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+			<title>Teapot::Configuration</title>
+		
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		<link rel="icon" type="image/png" href="../../../_static/icon.png"/>
+		<link rel="stylesheet" href="../../../_static/site.css" type="text/css" media="screen"/>
+		
+		<script src="../../../_components/jquery/jquery.min.js"></script>
+		<script src="../../../_components/jquery-syntax/jquery.syntax.min.js"></script>
+		<script src="../../../_components/mermaid/mermaid.min.js"></script>
+		
+		<script src="../../../_static/links.js"></script>
+		
+		<script type="text/javascript">
+		//<![CDATA[
+			jQuery(function($) {
+				$.syntax();
+			});
+			
+			let isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+			let config = {theme: 'light'};
+			if (isDarkMode) config.theme = 'dark';
+			else config.theme = 'forest';
+			mermaid.initialize(config);
+		//]]>
+		</script>
+	</head>
+
+	<body>
+		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="../../index.html">Source</a></header>
+		
+		<main>
+			
+	<h1>Teapot::Configuration</h1>
+	
+	<p>
+		<code class="language-ruby">class Teapot::Configuration &lt; Definition</code>
+	</p>
+	
+	<p>A configuration represents a mapping between package/dependency names and actual source locations. Usually, there is only one configuration, but in some cases it is useful to have more than one, e.g. one for local development using local source code, one for continuous integration, and one for deployment.</p>
+	
+	
+	
+	
+	<section>
+	<h2>Definitions</h2>
+	
+	<section id="Teapot::Configuration#visibility"><h3><code class="language-ruby">attr :visibility</code></h3><p>Controls how the configuration is exposed in the context.</p>
+</section><section id="Teapot::Configuration#targets"><h3><code class="language-ruby">attr :targets</code></h3><p>A table of named targets for specific purposes.</p>
+</section><section id="Teapot::Configuration#options"><h3><code class="language-ruby">attr :options</code></h3><p>Options used to bind packages to this configuration.</p>
+</section><section id="Teapot::Configuration#packages"><h3><code class="language-ruby">attr :packages</code></h3><p>A list of packages which are required by this configuration.</p>
+</section><section id="Teapot::Configuration#imports"><h3><code class="language-ruby">attr :imports</code></h3><p>A list of other configurations to include when materialising the list of packages.</p>
+</section><section id="Teapot::Configuration#require"><h3><code class="language-ruby">def require(name, **options)</code></h3><p>Specifies that this configuration depends on an external package of some sort.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def require(name, **options)
+	options = @options.merge(options)
+	
+	@packages &lt;&lt; Package.new(packages_path + name.to_s, name, options)
+	
+	if options[:import] == true
+		import(name, false)
+	elsif String === options[:import]
+		import(options[:import])
+	end
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#import"><h3><code class="language-ruby">def import(name, explicit = true)</code></h3><p>Specifies that this package will import additional configuration records from another definition.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def import(name, explicit = true)
+	@imports &lt;&lt; Import.new(name, explicit, @options.dup)
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#group"><h3><code class="language-ruby">def group</code></h3><p>Create a group for configuration options which will be only be active within the group block.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def group
+	options = @options.dup
+	
+	yield
+	
+	@options = options
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#[]="><h3><code class="language-ruby">def []= key, value</code></h3><p>Set a configuration option.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def []= key, value
+	@options[key] = value
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#[]"><h3><code class="language-ruby">def [] key</code></h3><p>Get a configuration option.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def [] key
+	@options[key]
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#packages_path"><h3><code class="language-ruby">def packages_path</code></h3><p>The path where packages will be located when fetched.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def packages_path
+	context.root + &quot;teapot/packages/#{name}&quot;
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#build_path"><h3><code class="language-ruby">def build_path</code></h3><p>The path where built products will be placed.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def build_path
+	context.root + &quot;teapot/build/#{name}&quot;
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#traverse"><h3><code class="language-ruby">def traverse(configurations, imported = Build::Dependency::Set.new, &amp;block)</code></h3><p>Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def traverse(configurations, imported = Build::Dependency::Set.new, &amp;block)
+	yield self # Whatever happens here, should ensure that...
+	
+	@imports.each do |import|
+		# So we don't get into some crazy cycle:
+		next if imported.include?(import)
+		
+		# Mark it as being imported:
+		imported &lt;&lt; import
+		
+		# ... by here, the configuration is available:
+		if configuration = configurations[import.name]
+			configuration.traverse(configurations, imported, &amp;block)
+		end
+	end
+end</code></pre>
+					</details></section><section id="Teapot::Configuration#merge"><h3><code class="language-ruby">def merge(configuration)</code></h3><p>Merge an external configuration into this configuration. We won't override already defined packages.</p>
+<details>
+						<summary><h4>Implementation</h4></summary>
+						<pre><code class="language-ruby">def merge(configuration)
+	configuration.packages.each do |package|
+		# The top level configuration will override packages that are defined by imported configurations. This is desirable behaviour, as it allows us to flatten the configuration but provide overrides if required.
+		unless @packages.include? package
+			package = Package.new(packages_path + package.name, package.name, @options.merge(package.options))
+			
+			@packages &lt;&lt; package
+			
+			yield package
+		end
+	end
+	
+	configuration.imports.each do |import|
+		unless @imports.include? import
+			@imports &lt;&lt; Import.new(import.name, import.explicit, @options.merge(import.options))
+		end
+	end
+	
+	configuration.targets.each do |key, value|
+		@targets[key] += value
+	end
+	
+	return self
+end</code></pre>
+					</details></section>	</section>
+	
+	
+
+				
+			<footer>Documentation generated by <a href="https://github.com/socketry/utopia-project">Utopia::Project</a>.</footer>
+		</main>
+	</body>
+</html>
+

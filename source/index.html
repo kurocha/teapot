@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+			<title>Overview</title>
+		
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		<link rel="icon" type="image/png" href="../_static/icon.png"/>
+		<link rel="stylesheet" href="../_static/site.css" type="text/css" media="screen"/>
+		
+		<script src="../_components/jquery/jquery.min.js"></script>
+		<script src="../_components/jquery-syntax/jquery.syntax.min.js"></script>
+		<script src="../_components/mermaid/mermaid.min.js"></script>
+		
+		<script src="../_static/links.js"></script>
+		
+		<script type="text/javascript">
+		//<![CDATA[
+			jQuery(function($) {
+				$.syntax();
+			});
+			
+			let isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+			let config = {theme: 'light'};
+			if (isDarkMode) config.theme = 'dark';
+			else config.theme = 'forest';
+			mermaid.initialize(config);
+		//]]>
+		</script>
+	</head>
+
+	<body>
+		<header> › <a class="link" href="../index.html">Project</a> › <a class="link" href="index.html">Source</a></header>
+		
+		<main>
+			
+	<h1>Overview</h1>
+	
+	<ul class="index"><li>
+						<a href="Teapot/index.html"><code class="language-ruby">module Teapot</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/index.html"><code class="language-ruby">module Command</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/BuildFailedError/index.html"><code class="language-ruby">class BuildFailedError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Build/index.html"><code class="language-ruby">class Build</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/Build/options/index.html"><code class="language-ruby">options</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li></ul>				</li><li>
+						<a href="Teapot/Command/Clean/index.html"><code class="language-ruby">class Clean</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Clone/index.html"><code class="language-ruby">class Clone</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Create/index.html"><code class="language-ruby">class Create</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/FetchError/index.html"><code class="language-ruby">class FetchError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Fetch/index.html"><code class="language-ruby">class Fetch</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/Fetch/options/index.html"><code class="language-ruby">options</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li></ul>				</li><li>
+						<a href="Teapot/Command/List/index.html"><code class="language-ruby">class List</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Selection/index.html"><code class="language-ruby">class Selection</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Status/index.html"><code class="language-ruby">class Status</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Command/Visualize/index.html"><code class="language-ruby">class Visualize</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/Visualize/options/index.html"><code class="language-ruby">options</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li></ul>				</li><li>
+						<a href="Teapot/Command/Top/index.html"><code class="language-ruby">class Top</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+						<a href="Teapot/Command/Top/options/index.html"><code class="language-ruby">options</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li></ul>				</li></ul>				</li><li>
+						<a href="Teapot/Configuration/index.html"><code class="language-ruby">class Configuration</code></a>
+						
+						
+						
+							<p>A configuration represents a mapping between package/dependency names and actual source locations. Usually, there is only one configuration, but in some cases it is useful to have more than one, e.g. one for local development using local source code, one for continuous integration, and one for deployment.</p>
+
+					
+					<ul class="index"><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/Context/index.html"><code class="language-ruby">class Context</code></a>
+						
+						
+						
+							<p>A context represents a specific root package instance with a given configuration and all related definitions. A context is stateful in the sense that package selection is specialized based on #select and #dependency_chain. These parameters are usually set up initially as part of the context setup.</p>
+
+					
+					<ul class="index"><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/Definition/index.html"><code class="language-ruby">class Definition</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li></ul>				</li><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li><li>
+						<a href="Teapot/IncompatibleTeapotError/index.html"><code class="language-ruby">class IncompatibleTeapotError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/MissingTeapotError/index.html"><code class="language-ruby">class MissingTeapotError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Script/index.html"><code class="language-ruby">class Script</code></a>
+						
+						
+						
+							<p>The DSL exposed to the <code>teapot.rb</code> file.</p>
+
+					
+					<ul class="index"><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/Loader/index.html"><code class="language-ruby">class Loader</code></a>
+						
+						
+						
+							<p>Loads the teapot.rb script and can reload it if it was changed.</p>
+
+					
+					<ul class="index"><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/Package/index.html"><code class="language-ruby">class Package</code></a>
+						
+						
+						
+					
+					<ul class="index"><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/Project/index.html"><code class="language-ruby">class Project</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/AlreadyDefinedError/index.html"><code class="language-ruby">class AlreadyDefinedError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Select/index.html"><code class="language-ruby">class Select</code></a>
+						
+						
+						
+							<p>A selection is a specific view of the data exposed by the context at a specific point in time.</p>
+
+					
+					<ul class="index"><li>
+					
+									</li><li>
+					
+									</li><li>
+					
+									</li></ul>				</li><li>
+						<a href="Teapot/BuildError/index.html"><code class="language-ruby">class BuildError</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li><li>
+						<a href="Teapot/Target/index.html"><code class="language-ruby">class Target</code></a>
+						
+						
+						
+					
+					<ul class="index"></ul>				</li></ul>				</li></ul>
+				
+			<footer>Documentation generated by <a href="https://github.com/socketry/utopia-project">Utopia::Project</a>.</footer>
+		</main>
+	</body>
+</html>

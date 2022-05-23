@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+			<title>Teapot
+</title>
+		
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		<link rel="icon" type="image/png" href="_static/icon.png"/>
+		<link rel="stylesheet" href="_static/site.css" type="text/css" media="screen"/>
+		
+		<script src="_components/jquery/jquery.min.js"></script>
+		<script src="_components/jquery-syntax/jquery.syntax.min.js"></script>
+		<script src="_components/mermaid/mermaid.min.js"></script>
+		
+		<script src="_static/links.js"></script>
+		
+		<script type="text/javascript">
+		//<![CDATA[
+			jQuery(function($) {
+				$.syntax();
+			});
+			
+			let isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+			let config = {theme: 'light'};
+			if (isDarkMode) config.theme = 'dark';
+			else config.theme = 'forest';
+			mermaid.initialize(config);
+		//]]>
+		</script>
+	</head>
+
+	<body>
+		<header> › <a class="link" href="index.html">Project</a></header>
+		
+		<main>
+			
+	<h1 style="text-align: center"><object type="image/svg+xml" data="materials/teapot.svg"></object></h1><p>Teapot is a decentralised build tool for managing complex cross-platform projects. It has many goals but it is primarily designed to improve the experience for developers trying to make cross-platform applications and libraries with a minimum of overhead.</p>
+<ul>
+<li>Provide useful feedback when dependencies are not met or errors are encountered.</li>
+<li>Decentralised dependency management allows use within private organisations without exposing code.</li>
+<li>Generators can simplify the construction of new projects as well as assist with the development of existing ones.</li>
+<li>The build subsystem provides a simple set of canonical operations for building libraries and executables to minimise configuration overhead.</li>
+</ul>
+<p><a href="https://github.com/kurocha/teapot/actions?workflow=Development"><img src="https://github.com/kurocha/teapot/workflows/Development/badge.svg" alt="Development Status"/></a></p>
+<section id="installation"><h2>Installation</h2>
+<p>Ensure that you already have a working install of Ruby 2.0.0+ and run the following to install <code>teapot</code>:</p>
+<pre><code>$ gem install teapot
+</code></pre>
+</section><section id="usage"><h2>Usage</h2>
+<p>Please browse the <a href="source/index.html">source code index</a> or refer to the guides below.</p>
+
+
+</section><section id="create-project"><h3>Create Project</h3>
+<p>Firstly, create your project by running:</p>
+<pre><code>$ teapot create &quot;My Project&quot; https://github.com/kurocha generate-project
+$ cd my-project
+</code></pre>
+<p>You will be asked to merge the project file. At present, merge tools are not very good and thus you may need to take a moment to review the changes. You want to keep most of the original file, but you would like to add the <code>define_target</code> blocks which are being added.</p>
+<p>In the resulting project directory that has been created, you can see the list of dependencies:</p>
+<pre><code>$ teapot list
+... lots of output ...
+</code></pre>
+<p>To only see things exported by your current project, you can run:</p>
+<pre><code>$ teapot list root
+Package root (from /private/tmp/my-project):
+	#&lt;Teapot::Project &quot;my-project&quot;&gt;
+		My Project description.
+		- Summary: A brief one line summary of the project.
+		- License: MIT License
+		- Version: 0.1.0
+		- Author: Samuel Williams &lt;samuel.williams@oriontransfer.co.nz&gt;
+	#&lt;Teapot::Target &quot;my-project-library&quot;&gt;
+		- depends on &quot;Build/Files&quot;
+		- depends on &quot;Build/Clang&quot;
+		- depends on :platform
+		- depends on &quot;Language/C++14&quot; {:private=&gt;true}
+		- provides &quot;Library/MyProject&quot;
+	#&lt;Teapot::Target &quot;my-project-test&quot;&gt;
+		- depends on &quot;Library/UnitTest&quot;
+		- depends on &quot;Library/MyProject&quot;
+		- provides &quot;Test/MyProject&quot;
+	#&lt;Teapot::Target &quot;my-project-executable&quot;&gt;
+		- depends on &quot;Build/Files&quot;
+		- depends on &quot;Build/Clang&quot;
+		- depends on :platform
+		- depends on &quot;Language/C++14&quot; {:private=&gt;true}
+		- depends on &quot;Library/MyProject&quot;
+		- provides &quot;Executable/MyProject&quot;
+	#&lt;Teapot::Target &quot;my-project-run&quot;&gt;
+		- depends on &quot;Executable/MyProject&quot;
+		- provides &quot;Run/MyProject&quot;
+	#&lt;Teapot::Configuration &quot;development&quot; visibility=private&gt;
+		- references root from /private/tmp/my-project
+		- clones platforms from https://github.com/kurocha/platforms
+		- clones unit-test from https://github.com/kurocha/unit-test
+		- clones generate-cpp-class from https://github.com/kurocha/generate-cpp-class
+		- clones generate-project from https://github.com/kurocha/generate-project
+		- clones variants from https://github.com/kurocha/variants
+		- clones platform-darwin-osx from https://github.com/kurocha/platform-darwin-osx
+		- clones platform-darwin-ios from https://github.com/kurocha/platform-darwin-ios
+		- clones build-clang from https://github.com/kurocha/build-clang
+		- clones build-darwin from https://github.com/kurocha/build-darwin
+		- clones build-files from https://github.com/kurocha/build-files
+		- clones streams from https://github.com/kurocha/streams
+		- clones generate-template from https://github.com/kurocha/generate-template
+	#&lt;Teapot::Configuration &quot;my-project&quot; visibility=public&gt;
+		- references root from /private/tmp/my-project
+</code></pre>
+</section><section id="run-tests"><h3>Run Tests</h3>
+<p>Testing is a good idea, and teapot supports test driven development.</p>
+<pre><code>$ teapot Test/MyProject
+</code></pre>
+</section><section id="wildcard-targets"><h4>Wildcard Targets</h4>
+<p>To run all tests:</p>
+<pre><code>$ teapot &quot;Test/*&quot;
+</code></pre>
+<p>Provided you are using an environment that supports sanitizers, you can test more thoroughly using:</p>
+<pre><code>$ teapot &quot;Test/*&quot; variant-sanitize
+</code></pre>
+</section><section id="run-project"><h3>Run Project</h3>
+<p>We can now build and run the project executable:</p>
+<pre><code>$ teapot Run/MyProject
+I'm a little teapot,
+Short and stout,
+Here is my handle (one hand on hip),
+Here is my spout (other arm out with elbow and wrist bent).
+When I get all steamed up,
+Hear me shout,
+Tip me over and pour me out! (lean over toward spout)
+
+                              ~
+                   ___^___   __
+               .- /       \./ /
+              /  /          _/
+              \__|         |
+                  \_______/
+</code></pre>
+<p>The resulting executables and libraries will be framework dependent, but are typically located in:</p>
+<pre><code>$ cd teapot/platforms/development/$PLATFORM-debug/bin
+$ ./$PROJECT_NAME
+</code></pre>
+</section><section id="cloning-project"><h3>Cloning Project</h3>
+<p>You can clone another project which will fetch all dependencies:</p>
+<pre><code>$ teapot clone https://github.com/kurocha/tagged-format
+$ cd tagged-format
+$ teapot build Executable/TaggedFormat
+</code></pre>
+</section><section id="open-issues"><h2>Open Issues</h2>
+<ul>
+<li>Should packages be built into a shared prefix or should they be built into unique prefixes and joined together either via install or <code>-L</code> and <code>-I</code>?
+<ul>
+<li>Relative include paths might fail to work correctly if headers are not installed into same directory.</li>
+</ul>
+</li>
+<li>Should packages have some way to expose system requirements, e.g. installed compiler, libraries, etc. Perhaps some kind of <code>Package#valid?</code> which allows custom logic?</li>
+</ul>
+</section><section id="contributing"><h2>Contributing</h2>
+<ol>
+<li>Fork it</li>
+<li>Create your feature branch (<code>git checkout -b my-new-feature</code>)</li>
+<li>Commit your changes (<code>git commit -am 'Add some feature'</code>)</li>
+<li>Push to the branch (<code>git push origin my-new-feature</code>)</li>
+<li>Create new Pull Request</li>
+</ol>
+</section><section id="license"><h2>License</h2>
+<p>Released under the MIT license.</p>
+<p>Copyright, 2012, 2014, by <a href="http://www.codeotaku.com/samuel-williams">Samuel G. D. Williams</a>.</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+</section>
+				
+			<footer>Documentation generated by <a href="https://github.com/socketry/utopia-project">Utopia::Project</a>.</footer>
+		</main>
+	</body>
+</html>
