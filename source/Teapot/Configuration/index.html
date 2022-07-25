@@ -32,25 +32,21 @@
 	</head>
 
 	<body>
-		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="../../index.html">Source</a></header>
+		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="../../index.html">Source</a> › <a href="../index.html">Teapot</a>  › <a href="index.html">Configuration</a> </header>
 		
 		<main>
 			
-	<h1>Teapot::Configuration</h1>
-	
-	<p>
-		<code class="language-ruby">class Teapot::Configuration &lt; Definition</code>
-	</p>
+
+	<h1>
+		<code class="language-ruby">class Configuration</code>
+	</h1>
 	
 	<p>A configuration represents a mapping between package/dependency names and actual source locations. Usually, there is only one configuration, but in some cases it is useful to have more than one, e.g. one for local development using local source code, one for continuous integration, and one for deployment.</p>
 	
-	
-	
-	
 	<section>
-	<h2>Definitions</h2>
-	
-	<section id="Teapot::Configuration#visibility"><h3><code class="language-ruby">attr :visibility</code></h3><p>Controls how the configuration is exposed in the context.</p>
+		<h2>Definitions</h2>
+		
+		<section id="Teapot::Configuration#visibility"><h3><code class="language-ruby">attr :visibility</code></h3><p>Controls how the configuration is exposed in the context.</p>
 </section><section id="Teapot::Configuration#targets"><h3><code class="language-ruby">attr :targets</code></h3><p>A table of named targets for specific purposes.</p>
 </section><section id="Teapot::Configuration#options"><h3><code class="language-ruby">attr :options</code></h3><p>Options used to bind packages to this configuration.</p>
 </section><section id="Teapot::Configuration#packages"><h3><code class="language-ruby">attr :packages</code></h3><p>A list of packages which are required by this configuration.</p>
@@ -156,7 +152,6 @@ end</code></pre>
 	return self
 end</code></pre>
 					</details></section>	</section>
-	
 	
 
 				

@@ -32,25 +32,21 @@
 	</head>
 
 	<body>
-		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="../../index.html">Source</a></header>
+		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="../../index.html">Source</a> › <a href="../index.html">Teapot</a>  › <a href="index.html">Context</a> </header>
 		
 		<main>
 			
-	<h1>Teapot::Context</h1>
-	
-	<p>
-		<code class="language-ruby">class Teapot::Context</code>
-	</p>
+
+	<h1>
+		<code class="language-ruby">class Context</code>
+	</h1>
 	
 	<p>A context represents a specific root package instance with a given configuration and all related definitions. A context is stateful in the sense that package selection is specialized based on #select and #dependency_chain. These parameters are usually set up initially as part of the context setup.</p>
 	
-	
-	
-	
 	<section>
-	<h2>Definitions</h2>
-	
-	<section id="Teapot::Context#configuration"><h3><code class="language-ruby">attr :configuration</code></h3><p>The primary configuration.</p>
+		<h2>Definitions</h2>
+		
+		<section id="Teapot::Context#configuration"><h3><code class="language-ruby">attr :configuration</code></h3><p>The primary configuration.</p>
 </section><section id="Teapot::Context#project"><h3><code class="language-ruby">attr :project</code></h3><p>The primary project.</p>
 </section><section id="Teapot::Context#root_package"><h3><code class="language-ruby">def root_package</code></h3><p>The root package is a special package which is used to load definitions from a given root path.</p>
 <details>
@@ -59,7 +55,6 @@
 	@root_package ||= Package.new(@root, &quot;root&quot;)
 end</code></pre>
 					</details></section>	</section>
-	
 	
 
 				
