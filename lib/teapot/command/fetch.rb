@@ -135,7 +135,7 @@ module Teapot
 					base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
 				end
 
-				branch_name = package.options.fetch(:branch, 'master')
+				branch_name = package.options[:branch]
 
 				if package_lock
 					logger.info "Package locked to commit: #{package_lock[:branch]}/#{package_lock[:commit]}"
@@ -145,7 +145,7 @@ module Teapot
 				end
 
 				if destination_path.exist?
-					logger.info "Updating package at path #{destination_path}..." #.color(:cyan)
+					logger.info "Updating package at path #{destination_path}..."
 
 					repository = Rugged::Repository.new(destination_path.to_s)
 
@@ -155,7 +155,7 @@ module Teapot
 					end
 					
 					repository.fetch('origin', credentials: self.method(:credentials))
-					repository.checkout(branch_name)
+					repository.checkout(branch_name) if branch_name
 					
 					# Essentially implement git pull:
 					if commit_id

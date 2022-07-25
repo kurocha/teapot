@@ -45,10 +45,8 @@ RSpec.describe Teapot::Command::Clone, order: :defined do
 			expect(selection.targets).to include(
 				"tagged-format-library",
 				"tagged-format-executable",
-				"tagged-format-tests",
 				"build-files",
 				"unit-test-library",
-				"unit-test-tests",
 				"variant-debug",
 				"variant-release",
 			)

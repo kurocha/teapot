@@ -35,11 +35,11 @@ module Teapot
 			
 			super
 		end
-		
-		def pretty_print(pp)
-			pp.text self.inspect
+
+		def inspect
+			"\#<#{self.class.name} #{@name}>"
 		end
-		
+
 		# The context in which the definition was loaded:
 		attr :context
 		
