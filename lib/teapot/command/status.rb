@@ -35,26 +35,33 @@ module Teapot
 				end
 			end
 			
+			def repository_for(package)
+				Rugged::Repository.new(package.path.to_s)
+			rescue Rugged::RepositoryError
+				# In some cases, a repository might not exist yet, so just skip the package.
+				nil
+			end
+			
 			def process(selection)
 				context = selection.context
 				terminal = self.terminal
 				
 				selection.resolved.each do |package|
-					repository = Rugged::Repository.new(package.path.to_s)
-					
-					changes = {}
-					repository.status do |file, status|
-						unless status == [:ignored]
-							changes[file] = status
+					if repository = repository_for(package)
+						changes = {}
+						repository.status do |file, status|
+							unless status == [:ignored]
+								changes[file] = status
+							end
 						end
-					end
-					
-					next if changes.empty?
-					
-					terminal.puts "Package #{package.name} (from #{package.path}):"
-					
-					changes.each do |file, statuses|
-						terminal.puts "\t#{file} (#{statuses})", style: statuses.last
+						
+						next if changes.empty?
+						
+						terminal.puts "Package #{package.name} (from #{package.path}):"
+						
+						changes.each do |file, statuses|
+							terminal.puts "\t#{file} (#{statuses})", style: statuses.last
+						end
 					end
 				end
 			end
