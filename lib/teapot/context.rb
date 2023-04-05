@@ -45,7 +45,7 @@ module Teapot
 		attr :project
 
 		def repository
-			@repository ||= Rugged::Repository.new(@root.to_s)
+			@repository ||= Rugged::Repository.discover(@root.to_s)
 		end
 		
 		def select(names = nil, configuration = @configuration)
