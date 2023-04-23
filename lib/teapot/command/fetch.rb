@@ -122,7 +122,15 @@ module Teapot
 				# We should prompt for username/password if required...
 				return Rugged::Credentials::SshKeyFromAgent.new(username: username)
 			end
-
+			
+			def modified?(repository)
+				repository.status.each do |path, status|
+					return true if status != [:ignored]
+				end
+				
+				return false
+			end
+			
 			def clone_or_pull_package(context, configuration, package, package_lock, logger)
 				logger.info "Processing #{package}..." #.color(:cyan)
 
@@ -150,7 +158,7 @@ module Teapot
 					repository = Rugged::Repository.new(destination_path.to_s)
 
 					# Are there uncommitted changes in the work tree?
-					if repository.to_enum(:status).any?
+					if modified?(repository)
 						raise FetchError.new(package, "Uncommited local modifications")
 					end
 					
