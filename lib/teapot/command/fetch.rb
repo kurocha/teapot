@@ -124,7 +124,7 @@ module Teapot
 			end
 			
 			def modified?(repository)
-				repository.status.each do |path, status|
+				repository.status do |path, status|
 					return true if status != [:ignored]
 				end
 				
