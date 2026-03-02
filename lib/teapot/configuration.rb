@@ -1,30 +1,15 @@
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# frozen_string_literal: true
 
-require 'pathname'
-require 'set'
+# Released under the MIT License.
+# Copyright, 2013-2026, by Samuel Williams.
 
-require 'yaml/store'
+require "pathname"
+require "set"
 
-require 'build/dependency/set'
-require_relative 'definition'
+require "yaml/store"
+
+require "build/dependency/set"
+require_relative "definition"
 
 module Teapot
 	# A configuration represents a mapping between package/dependency names and actual source locations. Usually, there is only one configuration, but in some cases it is useful to have more than one, e.g. one for local development using local source code, one for continuous integration, and one for deployment.
@@ -37,18 +22,18 @@ module Teapot
 		
 		def initialize(context, package, name, packages = [], **options)
 			super context, package, name
-
+			
 			@options = DEFAULT_OPTIONS.merge(options)
-
+			
 			@packages = Build::Dependency::Set.new(packages)
 			@imports = Build::Dependency::Set.new
-
+			
 			@visibility = :private
-
+			
 			# A list of named targets for specific purposes:
 			@targets = Hash.new{|hash,key| hash[key] = Array.new}
 		end
-
+		
 		def freeze
 			return self if frozen?
 			
@@ -62,7 +47,7 @@ module Teapot
 			
 			super
 		end
-
+		
 		def environment
 			configuration = self
 			
@@ -71,30 +56,30 @@ module Teapot
 				default platforms_path configuration.build_path
 			end
 		end
-
+		
 		# Controls how the configuration is exposed in the context.
 		attr :visibility
-
+		
 		def public?
 			@visibility == :public
 		end
-
+		
 		def public!
 			@visibility = :public
 		end
-
+		
 		# A table of named targets for specific purposes.
 		attr :targets
-
+		
 		# Options used to bind packages to this configuration.
 		attr :options
-
+		
 		# A list of packages which are required by this configuration.
 		attr :packages
-
+		
 		# A list of other configurations to include when materialising the list of packages.
 		attr :imports
-
+		
 		# Specifies that this configuration depends on an external package of some sort.
 		def require(name, **options)
 			options = @options.merge(options)
@@ -107,12 +92,12 @@ module Teapot
 				import(options[:import])
 			end
 		end
-
+		
 		# Specifies that this package will import additional configuration records from another definition.
 		def import(name, explicit = true)
 			@imports << Import.new(name, explicit, @options.dup)
 		end
-
+		
 		# Create a group for configuration options which will be only be active within the group block.
 		def group
 			options = @options.dup
@@ -121,41 +106,41 @@ module Teapot
 			
 			@options = options
 		end
-
+		
 		# Set a configuration option.
 		def []= key, value
 			@options[key] = value
 		end
-
+		
 		# Get a configuration option.
 		def [] key
 			@options[key]
 		end
-
+		
 		# The path where packages will be located when fetched.
 		def packages_path
 			context.root + "teapot/packages/#{name}"
 		end
-
+		
 		# The path where built products will be placed.
 		def build_path
 			context.root + "teapot/build/#{name}"
 		end
-
+		
 		alias platforms_path build_path
-
+		
 		def lock_path
 			context.root + "#{@name}-lock.yml"
 		end
-
+		
 		def lock_store
 			::YAML::Store.new(lock_path.to_s)
 		end
-
+		
 		def to_s
 			"#<#{self.class} #{@name.dump} visibility=#{@visibility}>"
 		end
-
+		
 		# Process all import directives and return a new configuration based on the current configuration. Import directives bring packages and other import directives from the specififed configuration definition.
 		def traverse(configurations, imported = Build::Dependency::Set.new, &block)
 			yield self # Whatever happens here, should ensure that...

@@ -1,25 +1,10 @@
-# Copyright, 2016, by Samuel G. D. Williams. <http://www.codeotaku.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# frozen_string_literal: true
 
-require_relative 'selection'
-require 'rugged'
+# Released under the MIT License.
+# Copyright, 2017-2026, by Samuel Williams.
+
+require_relative "selection"
+require "rugged"
 
 module Teapot
 	module Command
@@ -41,8 +26,8 @@ module Teapot
 			# - update packages and update lockfile
 			
 			options do
-				option '--update', "Update dependencies to the latest versions."
-				option '--local', "Don't update from source, assume updated local packages."
+				option "--update", "Update dependencies to the latest versions."
+				option "--local", "Don't update from source, assume updated local packages."
 			end
 			
 			many :packages, "Only update the specified packages, or all packages if none specified."
@@ -77,7 +62,7 @@ module Teapot
 					
 					packages = selection.unresolved
 				end
-			
+				
 				if selection.unresolved.count > 0
 					logger.error(self) do |buffer|
 						buffer.puts "Could not fetch all packages!"
@@ -98,21 +83,21 @@ module Teapot
 				
 				return {
 					commit: repository.head.target.oid,
-					branch: repository.head.name.sub(/^refs\/heads\//, '')
+					branch: repository.head.name.sub(/^refs\/heads\//, "")
 				}
 			end
 			
 			def link_local_package(context, configuration, package, logger)
 				logger.info "Linking local #{package}..." #.color(:cyan)
-		
+				
 				local_path = context.root + package.options[:local]
-
+				
 				# Where we are going to put the package:
 				destination_path = package.path
-
+				
 				# Make the top level directory if required:
 				destination_path.dirname.create
-
+				
 				unless destination_path.exist?
 					destination_path.make_symlink(local_path)
 				end
@@ -133,36 +118,36 @@ module Teapot
 			
 			def clone_or_pull_package(context, configuration, package, package_lock, logger)
 				logger.info "Processing #{package}..." #.color(:cyan)
-
+				
 				# Where we are going to put the package:
 				destination_path = package.path
-
+				
 				base_uri = URI(package.options[:source].to_s)
-
-				if base_uri.scheme == nil || base_uri.scheme == 'file'
+				
+				if base_uri.scheme == nil || base_uri.scheme == "file"
 					base_uri = URI "file://" + File.expand_path(base_uri.path, context.root) + "/"
 				end
-
+				
 				branch_name = package.options[:branch]
-
+				
 				if package_lock
 					logger.info "Package locked to commit: #{package_lock[:branch]}/#{package_lock[:commit]}"
-
+					
 					branch_name = package_lock[:branch]
 					commit_id = package_lock[:commit]
 				end
-
+				
 				if destination_path.exist?
 					logger.info "Updating package at path #{destination_path}..."
-
+					
 					repository = Rugged::Repository.new(destination_path.to_s)
-
+					
 					# Are there uncommitted changes in the work tree?
 					if modified?(repository)
 						raise FetchError.new(package, "Uncommited local modifications")
 					end
 					
-					repository.fetch('origin', credentials: self.method(:credentials))
+					repository.fetch("origin", credentials: self.method(:credentials))
 					repository.checkout(branch_name) if branch_name
 					
 					# Essentially implement git pull:
@@ -194,7 +179,7 @@ module Teapot
 					system("git", "submodule", "update", "--init", "--recursive", chdir: package.path)
 				end
 			end
-
+			
 			def fetch_package(context, configuration, package, logger, update: false, local: false)
 				if package.local?
 					link_local_package(context, configuration, package, logger)

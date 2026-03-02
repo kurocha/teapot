@@ -1,26 +1,11 @@
-# Copyright, 2017, by Samuel G. D. Williams. <http://www.codeotaku.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# frozen_string_literal: true
 
-require_relative 'selection'
+# Released under the MIT License.
+# Copyright, 2017-2026, by Samuel Williams.
 
-require 'build/controller'
+require_relative "selection"
+
+require "build/controller"
 
 module Teapot
 	module Command
@@ -31,8 +16,8 @@ module Teapot
 			self.description = "Build the specified target."
 			
 			options do
-				option '-j/-l/--limit <n>', "Limit the build to <n> concurrent processes.", type: Integer
-				option '-c/--continuous', "Run the build graph continually (experimental)."
+				option "-j/-l/--limit <n>", "Limit the build to <n> concurrent processes.", type: Integer
+				option "-c/--continuous", "Run the build graph continually (experimental)."
 			end
 			
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
@@ -51,7 +36,7 @@ module Teapot
 				chain = selection.chain
 				environment = context.configuration.environment
 				
-				controller = ::Build::Controller.new(logger: parent.logger, limit: @options[:limit]) do |controller|
+				controller = ::Build::Controller.new(limit: @options[:limit]) do |controller|
 					controller.add_chain(chain, self.argv, environment)
 				end
 				
@@ -67,7 +52,7 @@ module Teapot
 							if walker.failed?
 								raise BuildFailedError.new("Failed to build all nodes successfully!")
 							end
-						
+							
 							break
 						end
 					end

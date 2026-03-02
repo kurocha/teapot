@@ -1,28 +1,13 @@
-# Copyright, 2016, by Samuel G. D. Williams. <http://www.codeotaku.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# frozen_string_literal: true
 
-require 'samovar'
-require 'build/name'
+# Released under the MIT License.
+# Copyright, 2017-2026, by Samuel Williams.
 
-require_relative 'fetch'
-require 'rugged'
+require "samovar"
+require "build/name"
+
+require_relative "fetch"
+require "rugged"
 
 module Teapot
 	module Command
@@ -36,7 +21,7 @@ module Teapot
 			def call
 				logger = parent.logger
 				
-				nested = parent['--root', parent.options[:root] || name.gsub(/\s+/, '-').downcase]
+				nested = parent["--root", parent.options[:root] || name.gsub(/\s+/, "-").downcase]
 				root = nested.root
 				
 				if root.exist?
@@ -75,7 +60,7 @@ module Teapot
 					tree: index.write_tree(repository),
 					message: "Initial project files.",
 					parents: repository.empty? ? [] : [repository.head.target].compact,
-					update_ref: 'HEAD'
+					update_ref: "HEAD"
 				)
 			end
 			
@@ -89,17 +74,17 @@ module Teapot
 				
 				# A very basic teapot file to pull in the initial dependencies.
 				File.open(root + TEAPOT_FILE, "w") do |output|
-					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ''
-				
-					output.puts "required_version #{LOADER_VERSION.dump}", ''
+					output.puts "\# Teapot v#{VERSION} configuration generated at #{Time.now.to_s}", ""
+					
+					output.puts "required_version #{LOADER_VERSION.dump}", ""
 					
 					output.puts "define_project #{name.target.dump} do |project|"
 					output.puts "\tproject.title = #{name.text.dump}"
-					output.puts "end", ''
-				
-					output.puts "\# Build Targets", ''
-				
-					output.puts "\# Configurations", ''
+					output.puts "end", ""
+					
+					output.puts "\# Build Targets", ""
+					
+					output.puts "\# Configurations", ""
 					
 					output.puts "define_configuration 'development' do |configuration|"
 					output.puts "\tconfiguration[:source] = #{source.dump}"
@@ -107,7 +92,7 @@ module Teapot
 					packages.each do |name|
 						output.puts "\tconfiguration.require #{name.dump}"
 					end
-					output.puts "end", ''
+					output.puts "end", ""
 					
 					output.puts "define_configuration #{name.target.dump} do |configuration|"
 					output.puts "\tconfiguration.public!"
