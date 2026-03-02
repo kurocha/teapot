@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build-dependency", "~> 1.4"
 	spec.add_dependency "build-environment", "~> 1.10"
 	spec.add_dependency "build-files", "~> 1.8"
-	spec.add_dependency "build-files-monitor", "~> 0.2.0"
+	spec.add_dependency "build-files-monitor", "~> 0.4"
 	spec.add_dependency "build-text", "~> 1.0"
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "console", "~> 1.0"
@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "process-group", "~> 1.2"
 	spec.add_dependency "rugged", "~> 1.0"
 	spec.add_dependency "samovar", "~> 2.0"
+	spec.add_dependency "pstore"
 	
 	spec.add_development_dependency "bundler"
 	spec.add_development_dependency "covered"

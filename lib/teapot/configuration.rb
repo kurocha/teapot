@@ -149,7 +149,7 @@ module Teapot
 		end
 
 		def lock_store
-			YAML::Store.new(lock_path.to_s)
+			::YAML::Store.new(lock_path.to_s)
 		end
 
 		def to_s
