@@ -17,7 +17,7 @@ Ensure that you already have a working install of Ruby 2.0.0+ and run the follow
 
 ## Usage
 
-Teapot doesn't have a default centralised package management system but there is a [canonical one](https://github.com/kurocha) for developing cross-platform C++ applications. This example shows how to use this framework.
+Please see the [project documentation](http://www.teapot.nz) for more details.
 
 ### Create Project
 
@@ -137,7 +137,11 @@ You can clone another project which will fetch all dependencies:
 
 ## Releases
 
-There are no documented releases.
+Please see the [project releases](http://www.teapot.nzreleases/index) for all releases.
+
+### v3.6.0
+
+  - Update dependencies.
 
 ## Contributing
 

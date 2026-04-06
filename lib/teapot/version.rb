@@ -4,5 +4,5 @@
 # Copyright, 2012-2026, by Samuel Williams.
 
 module Teapot
-	VERSION = "3.5.4"
+	VERSION = "3.6.0"
 end
