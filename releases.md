@@ -1,3 +1,5 @@
 # Releases
 
 ## Unreleased
+
+  - Update dependencies.
