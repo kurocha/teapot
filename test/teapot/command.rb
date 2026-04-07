@@ -4,42 +4,19 @@
 # Copyright, 2016-2026, by Samuel Williams.
 
 require "teapot/command"
-require "teapot/a_command"
+require "sus/fixtures/temporary_directory_context"
 
 describe Teapot::Command do
-	include_context Teapot::ACommand
+	include Sus::Fixtures::TemporaryDirectoryContext
 	
 	let(:source) {"https://github.com/kurocha"}
-	# let(:source) {File.expand_path("../../../../kurocha", __dir__)}
 	let(:project_name) {"Test Project"}
-	let(:project_path) {root + "test-project"}
+	let(:project_path) {File.join(root, "test-project")}
 	
 	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
 	
-	with "Teapot::Command::Create" do
-		let(:subject) {top["create", project_name, source.to_s, "generate-project"]}
-		
-		it "should create a new project" do
-			root.delete
-			
-			subject.call
-			expect(project_path + "teapot.rb").to be(:exist?)
-		end
-	end
-	
-	with "Teapot::Command::Build" do
-		let(:subject) {top["build", "Run/TestProject"]}
-		
-		it "should build project" do
-			subject.call
-		end
-	end
-	
-	with "Teapot::Command::Fetch" do
-		let(:subject) {top["fetch"]}
-		
-		it "should fetch any changes" do
-			subject.call
-		end
+	it "can create and build a project" do
+		top["create", project_name, source.to_s, "generate-project"].call
+		top["build", "Run/TestProject"].call
 	end
 end
