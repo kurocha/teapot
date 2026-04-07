@@ -22,7 +22,7 @@ describe Teapot::Command do
 		it "should create a new project" do
 			root.delete
 			
-			expect{subject.call}.not.to raise_exception
+			subject.call
 			expect(project_path + "teapot.rb").to be(:exist?)
 		end
 	end
@@ -31,7 +31,7 @@ describe Teapot::Command do
 		let(:subject) {top["build", "Run/TestProject"]}
 		
 		it "should build project" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 		end
 	end
 	
@@ -39,7 +39,7 @@ describe Teapot::Command do
 		let(:subject) {top["fetch"]}
 		
 		it "should fetch any changes" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 		end
 	end
 end

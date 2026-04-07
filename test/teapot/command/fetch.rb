@@ -7,8 +7,6 @@ require "teapot/command"
 require "teapot/command/a_fetch"
 
 describe Teapot::Command::Fetch do
-	# include Sus::Fixtures::WithTemporaryDirectory
-	
 	include_context Teapot::Command::AFetch
 	
 	let(:project_path) {root + "test-project"}
@@ -50,7 +48,7 @@ describe Teapot::Command::Fetch do
 		end
 		
 		it "should fetch repositories with no changes" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 			
 			# Did the thing package checkout correctly?
 			expect(File).to be(:exist?, root + "test-project/teapot/packages/test/thing/teapot.rb")
@@ -83,7 +81,7 @@ describe Teapot::Command::Fetch do
 		end
 		
 		it "can fetch changes" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 			
 			expect(File).to be(:exist?, thing_package_path + "readme.md")
 		end

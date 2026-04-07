@@ -21,7 +21,7 @@ describe Teapot::Command::Clone do
 		let(:subject) {top["clone", source]}
 		
 		it "should checkout files" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 			
 			expect(File).to be(:exist?, root + "teapot.rb")
 			
