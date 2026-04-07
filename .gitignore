@@ -5,13 +5,3 @@
 /gems.locked
 /.covered.db
 /external
-
-kurocha
-dependency.svg
-
-# Test fixtures:
-fixtures/teapot/command/clone/
-fixtures/teapot/command/fetch/test-project/merged-lock.yml
-fixtures/teapot/command/fetch/test-project/teapot/
-fixtures/teapot/command/fetch/test-project/test-lock.yml
-fixtures/teapot/run/

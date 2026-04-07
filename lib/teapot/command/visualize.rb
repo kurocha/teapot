@@ -3,56 +3,120 @@
 # Released under the MIT License.
 # Copyright, 2017-2026, by Samuel Williams.
 
+require "samovar"
 require_relative "selection"
-require "graphviz"
+require "build/controller"
 
 module Teapot
 	module Command
-		# A command to visualize the dependency graph.
-		class Visualize < Selection
-			self.description = "Generate a picture of the dependency graph."
+		# A command to visualize dependency graphs.
+		class Visualize < Samovar::Command
+			self.description = "Generate visualizations of package and target dependencies."
 			
-			options do
-				option "-o/--output-path <path>", "The output path for the visualization.", default: "dependency.svg"
-				option "-d/--dependency-name <name>", "Show the partial chain for the given named dependency."
-			end
-			
-			# Get the dependency names to visualize.
-			# @returns [Array(String)] The dependency names.
-			def dependency_names
-				@targets || []
-			end
-			
-			# Get the specific dependency name to visualize.
-			# @returns [String | Nil] The dependency name.
-			def dependency_name
-				@options[:dependency_name]
-			end
-			
-			# Process and generate the visualization.
-			# @parameter selection [Select] The selection to visualize.
-			# @returns [Graphviz::Graph] The generated graph.
-			def process(selection)
-				context = selection.context
-				chain = selection.chain
+			# Visualize package-level dependencies.
+			class Packages < Selection
+				self.description = "Visualize package-level dependencies from configuration.require."
 				
-				if dependency_name
-					provider = selection.dependencies[dependency_name]
+				options do
+					option "-o/--output-path <path>", "The output path for the visualization."
+					option "-d/--dependency-name <name>", "Show the partial chain for the given named dependency."
+				end
+				
+				# Get the specific dependency name to visualize.
+				# @returns [String | Nil] The dependency name.
+				def dependency_name
+					@options[:dependency_name]
+				end
+				
+				# Process and generate the package dependency visualization.
+				# @parameter selection [Select] The selection to visualize.
+				# @returns [String] The generated Mermaid diagram.
+				def process(selection)
+					chain = selection.chain
 					
-					chain = chain.partial(provider)
+					if dependency_name
+						provider = selection.dependencies[dependency_name]
+						chain = chain.partial(provider)
+					end
+					
+					visualization = ::Build::Dependency::Visualization.new
+					diagram = visualization.generate(chain)
+					
+					if output_path = @options[:output_path]
+						File.write(output_path, diagram)
+					else
+						$stdout.puts diagram
+					end
+					
+					return diagram
+				end
+			end
+			
+			# Visualize target-level dependencies.
+			class Targets < Selection
+				self.description = "Visualize target-level dependencies from target.depends."
+				
+				options do
+					option "-o/--output-path <path>", "The output path for the visualization."
 				end
 				
-				visualization = ::Build::Dependency::Visualization.new
-				
-				graph = visualization.generate(chain)
-				
-				if output_path = @options[:output_path]
-					Graphviz.output(graph, path: output_path, format: :svg)
-				else
-					$stdout.puts graph.to_dot
+				# Process and generate the target dependency visualization.
+				# @parameter selection [Select] The selection to visualize.
+				# @returns [String] The generated Mermaid diagram.
+				def process(selection)
+					lines = ["flowchart LR"]
+					lines << ""
+					
+					# Build the graph from all targets in the selection
+					# The selection contains all targets loaded from packages
+					selection.targets.each do |name, target|
+						target.dependencies.each do |dependency|
+							dependency_name = dependency.name.to_s
+							
+							# Create edge from target to its dependency
+							if dependency.private?
+								lines << "    #{sanitize_id(name)}[#{name}] -.-> #{sanitize_id(dependency_name)}[#{dependency_name}]"
+							else
+								lines << "    #{sanitize_id(name)}[#{name}] --> #{sanitize_id(dependency_name)}[#{dependency_name}]"
+							end
+						end
+					end
+					
+					diagram = lines.join("\n")
+					
+					if output_path = @options[:output_path]
+						File.write(output_path, diagram)
+					else
+						$stdout.puts diagram
+					end
+					
+					return diagram
 				end
 				
-				return graph
+				private
+				
+				# Convert a name to a valid Mermaid node ID.
+				# @parameter name [String] The name to sanitize.
+				# @returns [String] A sanitized identifier safe for use in Mermaid diagrams.
+				def sanitize_id(name)
+					name.to_s.gsub(/[^a-zA-Z0-9_]/, "_")
+				end
+			end
+			
+			nested :command, {
+				"packages" => Packages,
+				"targets" => Targets,
+			}, default: "packages"
+			
+			# Delegate context to parent Top command.
+			# @returns [Context] The project context.
+			def context
+				parent.context
+			end
+			
+			# Execute the visualize command.
+			def call
+				@command.call
 			end
 		end
 	end
