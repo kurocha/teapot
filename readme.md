@@ -21,12 +21,6 @@ Please see the [project documentation](https://ioquatix.github.io/teapot/) for m
 
   - [Getting Started](https://ioquatix.github.io/teapot/guides/getting-started/index) - This guide explains how to use `teapot` to manage cross-platform project dependencies and build systems.
 
-## Open Issues
-
-  - Should packages be built into a shared prefix or should they be built into unique prefixes and joined together either via install or `-L` and `-I`?
-      - Relative include paths might fail to work correctly if headers are not installed into same directory.
-  - Should packages have some way to expose system requirements, e.g. installed compiler, libraries, etc. Perhaps some kind of `Package#valid?` which allows custom logic?
-
 ## Releases
 
 Please see the [project releases](https://ioquatix.github.io/teapot/releases/index) for all releases.
