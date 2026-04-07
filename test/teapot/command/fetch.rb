@@ -7,6 +7,8 @@ require "teapot/command"
 require "teapot/command/a_fetch"
 
 describe Teapot::Command::Fetch do
+	# include Sus::Fixtures::WithTemporaryDirectory
+	
 	include_context Teapot::Command::AFetch
 	
 	let(:project_path) {root + "test-project"}
@@ -24,8 +26,7 @@ describe Teapot::Command::Fetch do
 		
 		it "can create thing repository" do
 			(thing_path + ".git").delete
-			
-			system("git", "init", chdir: thing_path)
+			system("git", "init", "-b", "main", chdir: thing_path)
 			system("git", "add", "teapot.rb", chdir: thing_path)
 			system("git", "commit", "-m", "Teapot file for testing", chdir: thing_path)
 		end
