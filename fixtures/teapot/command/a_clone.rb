@@ -15,7 +15,7 @@ module Teapot
 		AClone = Sus::Shared("a clone") do
 			include Sus::Fixtures::TemporaryDirectoryContext
 			
-			let(:template_root) {::Build::Files::Path.new(File.expand_path("clone", __dir__))}
+			let(:clone_root) {::Build::Files::Path.new(File.expand_path("clone", root))}
 		end
 	end
 end
