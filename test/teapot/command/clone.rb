@@ -7,23 +7,20 @@ require "teapot/command"
 require "teapot/command/a_clone"
 
 describe Teapot::Command::Clone do
-	include_context Teapot::Command::AClone
+	include Teapot::Command::AClone
 	
 	let(:source) {"https://github.com/kurocha/tagged-format"}
 	
-	let(:top) {Teapot::Command::Top["--root", root.to_s]}
-	
-	before do
-		root.delete
-	end
+	let(:project_root) {File.join(root, "project")}
+	let(:top) {Teapot::Command::Top["--root", project_root.to_s]}
 	
 	with "clone remote source" do
-		let(:subject) {top["clone", source]}
+		let(:subject) {top["clone", template_root.to_s]}
 		
 		it "should checkout files" do
 			subject.call
 			
-			expect(File).to be(:exist?, root + "teapot.rb")
+			expect(File).to be(:exist?, File.join(project_root, "teapot.rb"))
 			
 			selection = top.context.select
 			
