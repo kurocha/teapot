@@ -42,7 +42,7 @@ describe Teapot::Command::Fetch do
 		let(:subject) {top["fetch"]}
 		
 		it "should fetch repositories" do
-			expect{subject.call}.not.to raise_exception
+			subject.call
 			
 			# Did the thing package checkout correctly?
 			expect(File).to be(:exist?, root + "test-project/teapot/packages/test/thing/teapot.rb")
@@ -58,7 +58,7 @@ describe Teapot::Command::Fetch do
 	
 	with "fetch with worktree modifications" do
 		let(:subject) {top["fetch"]}
-		let(:path) {root + "test-project/teapot/packages/test/thing/README.md"}
+		let(:path) {root + "test-project/teapot/packages/test/thing/readme.md"}
 		
 		it "can make local modifications" do
 			path.write("Hello World")
@@ -77,14 +77,14 @@ describe Teapot::Command::Fetch do
 		let(:subject) {top["fetch", "--update"]}
 		
 		it "can commit upstream changes" do
-			system("git", "add", "README.md", chdir: thing_path)
+			system("git", "add", "readme.md", chdir: thing_path)
 			system("git", "commit", "-m", "Add documentation", chdir: thing_path)
 		end
 		
 		it "can fetch changes" do
 			expect{subject.call}.not.to raise_exception
 			
-			expect(File).to be(:exist?, thing_package_path + "README.md")
+			expect(File).to be(:exist?, thing_package_path + "readme.md")
 		end
 	end
 end
