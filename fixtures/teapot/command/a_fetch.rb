@@ -16,6 +16,7 @@ module Teapot
 			let(:template_root) {::Build::Files::Path.new(File.expand_path("fetch", __dir__))}
 			
 			before do
+				FileUtils.cp_r(File.join(template_root, "repositories"), root)
 				FileUtils.cp_r(File.join(template_root, "test-project"), root)
 			end
 		end

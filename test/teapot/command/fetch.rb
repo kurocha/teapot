@@ -47,8 +47,6 @@ describe Teapot::Command::Fetch do
 			File.write(local_path, "Hello World")
 			
 			expect{subject.call}.to raise_exception(Teapot::Command::FetchError, message: be =~ /local modifications/)
-			
-			File.delete(path)
 		end
 	end
 end
