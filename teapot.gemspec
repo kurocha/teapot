@@ -25,11 +25,12 @@ Gem::Specification.new do |spec|
 	
 	spec.required_ruby_version = ">= 3.3"
 	
-	spec.add_dependency "build", "~> 2.4"
+	spec.add_dependency "build", "~> 2.9"
 	spec.add_dependency "build-dependency", "~> 1.6"
 	spec.add_dependency "build-environment", "~> 1.10"
 	spec.add_dependency "build-files", "~> 1.8"
 	spec.add_dependency "build-files-monitor", "~> 0.4"
+	spec.add_dependency "build-graph", "~> 2.3"
 	spec.add_dependency "build-text", "~> 1.0"
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "console", "~> 1.0"

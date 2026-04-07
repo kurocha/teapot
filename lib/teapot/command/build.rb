@@ -20,6 +20,7 @@ module Teapot
 			options do
 				option "-j/-l/--limit <n>", "Limit the build to <n> concurrent processes.", type: Integer
 				option "-c/--continuous", "Run the build graph continually (experimental)."
+				option "--show-dependencies", "Show task dependencies for debugging."
 			end
 			
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
@@ -40,8 +41,8 @@ module Teapot
 				chain = selection.chain
 				environment = context.configuration.environment
 				
-				controller = ::Build::Controller.new(limit: @options[:limit]) do |controller|
-					controller.add_chain(chain, self.argv, environment)
+				controller = ::Build::Controller.build(limit: @options[:limit]) do |builder|
+					builder.add_chain(chain, self.argv, environment)
 				end
 				
 				walker = nil
@@ -49,7 +50,7 @@ module Teapot
 				# We need to catch interrupt here, and exit with the correct exit code:
 				begin
 					controller.run do |walker|
-						# show_dependencies(walker)
+						show_dependencies(walker) if @options[:show_dependencies]
 						
 						# Only run once is asked:
 						unless @options[:continuous]

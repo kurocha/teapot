@@ -103,9 +103,63 @@ module Teapot
 				end
 			end
 			
+			# Visualize file-level dependencies from the build graph.
+			class Files < Selection
+				self.description = "Visualize file-level dependencies by walking the build graph."
+				
+				options do
+					option "-o/--output-path <path>", "The output path for the visualization."
+				end
+				
+				# Process and generate the file dependency visualization.
+				# @parameter selection [Select] The selection to visualize.
+				# @returns [String] The generated Mermaid diagram.
+				def process(selection)
+					require "build/graph/walker"
+					require "build/graph/visualization"
+					
+					context = selection.context
+					chain = selection.chain
+					environment = context.configuration.environment
+					
+					# Build the controller to get the root nodes
+					controller = ::Build::Controller.build(limit: 1) do |builder|
+						builder.add_chain(chain, [], environment)
+					end
+					
+					# Create a process group for task execution
+					group = ::Process::Group.new
+					
+					# Create a walker that traverses without building
+					walker = ::Build::Graph::Walker.new do |walker, node, parent_task = nil|
+						task_class = node.task_class(parent_task) || ::Build::Graph::Task
+						task = task_class.new(walker, node, group)
+						
+						# Use traverse instead of visit to skip building:
+						task.traverse
+					end
+					
+					# Populate the walker by traversing from the root nodes
+					walker.update(controller.nodes)
+					
+					# Generate the Mermaid diagram
+					visualization = ::Build::Graph::Visualization.new
+					diagram = visualization.generate(walker)
+					
+					if output_path = @options[:output_path]
+						File.write(output_path, diagram)
+					else
+						$stdout.puts diagram
+					end
+					
+					return diagram
+				end
+			end
+			
 			nested :command, {
 				"packages" => Packages,
 				"targets" => Targets,
+				"files" => Files,
 			}, default: "packages"
 			
 			# Delegate context to parent Top command.

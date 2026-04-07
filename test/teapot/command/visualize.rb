@@ -61,4 +61,19 @@ describe Teapot::Command::Visualize do
 			expect(File).to be(:exist?, output_path)
 		end
 	end
+	
+	with "files subcommand" do
+		let(:output_path) {File.join(root, "files.mmd")}
+		let(:subject) {top["visualize", "files", "-o", output_path]}
+		
+		it "should generate file dependency diagram" do
+			diagram = subject.call
+			
+			# Verify it's a Mermaid flowchart
+			expect(diagram).to be =~ /flowchart/
+			
+			# Verify the file was written
+			expect(File).to be(:exist?, output_path)
+		end
+	end
 end
