@@ -30,6 +30,11 @@ jobs:
     
     - uses: kurocha/setup-cpp@main
     
+    - name: Configure git
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "GitHub Actions"
+    
     - name: Run tests
       timeout-minutes: 10
       run: bundle exec bake test:external
