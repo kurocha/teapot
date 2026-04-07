@@ -6,16 +6,20 @@ Gem::Specification.new do |spec|
 	spec.name = "teapot"
 	spec.version = Teapot::VERSION
 	
-	spec.summary = "Teapot is a tool for managing complex cross-platform builds."
+	spec.summary = "Teapot is a tool for managing cross-platform builds."
 	spec.authors = ["Samuel Williams"]
 	spec.license = "MIT"
 	
 	spec.cert_chain  = ["release.cert"]
 	spec.signing_key = File.expand_path("~/.gem/release.pem")
 	
-	spec.homepage = "http://www.teapot.nz"
+	spec.metadata = {
+		"documentation_uri" => "https://ioquatix.github.io/teapot/",
+		"funding_uri" => "https://github.com/sponsors/ioquatix",
+		"source_code_uri" => "https://github.com/ioquatix/teapot",
+	}
 	
-	spec.files = Dir.glob(["{bin,lib}/**/*", "*.md"], File::FNM_DOTMATCH, base: __dir__)
+	spec.files = Dir.glob(["{context,bin,lib}/**/*", "*.md"], File::FNM_DOTMATCH, base: __dir__)
 	
 	spec.executables = ["teapot"]
 	
@@ -29,7 +33,6 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "build-text", "~> 1.0"
 	spec.add_dependency "build-uri", "~> 1.0"
 	spec.add_dependency "console", "~> 1.0"
-	spec.add_dependency "graphviz", "~> 1.0"
 	spec.add_dependency "process-group", "~> 1.2"
 	spec.add_dependency "pstore"
 	spec.add_dependency "rugged", "~> 1.0"

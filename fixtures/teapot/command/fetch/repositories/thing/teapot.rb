@@ -1,3 +1,6 @@
 # frozen_string_literal: true
 
-teapot_version "2.0"
+# Released under the MIT License.
+# Copyright, 2026, by Samuel Williams.
+
+teapot_version "3.0"
