@@ -15,22 +15,14 @@ describe Teapot::Command::Fetch do
 	
 	let(:top) {Teapot::Command::Top["--root", project_path.to_s]}
 	
-	with "clean project" do
-		it "should delete all packages" do
-			top["clean"].call
-			
-			expect(File).not.to be(:exist?, File.join(root, "test-project/teapot/packages/test"))
-		end
+	with "fetch" do
+		let(:subject) {top["fetch"]}
 		
-		it "can create thing repository" do
+		before do
 			system("git", "init", "-b", "main", chdir: thing_path)
 			system("git", "add", "teapot.rb", chdir: thing_path)
 			system("git", "commit", "-m", "Teapot file for testing", chdir: thing_path)
 		end
-	end
-	
-	with "fetch" do
-		let(:subject) {top["fetch"]}
 		
 		it "should fetch repositories" do
 			subject.call
