@@ -4,7 +4,12 @@
 # Copyright, 2013-2026, by Samuel Williams.
 
 module Teapot
+	# Base class for definitions (target, configuration, or project).
 	class Definition
+		# Initialize a new definition.
+		# @parameter context [Context] The project context.
+		# @parameter package [Package] The package.
+		# @parameter name [String] The definition name.
 		def initialize(context, package, name)
 			@context = context
 			@package = package
@@ -14,6 +19,7 @@ module Teapot
 			@description = nil
 		end
 		
+		# Make the definition immutable after it has been loaded from a teapot file.
 		def freeze
 			@name.freeze
 			@description.freeze
@@ -21,6 +27,7 @@ module Teapot
 			super
 		end
 		
+		# @returns [String] The string representation.
 		def inspect
 			"\#<#{self.class.name} #{@name}>"
 		end
@@ -37,6 +44,8 @@ module Teapot
 		# A textual description of the definition, possibly in markdown format:
 		attr :description
 		
+		# Assign a description with automatic removal of common leading indentation.
+		# @parameter text [String] The description text.
 		def description=(text)
 			if text =~ /^(\t+)/
 				text = text.gsub(/#{$1}/, "")
@@ -50,6 +59,7 @@ module Teapot
 			@package.path
 		end
 		
+		# @returns [String] The string representation.
 		def to_s
 			"#<#{self.class} #{@name.dump}>"
 		end

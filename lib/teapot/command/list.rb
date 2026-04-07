@@ -10,9 +10,13 @@ require_relative "selection"
 
 module Teapot
 	module Command
+		# A command to list project definitions and dependencies.
 		class List < Selection
 			self.description = "List provisions and dependencies of the specified package."
 			
+			# Create a terminal with custom styles for colorizing different definition types in output.
+			# @parameter output [IO] The output stream.
+			# @returns [Console::Terminal] The configured terminal.
 			def terminal(output = $stdout)
 				Console::Terminal.for(output).tap do |terminal|
 					terminal[:definition] = terminal.style(nil, nil, :bright)
@@ -24,6 +28,8 @@ module Teapot
 				end
 			end
 			
+			# Process and display the selection.
+			# @parameter selection [Select] The selection to process.
 			def process(selection)
 				context = selection.context
 				terminal = self.terminal

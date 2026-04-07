@@ -23,7 +23,9 @@ require "fileutils"
 require "console"
 
 module Teapot
+	# @namespace
 	module Command
+		# Represents the top-level command for the teapot CLI.
 		class Top < Samovar::Command
 			self.description = "A decentralised package manager and build tool."
 			
@@ -46,18 +48,26 @@ module Teapot
 				"clean" => Clean,
 			}, default: "build"
 			
+			# The project root directory, either from --root option or current working directory.
+			# @returns [Build::Files::Path] The root directory path.
 			def root
 				::Build::Files::Path.expand(@options[:root] || Dir.getwd)
 			end
 			
+			# Whether verbose logging is enabled via --verbose flag.
+			# @returns [Boolean] True if verbose mode is enabled.
 			def verbose?
 				@options[:logging] == :verbose
 			end
 			
+			# Whether quiet logging is enabled via --quiet flag.
+			# @returns [Boolean] True if quiet mode is enabled.
 			def quiet?
 				@options[:logging] == :quiet
 			end
 			
+			# Get the logger for the command.
+			# @returns [Console::Logger] The configured logger instance.
 			def logger
 				@logger ||= Console::Logger.new(Console.logger, verbose: self.verbose?).tap do |logger|
 					if verbose?
@@ -70,14 +80,20 @@ module Teapot
 				end
 			end
 			
+			# The build configuration name from -c option or TEAPOT_CONFIGURATION environment variable.
+			# @returns [String | Nil] The configuration name if specified.
 			def configuration
 				@options[:configuration]
 			end
 			
+			# Create a context for the project.
+			# @parameter root [Build::Files::Path] The root directory path.
+			# @returns [Context] A new context instance.
 			def context(root = self.root)
 				Context.new(root, configuration: configuration)
 			end
 			
+			# Execute the command.
 			def call
 				if @options[:version]
 					puts "teapot v#{Teapot::VERSION}"

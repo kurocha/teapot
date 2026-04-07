@@ -11,6 +11,7 @@ require "rugged"
 
 module Teapot
 	module Command
+		# A command to create a new teapot project.
 		class Create < Samovar::Command
 			self.description = "Create a new teapot package using the specified repository."
 			
@@ -18,6 +19,7 @@ module Teapot
 			one :source, "The source repository to use for fetching packages, e.g. https://github.com/kurocha.", required: true
 			many :packages, "Any packages you'd like to include in the project.", default: ["generate-project"]
 			
+			# Create a new project directory structure with default teapot.rb configuration.
 			def call
 				logger = parent.logger
 				
@@ -64,6 +66,11 @@ module Teapot
 				)
 			end
 			
+			# Generate the initial project files.
+			# @parameter root [Build::Files::Path] The project root path.
+			# @parameter name [String] The project name.
+			# @parameter source [String] The source repository URL.
+			# @parameter packages [Array(String)] The packages to include.
 			def generate_project(root, name, source, packages)
 				name = ::Build::Name.new(name)
 				

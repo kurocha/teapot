@@ -8,6 +8,7 @@ require "graphviz"
 
 module Teapot
 	module Command
+		# A command to visualize the dependency graph.
 		class Visualize < Selection
 			self.description = "Generate a picture of the dependency graph."
 			
@@ -16,14 +17,21 @@ module Teapot
 				option "-d/--dependency-name <name>", "Show the partial chain for the given named dependency."
 			end
 			
+			# Get the dependency names to visualize.
+			# @returns [Array(String)] The dependency names.
 			def dependency_names
 				@targets || []
 			end
 			
+			# Get the specific dependency name to visualize.
+			# @returns [String | Nil] The dependency name.
 			def dependency_name
 				@options[:dependency_name]
 			end
 			
+			# Process and generate the visualization.
+			# @parameter selection [Select] The selection to visualize.
+			# @returns [Graphviz::Graph] The generated graph.
 			def process(selection)
 				context = selection.context
 				chain = selection.chain

@@ -20,6 +20,11 @@ module Teapot
 			:import => true
 		}.freeze
 		
+		# Initialize a new configuration.
+		# @parameter context [Context] The project context.
+		# @parameter package [Package] The package.
+		# @parameter name [String] The configuration name.
+		# @parameter packages [Array] The list of packages.
 		def initialize(context, package, name, packages = [], **options)
 			super context, package, name
 			
@@ -34,6 +39,7 @@ module Teapot
 			@targets = Hash.new{|hash,key| hash[key] = Array.new}
 		end
 		
+		# Make the configuration immutable to prevent modification after targets and packages are resolved.
 		def freeze
 			return self if frozen?
 			
@@ -48,6 +54,8 @@ module Teapot
 			super
 		end
 		
+		# Create an environment for this configuration.
+		# @returns [Build::Environment] The build environment.
 		def environment
 			configuration = self
 			
@@ -60,10 +68,13 @@ module Teapot
 		# Controls how the configuration is exposed in the context.
 		attr :visibility
 		
+		# Whether this configuration is publicly accessible (not hidden from listings).
+		# @returns [Boolean] True if public.
 		def public?
 			@visibility == :public
 		end
 		
+		# Mark this configuration as publicly visible in listings and help output.
 		def public!
 			@visibility = :public
 		end
@@ -112,7 +123,7 @@ module Teapot
 			@options[key] = value
 		end
 		
-		# Get a configuration option.
+		# Access configuration-specific settings that control build behavior and environment variables.
 		def [] key
 			@options[key]
 		end
@@ -129,14 +140,19 @@ module Teapot
 		
 		alias platforms_path build_path
 		
+		# Get the path to the lock file.
+		# @returns [Build::Files::Path] The lock file path.
 		def lock_path
 			context.root + "#{@name}-lock.yml"
 		end
 		
+		# Get the lock store for persisting state.
+		# @returns [YAML::Store] The lock store.
 		def lock_store
 			::YAML::Store.new(lock_path.to_s)
 		end
 		
+		# @returns [String] The string representation.
 		def to_s
 			"#<#{self.class} #{@name.dump} visibility=#{@visibility}>"
 		end

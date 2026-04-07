@@ -9,9 +9,11 @@ require "build/controller"
 
 module Teapot
 	module Command
+		# Raised when the build fails.
 		class BuildFailedError < StandardError
 		end
 		
+		# A command to build targets in the project.
 		class Build < Selection
 			self.description = "Build the specified target."
 			
@@ -23,6 +25,8 @@ module Teapot
 			many :targets, "Build these targets, or use them to help the dependency resolution process."
 			split :argv, "Arguments passed to child process(es) of build if any."
 			
+			# Build the selected targets or default build targets, resolving dependencies and executing the build controller.
+			# @returns [Build::Dependency::Chain] The dependency chain.
 			def call
 				context = parent.context
 				
@@ -65,6 +69,8 @@ module Teapot
 				return chain
 			end
 			
+			# Display task dependencies for debugging, showing which tasks generate which outputs.
+			# @parameter walker [Build::Walker] The build walker.
 			def show_dependencies(walker)
 				outputs = {}
 				

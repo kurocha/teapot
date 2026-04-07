@@ -9,9 +9,13 @@ require "console/terminal"
 
 module Teapot
 	module Command
+		# A command to show git status of packages.
 		class Status < Selection
 			self.description = "List the git status of the specified package(s)."
 			
+			# Create a terminal with custom styles for colorizing git status information.
+			# @parameter output [IO] The output stream.
+			# @returns [Console::Terminal] The configured terminal.
 			def terminal(output = $stdout)
 				Console::Terminal.for(output).tap do |terminal|
 					terminal[:worktree_new] = terminal.style(:green)
@@ -20,6 +24,9 @@ module Teapot
 				end
 			end
 			
+			# Open the git repository for a package, or return nil if the package doesn't have a repository yet.
+			# @parameter package [Package] The package.
+			# @returns [Rugged::Repository | Nil] The repository or nil.
 			def repository_for(package)
 				Rugged::Repository.new(package.path.to_s)
 			rescue Rugged::RepositoryError
@@ -27,6 +34,8 @@ module Teapot
 				nil
 			end
 			
+			# Process and display the selection.
+			# @parameter selection [Select] The selection to process.
 			def process(selection)
 				context = selection.context
 				terminal = self.terminal

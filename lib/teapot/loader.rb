@@ -24,7 +24,10 @@ module Teapot
 	# The package relative path to the file to load:
 	TEAPOT_FILE = "teapot.rb".freeze
 	
+	# Raised when a teapot file requires an incompatible version.
 	class IncompatibleTeapotError < StandardError
+		# @parameter package [Package] The package.
+		# @parameter version [String] The version.
 		def initialize(package, version)
 			super "Unsupported teapot_version #{version} in #{package.path}!"
 		end
@@ -32,7 +35,9 @@ module Teapot
 		attr :version
 	end
 	
+	# Raised when a teapot file cannot be found.
 	class MissingTeapotError < StandardError
+		# @parameter path [String] The file path.
 		def initialize(path)
 			super "Could not read file at #{path}!"
 		end
@@ -45,6 +50,10 @@ module Teapot
 		Files = Build::Files
 		Rule = Build::Rule
 		
+		# Initialize a new script.
+		# @parameter context [Context] The project context.
+		# @parameter package [Package] The package.
+		# @parameter path [String] The teapot file path.
 		def initialize(context, package, path = TEAPOT_FILE)
 			@context = context
 			@package = package
@@ -70,6 +79,8 @@ module Teapot
 		attr :default_project
 		attr :default_configuration
 		
+		# Specify the minimum required teapot gem version for compatibility checks.
+		# @parameter version [String] The required version.
 		def teapot_version(version)
 			version = version[0..2]
 			
@@ -82,6 +93,8 @@ module Teapot
 		
 		alias required_version teapot_version
 		
+		# Define a new project.
+		# @parameter arguments [Array] The definition arguments.
 		def define_project(*arguments, **options)
 			project = Project.new(@context, @package, *arguments, **options)
 			
@@ -91,6 +104,8 @@ module Teapot
 			@defined << project
 		end
 		
+		# Define a new target.
+		# @parameter arguments [Array] The definition arguments.
 		def define_target(*arguments, **options)
 			target = Target.new(@context, @package, *arguments, **options)
 			
@@ -101,6 +116,8 @@ module Teapot
 			@defined << target
 		end
 		
+		# Define a new configuration.
+		# @parameter arguments [Array] The definition arguments.
 		def define_configuration(*arguments, **options)
 			configuration = Configuration.new(@context, @package, *arguments, **options)
 			
@@ -127,6 +144,10 @@ module Teapot
 	
 	# Loads the teapot.rb script and can reload it if it was changed.
 	class Loader
+		# Initialize a new loader.
+		# @parameter context [Context] The project context.
+		# @parameter package [Package] The package.
+		# @parameter path [String] The teapot file path.
 		def initialize(context, package, path = TEAPOT_FILE)
 			@context = context
 			@package = package
@@ -139,14 +160,20 @@ module Teapot
 		
 		attr :script
 		
+		# The absolute path to the teapot.rb file for this package.
+		# @returns [Build::Files::Path] The teapot file path.
 		def teapot_path
 			@package.path + @path
 		end
 		
+		# Whether the teapot file has been modified since it was loaded.
+		# @returns [Boolean] True if changed.
 		def changed?
 			File.mtime(teapot_path) > @mtime
 		end
 		
+		# Reload the loader with fresh data.
+		# @returns [Loader] A new loader instance.
 		def reload
 			self.class.new(@context, @package, @path)
 		end

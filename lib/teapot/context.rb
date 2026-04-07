@@ -8,6 +8,8 @@ require_relative "select"
 module Teapot
 	# A context represents a specific root package instance with a given configuration and all related definitions. A context is stateful in the sense that package selection is specialized based on #select and #dependency_chain. These parameters are usually set up initially as part of the context setup.
 	class Context
+		# Initialize a new context.
+		# @parameter root [String] The root path.
 		def initialize(root, **options)
 			@root = Path[root]
 			@options = options
@@ -29,14 +31,22 @@ module Teapot
 		# The primary project.
 		attr :project
 		
+		# Discover and open the git repository for this context's root directory.
+		# @returns [Rugged::Repository] The git repository.
 		def repository
 			@repository ||= Rugged::Repository.discover(@root.to_s)
 		end
 		
+		# Create a selection that resolves dependencies and loads definitions for the specified targets or configurations.
+		# @parameter names [Array | Nil] The names to select.
+		# @parameter configuration [Configuration] The configuration to use.
+		# @returns [Select] The selection.
 		def select(names = nil, configuration = @configuration)
 			Select.new(self, configuration, names || [])
 		end
 		
+		# Get substitutions for template generation.
+		# @returns [Build::Text::Substitutions] The substitutions.
 		def substitutions
 			substitutions = Build::Text::Substitutions.new
 			
@@ -71,6 +81,9 @@ module Teapot
 			return substitutions
 		end
 		
+		# Load a package from its teapot.rb, tracking loaded packages to prevent duplicates.
+		# @parameter package [Package] The package to load.
+		# @returns [Script] The loaded script.
 		def load(package)
 			if loader = @loaded[package]
 				return loader.script unless loader.changed?

@@ -7,9 +7,11 @@ require "samovar"
 
 module Teapot
 	module Command
+		# A command to clean build artifacts.
 		class Clean < Samovar::Command
 			self.description = "Delete everything in the teapot directory."
 			
+			# Delete build output directories for the specified targets or all targets.
 			def call
 				context = parent.context
 				logger = parent.logger

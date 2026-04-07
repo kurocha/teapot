@@ -11,18 +11,22 @@ require "build/environment"
 require "build/rulebook"
 
 module Teapot
+	# Raised during build operations.
 	class BuildError < StandardError
 	end
 	
+	# A build target.
 	class Target < Definition
 		include Build::Dependency
 		
+		# Initialize a new target.
 		def initialize(*)
 			super
 			
 			@build = nil
 		end
 		
+		# Make the target immutable after it has been completely defined with dependencies and build rules.
 		def freeze
 			return self if frozen?
 			
@@ -31,6 +35,9 @@ module Teapot
 			super
 		end
 		
+		# Define the build block for this target.
+		# @parameter block [Proc | Nil] The build block.
+		# @returns [Proc | Nil] The build block.
 		def build(&block)
 			if block_given?
 				@build = block
@@ -39,6 +46,7 @@ module Teapot
 			return @build
 		end
 		
+		# Update environments with the build block.
 		def update_environments!
 			return unless @build
 			

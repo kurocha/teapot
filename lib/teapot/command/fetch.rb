@@ -8,7 +8,10 @@ require "rugged"
 
 module Teapot
 	module Command
+		# Raised when a fetch operation fails.
 		class FetchError < StandardError
+			# @parameter package [Package] The package that caused the error.
+			# @parameter message [String] The error message.
 			def initialize(package, message)
 				super(message)
 				@package = package
@@ -17,6 +20,7 @@ module Teapot
 			attr :package
 		end
 		
+		# A command to fetch remote packages and dependencies.
 		class Fetch < Samovar::Command
 			self.description = "Fetch remote packages according to the specified configuration."
 			
@@ -32,10 +36,13 @@ module Teapot
 			
 			many :packages, "Only update the specified packages, or all packages if none specified."
 			
+			# Get the context for this command.
+			# @returns [Context] The current context.
 			def context
 				parent.context
 			end
 			
+			# Update packages by pulling latest changes from their git remotes, subject to lock file constraints.
 			def call
 				selection = context.select
 				

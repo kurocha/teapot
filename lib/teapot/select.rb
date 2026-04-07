@@ -11,11 +11,17 @@ require "build/text/substitutions"
 require "build/text/merge"
 
 module Teapot
+	# Raised when a definition is already defined.
 	class AlreadyDefinedError < StandardError
+		# @parameter definition [Definition] The definition.
+		# @parameter previous [Definition] The previous definition.
 		def initialize(definition, previous)
 			super "Definition #{definition.name} in #{definition.path} has already been defined in #{previous.path}!"
 		end
 		
+		# Check if a definition would cause a conflict.
+		# @parameter definition [Definition] The definition to check.
+		# @parameter definitions [Hash] The existing definitions.
 		def self.check(definition, definitions)
 			previous = definitions[definition.name]
 			
@@ -25,6 +31,10 @@ module Teapot
 	
 	# A selection is a specific view of the data exposed by the context at a specific point in time.
 	class Select
+		# Initialize a new selection.
+		# @parameter context [Context] The project context.
+		# @parameter configuration [Configuration] The configuration.
+		# @parameter names [Array] The names to select.
 		def initialize(context, configuration, names = [])
 			@context = context
 			@configuration = Configuration.new(context, configuration.package, configuration.name, [], **configuration.options)
@@ -61,10 +71,15 @@ module Teapot
 		attr :resolved
 		attr :unresolved
 		
+		# Get the dependency chain.
+		# @returns [Build::Dependency::Chain] The dependency chain.
 		def chain
 			@chain ||= Build::Dependency::Chain.expand(@dependencies, @targets.values, @selection)
 		end
 		
+		# Extract the targets that directly satisfy the requested dependencies.
+		# @parameter ordered [Array] The ordered targets.
+		# @returns [Array] The direct targets.
 		def direct_targets(ordered)
 			@dependencies.collect do |dependency|
 				ordered.find{|(package, _)| package.provides? dependency}
